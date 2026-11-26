@@ -15,6 +15,10 @@ interface Props {
   onPlanToggle?: () => void;
   planPoint?: { lat: number; lng: number } | null;
   onMapClick?: (lat: number, lng: number) => void;
+  /** Fly to this site (set by the opportunity ranking); n makes a repeat request fire again */
+  focus?: { id: string; n: number } | null;
+  boardOpen?: boolean;
+  onBoardToggle?: () => void;
 }
 
 const planIcon = L.divIcon({ className: 'dc-pin dc-pin-plan', html: '<span class="dc-pin-core"></span>', iconSize: [22, 22], iconAnchor: [11, 11] });
@@ -47,7 +51,7 @@ function popupHtml(d: DataCenter) {
 interface PlaceResult { display_name: string; lat: string; lon: string }
 
 export default function MapSection({ dataCenters, fromApi = false, selectedId = null, onSelect, children,
-  planning = false, onPlanToggle, planPoint = null, onMapClick }: Props) {
+  planning = false, onPlanToggle, planPoint = null, onMapClick, focus = null, boardOpen = false, onBoardToggle }: Props) {
   const clickRef = useRef(onMapClick);
   clickRef.current = planning ? onMapClick : undefined;
   const planMarker = useRef<L.Marker | null>(null);
@@ -142,15 +146,22 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
     return () => { clearTimeout(t); ctrl.abort(); };
   }, [query]);
 
-  const focusDc = (d: DataCenter) => {
+  const flyToDc = (d: DataCenter, zoom = 11) => {
     const m = map.current;
-    if (m) {
-      // keep the pin in the visible part of the map, left of the side panel
-      const zoom = 11;
-      const panel = fromApi && m.getSize().x > 720 ? Math.min(460, m.getSize().x) / 2 : 0;
-      const target = m.unproject(m.project([d.lat, d.lng], zoom).add([panel, 0]), zoom);
-      m.flyTo(target, zoom, { duration: 1.2 });
-    }
+    if (!m) return;
+    // keep the pin in the visible part of the map, left of the side panel
+    const panel = fromApi && m.getSize().x > 720 ? Math.min(460, m.getSize().x) / 2 : 0;
+    const target = m.unproject(m.project([d.lat, d.lng], zoom).add([panel, 0]), zoom);
+    m.flyTo(target, zoom, { duration: 1.2 });
+  };
+
+  useEffect(() => {
+    const d = focus && dataCenters.find((x) => x.id === focus.id);
+    if (d) flyToDc(d, 9);
+  }, [focus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const focusDc = (d: DataCenter) => {
+    flyToDc(d);
     if (fromApi && onSelect) onSelect(d.id);
     else markers.current.get(d.id)?.openPopup();
     setQuery(d.name);
@@ -190,13 +201,11 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
       <div className="map-head">
         <h2>Data centers worldwide</h2>
         <p>
-          {dataCenters.length > 0 ? `${dataCenters.length} locations loaded` : 'Location data coming soon'}
-          {dataCenters.length > 0 && (fromApi
-            ? ' · click a pin for its ranking'
-            : ' · backend offline, start it with ./scripts/dev.sh to see rankings')}
+          {dataCenters.length > 0 ? `${dataCenters.length} data centers` : 'Location data coming soon'}
+          {dataCenters.length > 0 && !fromApi && ' · backend offline, start it with ./scripts/dev.sh to see rankings'}
           {fromApi && dataCenters.length > 0 && (showsAll
-            ? <> · all sites, including those without documented cooling (<a href="?sites=verified#map">only verified</a>)</>
-            : <> · only sites with documented cooling (<a href="?sites=all#map">show all</a>)</>)}
+            ? <> · all sites (<a href="?sites=verified#map">only documented cooling</a>)</>
+            : <> with documented cooling (<a href="?sites=all#map">show all</a>)</>)}
         </p>
       </div>
 
@@ -253,10 +262,19 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
         </form>
 
         <div ref={mapEl} className="map" />
-        {fromApi && onPlanToggle && (
-          <button className={`plan-toggle${planning ? ' on' : ''}`} onClick={onPlanToggle}>
-            {planning ? (planPoint ? 'Exit planning' : 'Click the map to place the site · cancel') : '+ Plan a new data center'}
-          </button>
+        {fromApi && (
+          <div className="map-btns">
+            {onBoardToggle && (
+              <button className={`plan-toggle${boardOpen ? ' on' : ''}`} onClick={onBoardToggle}>
+                {boardOpen ? 'Hide ranking' : 'Where can we do the most?'}
+              </button>
+            )}
+            {onPlanToggle && (
+              <button className={`plan-toggle${planning ? ' on' : ''}`} onClick={onPlanToggle}>
+                {planning ? (planPoint ? 'Exit planning' : 'Click the map to place the site · cancel') : '+ Plan a new data center'}
+              </button>
+            )}
+          </div>
         )}
         {children}
       </div>

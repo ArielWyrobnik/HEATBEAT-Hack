@@ -13,7 +13,6 @@ export default function Hero() {
         </p>
         <div className="hero-actions">
           <a href="#map" className="btn btn-primary">Explore the map</a>
-          <a href="#how" className="btn btn-ghost">How it works</a>
         </div>
         <ul className="features">
           <li><strong>01</strong><span>Search or pick a data center on the map</span></li>

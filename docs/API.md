@@ -35,6 +35,7 @@ All routes are under `/api`; Vite proxies `/api` to the backend (`frontend/vite.
 | `POST /api/evaluate` | `ModelResult` | what-if for a database site: `{"site_id", "overrides": {"d_bio_m": 2000}}` |
 | `GET /api/cooling-profiles` | `CoolingProfile[]` | cooling choices for a planned site, with heat temperature and typical PUE |
 | `POST /api/plan` | `ModelResult` | **future data center**: `{"lat", "lon", "it_mw", "cooling_profile", "pue"?, "is_greenfield": 1}`. See below. |
+| `GET /api/leaderboard?scope=` | `LeaderboardRow[]` | Opportunity ranking: per listed site the best option that changes something (not today's setup), with NPV, $/yr, CO2, water, payback; sorted by NPV. Cached, warmed at startup (`HEATBEAT_WARM=0` skips). |
 
 ## Planning a future data center
 
@@ -109,3 +110,12 @@ Show all sites again:
 - local: `HEATBEAT_SITES=all ./scripts/dev.sh`
 - in the browser, for one visit: add `?sites=all` to the address (the map header has a "show all" link)
 - on Render: set the environment variable `HEATBEAT_SITES` to `all` (Dashboard, Environment), or change it in `render.yaml`
+
+## Frontend view (2026-11-26)
+
+The site panel and the planner show the same compact view (`frontend/src/components/Results.tsx`): one line verdict,
+today's baseline in one line, the best 3 options that change something (`OptionResult.is_today` marks today's setup
+and is left out). Clicking an option opens its four key numbers with definitions (money saved per year, payback,
+CO2 avoided, water saved), how it is built, the investment, the calculation steps with inputs (colour = real /
+estimate / synthetic, hover for the source), the tornado and all inputs with sources. The button
+"Where can we do the most?" on the map opens the opportunity ranking (`/api/leaderboard`).

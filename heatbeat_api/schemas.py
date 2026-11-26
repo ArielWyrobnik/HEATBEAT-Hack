@@ -135,6 +135,7 @@ class OptionResult(BaseModel):
                                                  description="Every input this option uses, with flag and source")
     already_in_place: list[str] = Field(default_factory=list,
                                         description="Parts of this option the site already has today, with source")
+    is_today: bool = Field(False, description="True for the option that is the site's current setup (no change)")
 
 
 class SetupFact(BaseModel):
@@ -257,3 +258,22 @@ class PlanRequest(BaseModel):
 
 
 ModelResult.model_rebuild()
+
+
+class LeaderboardRow(BaseModel):
+    """One data center in the opportunity ranking: its best improvement over today's setup."""
+    site_id: str
+    name: str
+    city: str | None = None
+    region: str | None = None
+    country: str | None = None
+    operator: str | None = None
+    it_load_mw: float | None = None
+    verdict_level: str | None = None
+    option_id: str | None = Field(None, description="Best option that changes something, None if nothing is feasible")
+    option_name: str | None = None
+    npv_usd: float | None = None
+    cash_value_usd_yr: float | None = None
+    co2_avoided_t_yr: float | None = None
+    water_saved_m3_yr: float | None = None
+    payback_yr: float | None = None
