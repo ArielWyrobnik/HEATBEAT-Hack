@@ -1,0 +1,60 @@
+site_id,name,operator,city,region,country_iso2,lat,lon,coord_precision,capacity_mw,capacity_note,grid_region_id,is_hypothetical,notes
+us-va-ashburn-equinix,Equinix Ashburn campus (DC1-DC21),Equinix,Ashburn,VA,US,39.0158,-77.4597,campus_approx,,not public in a single figure,US-PJM-DOM,0,Data Center Alley in Loudoun County; largest DC market worldwide
+us-va-sterling-digital,Digital Realty Ashburn/Sterling campus,Digital Realty,Sterling,VA,US,39.0060,-77.4280,campus_approx,,,US-PJM-DOM,0,
+us-va-manassas,Manassas data center cluster,multiple,Manassas,VA,US,38.7510,-77.4750,city_approx,,,US-PJM-DOM,0,
+us-va-boydton-microsoft,Microsoft Boydton campus,Microsoft,Boydton,VA,US,36.6670,-78.3870,city_approx,,,US-PJM-DOM,0,
+us-tx-abilene-stargate,Stargate Abilene campus (Crusoe / OpenAI),Crusoe,Abilene,TX,US,32.5300,-99.7600,campus_approx,1200,announced target; press-reported and unverified,US-ERCOT-WEST,0,
+us-tx-dallas-infomart,Equinix Dallas Infomart (DA1-DA3),Equinix,Dallas,TX,US,32.8020,-96.8200,campus_approx,,,US-ERCOT-NORTH,0,
+us-tx-midlothian-google,Google Midlothian campus,Google,Midlothian,TX,US,32.4800,-96.9900,city_approx,,,US-ERCOT-NORTH,0,
+us-tx-san-antonio-microsoft,Microsoft San Antonio campus,Microsoft,San Antonio,TX,US,29.3700,-98.6600,city_approx,,,US-ERCOT-SOUTH,0,
+us-az-chandler,Chandler data center cluster,multiple,Chandler,AZ,US,33.3000,-111.9000,city_approx,,,US-AZ,0,hot desert climate
+us-az-mesa,Mesa data center cluster,multiple,Mesa,AZ,US,33.4000,-111.6500,city_approx,,,US-AZ,0,hot desert climate
+us-il-chicago-cermak,350 East Cermak (Lakeside Technology Center),Digital Realty,Chicago,IL,US,41.8530,-87.6180,building,,,US-PJM-COMED,0,
+us-il-elk-grove,Elk Grove Village cluster,multiple,Elk Grove Village,IL,US,42.0040,-87.9700,city_approx,,,US-PJM-COMED,0,
+us-ga-atlanta-qts,QTS Atlanta Metro campus,QTS,Atlanta,GA,US,33.7700,-84.4300,campus_approx,,,US-SE-GA,0,
+us-ga-douglas-google,Google Douglas County campus,Google,Lithia Springs,GA,US,33.7500,-84.6200,city_approx,,,US-SE-GA,0,
+us-ca-santa-clara,Santa Clara data center cluster,multiple,Santa Clara,CA,US,37.3700,-121.9600,city_approx,,,US-CAISO-NP15,0,
+us-ca-la-one-wilshire,One Wilshire,CoreSite,Los Angeles,CA,US,34.0480,-118.2560,building,,,US-CAISO-SP15,0,served by LADWP (not CAISO); SP15 used as a price proxy
+us-or-hillsboro,Hillsboro data center cluster,multiple,Hillsboro,OR,US,45.5400,-122.9200,city_approx,,,US-NW-OR,0,
+us-or-the-dalles-google,Google The Dalles campus,Google,The Dalles,OR,US,45.6300,-121.2000,city_approx,,,US-NW-OR,0,
+us-or-prineville-meta,Meta Prineville campus,Meta,Prineville,OR,US,44.2900,-120.8900,city_approx,,,US-NW-OR,0,
+us-wa-quincy,Quincy data center cluster,multiple,Quincy,WA,US,47.2300,-119.8500,city_approx,,,US-NW-WA,0,hydro-heavy grid
+us-ia-council-bluffs-google,Google Council Bluffs campus,Google,Council Bluffs,IA,US,41.1900,-95.8600,city_approx,,,US-MISO-IA,0,
+us-ia-west-des-moines-microsoft,Microsoft West Des Moines campus,Microsoft,West Des Moines,IA,US,41.5500,-93.7800,city_approx,,,US-MISO-IA,0,
+us-ia-altoona-meta,Meta Altoona campus,Meta,Altoona,IA,US,41.6500,-93.4700,city_approx,,,US-MISO-IA,0,
+us-ne-sarpy-meta,Meta Sarpy County campus,Meta,Papillion,NE,US,41.1100,-96.0500,city_approx,,,US-SPP-NE,0,
+us-ok-pryor-google,Google Mayes County campus,Google,Pryor,OK,US,36.2400,-95.3300,city_approx,,,US-SPP-OK,0,
+us-oh-new-albany,New Albany data center cluster,multiple,New Albany,OH,US,40.0800,-82.7800,city_approx,,,US-PJM-AEP,0,
+us-wi-mount-pleasant-microsoft,Microsoft Mount Pleasant (Fairwater) campus,Microsoft,Mount Pleasant,WI,US,42.7000,-87.9300,city_approx,,,US-MISO-WI,0,
+us-la-richland-meta,Meta Hyperion campus,Meta,Holly Ridge (Richland Parish),LA,US,32.3900,-91.7300,city_approx,2000,announced initial size; press-reported and unverified,US-MISO-LA,0,
+us-tn-memphis-xai,xAI Colossus,xAI,Memphis,TN,US,35.0600,-90.0300,city_approx,,,US-TVA-TN,0,
+us-nv-reno-switch,Switch Citadel campus,Switch,McCarran (Tahoe Reno Industrial Center),NV,US,39.5400,-119.4400,campus_approx,,,US-NV-N,0,high desert climate
+us-nv-las-vegas-switch,Switch Core campus,Switch,Las Vegas,NV,US,36.0700,-115.1500,city_approx,,,US-NV-S,0,hot desert climate
+us-ut-eagle-mountain-meta,Meta Eagle Mountain campus,Meta,Eagle Mountain,UT,US,40.3100,-112.0100,city_approx,,,US-UT,0,
+us-nc-maiden-apple,Apple Maiden campus,Apple,Maiden,NC,US,35.5800,-81.2100,city_approx,,,US-SE-NC,0,
+us-nc-lenoir-google,Google Lenoir campus,Google,Lenoir,NC,US,35.8900,-81.5400,city_approx,,,US-SE-NC,0,
+us-sc-berkeley-google,Google Berkeley County campus,Google,Moncks Corner,SC,US,33.0600,-80.0400,city_approx,,,US-SE-SC,0,
+us-ny-nyc-60-hudson,60 Hudson Street,multiple,New York,NY,US,40.7170,-74.0080,building,,,US-NYISO-NYC,0,
+us-nj-secaucus-equinix,Equinix Secaucus campus (NY1-NY6),Equinix,Secaucus,NJ,US,40.7800,-74.0700,campus_approx,,,US-PJM-PSEG,0,
+us-ma-boston-one-summer,One Summer Street,Markley,Boston,MA,US,42.3540,-71.0590,building,,,US-ISONE-BOS,0,
+us-wy-cheyenne-microsoft,Microsoft Cheyenne campus,Microsoft,Cheyenne,WY,US,41.1000,-104.8400,city_approx,,,US-WY,0,
+us-fl-miami-equinix,Equinix MI1 (NAP of the Americas),Equinix,Miami,FL,US,25.7800,-80.1900,building,,,US-FL,0,hot humid climate
+ie-dublin,Dublin data center cluster,multiple,Dublin,Dublin,IE,53.3300,-6.4300,city_approx,,,IE,0,
+de-frankfurt,Frankfurt data center cluster,multiple,Frankfurt am Main,Hesse,DE,50.1000,8.7300,city_approx,,,DE,0,
+nl-amsterdam,Amsterdam Science Park cluster,multiple,Amsterdam,North Holland,NL,52.3550,4.9500,city_approx,,,NL,0,
+gb-slough,Slough Trading Estate cluster,multiple,Slough,England,GB,51.5200,-0.6200,city_approx,,,GB,0,
+fr-paris,Paris (Saint-Denis) cluster,multiple,Saint-Denis,Ile-de-France,FR,48.9200,2.3600,city_approx,,,FR,0,
+se-lulea-meta,Meta Lulea campus,Meta,Lulea,Norrbotten,SE,65.6200,22.0700,city_approx,,,SE,0,subarctic climate
+dk-odense-meta,Meta Odense campus,Meta,Odense,Southern Denmark,DK,55.3600,10.3300,city_approx,,,DK,0,existing district heating heat reuse case
+fi-hamina-google,Google Hamina campus,Google,Hamina,Kymenlaakso,FI,60.5400,27.1200,city_approx,,,FI,0,seawater cooling case
+sg-singapore,Singapore data center cluster,multiple,Singapore,Singapore,SG,1.3300,103.7000,city_approx,,,SG,0,tropical climate
+jp-inzai,Inzai (Chiba) data center cluster,multiple,Inzai,Chiba,JP,35.8000,140.1500,city_approx,,,JP,0,
+au-sydney,Sydney (Macquarie Park) cluster,multiple,Sydney,NSW,AU,-33.7800,151.1200,city_approx,,,AU,0,
+br-sao-paulo,Sao Paulo (Barueri / Santana de Parnaiba) cluster,multiple,Barueri,Sao Paulo,BR,-23.4800,-46.8800,city_approx,,,BR,0,
+za-johannesburg,Johannesburg (Isando) cluster,multiple,Isando,Gauteng,ZA,-26.1400,28.2000,city_approx,,,ZA,0,
+in-navi-mumbai,Navi Mumbai data center cluster,multiple,Navi Mumbai,Maharashtra,IN,19.0300,73.0300,city_approx,,,IN,0,
+ae-dubai,Dubai data center cluster,multiple,Dubai,Dubai,AE,25.1000,55.1700,city_approx,,,AE,0,hot arid coastal climate; comparison for Israel
+il-petah-tikva,Petah Tikva data center cluster,multiple,Petah Tikva,Central District,IL,32.0900,34.8800,city_approx,,,IL,0,
+il-tel-aviv,Tel Aviv metro cloud region area,multiple (hyperscaler regions; exact sites undisclosed),Tel Aviv,Tel Aviv District,IL,32.0700,34.7900,city_approx,,,IL,0,location is city-level only
+il-haifa,Haifa data center site,multiple,Haifa,Haifa District,IL,32.7900,34.9900,city_approx,,,IL,0,
+il-beer-sheva-hypothetical,Negev hypothetical site (Be'er Sheva),hypothetical,Be'er Sheva,Southern District,IL,31.2500,34.7900,city_approx,,,IL,1,hypothetical comparison site; no known data center here

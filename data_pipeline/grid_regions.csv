@@ -1,0 +1,45 @@
+grid_region_id,name,country_iso2,country_iso3,us_state,iso_rto,lmp_location,egrid_subregion,fallback_retail_usd_mwh,fallback_co2_kg_mwh,notes
+US-PJM-DOM,PJM Dominion zone (Virginia),US,USA,VA,PJM,DOMINION HUB,SRVC,,,
+US-PJM-COMED,PJM ComEd zone (Northern Illinois),US,USA,IL,PJM,N ILLINOIS HUB,RFCW,,,
+US-PJM-AEP,PJM AEP zone (Ohio),US,USA,OH,PJM,AEP-DAYTON HUB,RFCW,,,
+US-PJM-PSEG,PJM PSEG zone (New Jersey),US,USA,NJ,PJM,EASTERN HUB,RFCE,,,
+US-ERCOT-WEST,ERCOT West,US,USA,TX,ERCOT,HB_WEST,ERCT,,,
+US-ERCOT-NORTH,ERCOT North,US,USA,TX,ERCOT,HB_NORTH,ERCT,,,
+US-ERCOT-SOUTH,ERCOT South,US,USA,TX,ERCOT,HB_SOUTH,ERCT,,,
+US-CAISO-NP15,CAISO NP15 (Northern California),US,USA,CA,CAISO,TH_NP15_GEN-APND,CAMX,,,
+US-CAISO-SP15,CAISO SP15 (Southern California),US,USA,CA,CAISO,TH_SP15_GEN-APND,CAMX,,,
+US-MISO-IA,MISO Iowa (Minnesota Hub as proxy),US,USA,IA,MISO,MINN.HUB,MROW,,,hub is a proxy for Iowa nodes
+US-MISO-WI,MISO Wisconsin (Illinois Hub as proxy),US,USA,WI,MISO,ILLINOIS.HUB,MROE,,,hub is a proxy for Wisconsin nodes
+US-MISO-LA,MISO Louisiana,US,USA,LA,MISO,LOUISIANA.HUB,SRMV,,,
+US-SPP-NE,SPP North (Nebraska),US,USA,NE,SPP,SPPNORTH_HUB,MROW,,,
+US-SPP-OK,SPP South (Oklahoma),US,USA,OK,SPP,SPPSOUTH_HUB,SPSO,,,
+US-NYISO-NYC,NYISO Zone J (New York City),US,USA,NY,NYISO,N.Y.C.,NYCW,,,
+US-ISONE-BOS,ISO-NE Internal Hub,US,USA,MA,ISONE,.H.INTERNAL_HUB,NEWE,,,
+US-SE-GA,Southeast non-market (Georgia Power),US,USA,GA,,,SRSO,,,no organized wholesale market
+US-SE-NC,Southeast non-market (Duke Energy NC),US,USA,NC,,,SRVC,,,no organized wholesale market
+US-SE-SC,Southeast non-market (South Carolina),US,USA,SC,,,SRVC,,,no organized wholesale market
+US-TVA-TN,TVA (Tennessee),US,USA,TN,,,SRTV,,,no organized wholesale market
+US-FL,Florida non-market (FPL),US,USA,FL,,,FRCC,,,no organized wholesale market
+US-AZ,Arizona non-market (APS / SRP),US,USA,AZ,,,AZNM,,,no organized wholesale market
+US-NV-N,Northern Nevada (NV Energy North),US,USA,NV,,,NWPP,,,no organized wholesale market
+US-NV-S,Southern Nevada (NV Energy South),US,USA,NV,,,AZNM,,,no organized wholesale market
+US-NW-OR,Pacific Northwest non-market (Oregon),US,USA,OR,,,NWPP,,,no organized wholesale market
+US-NW-WA,Pacific Northwest non-market (Washington),US,USA,WA,,,NWPP,,,no organized wholesale market
+US-UT,Utah non-market (PacifiCorp East),US,USA,UT,,,NWPP,,,no organized wholesale market
+US-WY,Wyoming non-market,US,USA,WY,,,RMPA,,,no organized wholesale market
+IE,Ireland,IE,IRL,,,,,250,300,fallback values are rough unverified estimates
+DE,Germany,DE,DEU,,,,,200,380,fallback values are rough unverified estimates
+NL,Netherlands,NL,NLD,,,,,180,300,fallback values are rough unverified estimates
+GB,Great Britain,GB,GBR,,,,,250,200,fallback values are rough unverified estimates
+FR,France,FR,FRA,,,,,150,50,fallback values are rough unverified estimates
+SE,Sweden,SE,SWE,,,,,80,40,fallback values are rough unverified estimates
+DK,Denmark,DK,DNK,,,,,150,150,fallback values are rough unverified estimates
+FI,Finland,FI,FIN,,,,,90,80,fallback values are rough unverified estimates
+SG,Singapore,SG,SGP,,,,,200,480,fallback values are rough unverified estimates
+JP,Japan,JP,JPN,,,,,150,480,fallback values are rough unverified estimates
+AU,Australia,AU,AUS,,,,,130,550,fallback values are rough unverified estimates
+BR,Brazil,BR,BRA,,,,,120,100,fallback values are rough unverified estimates
+ZA,South Africa,ZA,ZAF,,,,,90,700,fallback values are rough unverified estimates
+IN,India,IN,IND,,,,,100,700,fallback values are rough unverified estimates
+AE,United Arab Emirates,AE,ARE,,,,,80,400,fallback values are rough unverified estimates
+IL,Israel (IEC TAOZ time-of-use),IL,ISR,,,,,,500,hourly price from IEC TAOZ tariff; CO2 fallback is a rough unverified estimate
