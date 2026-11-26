@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 
-from heatbeat_api.schemas import (Baseline, EnergyFlow, InputValue, Kpis, ModelInfo, ModelResult, OptionResult,
+from heatbeat_api.schemas import (Baseline, EnergyFlow, HeatLoop, InputValue, Kpis, ModelInfo, ModelResult, OptionResult,
                                   SetupFact, Tornado, TornadoBar)
 
 from . import calc_trace
@@ -112,17 +112,27 @@ class HeatChainModel:
         df, base, results = evaluate_site(s, P)
         if mode == "reuse_only":
             df = df[df["uses"] != "none"].reset_index(drop=True)
-        pick = list(dict.fromkeys(list(df["chain_id"].head(10)) + list(best_per_use(df)["chain_id"])))
-        pick = list(dict.fromkeys([*pick, *df.loc[df["uses"] == "none", "chain_id"]]))
+        pick = [*df["chain_id"].head(10), *best_per_use(df)["chain_id"], *df.loc[df["uses"] == "none", "chain_id"]]
+        # Keep heat-priority options even if they fall outside the NPV shortlist.
+        by_heat = sorted((cid for cid in df["chain_id"] if results[cid]["heat_recovered_mwh"] > 0),
+                         key=lambda cid: results[cid]["heat_recovered_mwh"], reverse=True)
+        pick.extend(by_heat[:3])
         if planned:
             # Keep standalone designs for every use and every heat rejection technology.
             # A high-ranking combined chain should not hide its standalone alternatives.
             standalone = df[~df["uses"].str.contains("+", regex=False)]
             standalone = standalone.drop_duplicates(["uses", "tech", "storage"])
-            pick = list(dict.fromkeys([*pick, *standalone["chain_id"]]))
+            pick.extend(standalone["chain_id"])
+            best_heat_by_use = {}
+            for cid in by_heat:
+                chain = results[cid]
+                for use in (*chain["uses"], chain["storage"]):
+                    if use:
+                        best_heat_by_use.setdefault(use, cid)
+            pick.extend(best_heat_by_use.values())
         rank = {cid: i + 1 for i, cid in enumerate(df["chain_id"])}
         options = []
-        for cid in sorted(pick, key=lambda c: rank[c]):
+        for cid in sorted(set(pick), key=lambda c: rank[c]):
             r = results[cid]
             options.append(self._option(cid, r, rank[cid], base, s, P, planned=planned))
         for name, why in df.attrs.get("ko", {}).items():
@@ -228,6 +238,7 @@ class HeatChainModel:
         return OptionResult(**extra, option_id=cid, name=name, rank=rank, feasible=True,
                             score=round(r["npv_usd"] / 1e6, 2), components=r["components"],
                             product=", ".join(prod) or "cooling only", kpis=k, energy_balance=flows,
+                            heat_loops=[HeatLoop(**loop) for loop in r["heat_loops"]],
                             details={"capex_breakdown_usd": {a: round(b) for a, b in r["capex"].items()},
                                      "cost_usd_yr": {a: round(b) for a, b in r["cost"].items()},
                                      "npv_usd": r["npv_usd"], "reuse_npv_usd": r.get("reuse_npv_usd"),

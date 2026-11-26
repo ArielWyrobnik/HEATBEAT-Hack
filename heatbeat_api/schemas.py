@@ -94,6 +94,21 @@ class EnergyFlow(BaseModel):
     kind: Literal["heat", "electricity", "cooling", "fuel", "loss", "other"] = "heat"
 
 
+class HeatRoute(BaseModel):
+    """Annual server heat entering one application or cooling device."""
+    name: str
+    mwh_yr: float
+    kind: Literal["reuse", "cooling"]
+
+
+class HeatLoop(BaseModel):
+    """Annual server heat collected by one cooling loop, split by destination."""
+    name: str
+    mwh_yr: float
+    return_c: float
+    routes: list[HeatRoute]
+
+
 class CalcTerm(BaseModel):
     """One number that goes into a calculation step, with where it comes from."""
     key: str
@@ -146,6 +161,7 @@ class OptionResult(BaseModel):
     capex_breakdown: dict[str, float] = Field(default_factory=dict, description="USD per cost item, sums to kpis.capex_usd")
     kpis: Kpis = Field(default_factory=Kpis)
     energy_balance: list[EnergyFlow] = Field(default_factory=list)
+    heat_loops: list[HeatLoop] = Field(default_factory=list)
     details: dict[str, Any] = Field(default_factory=dict, description="Model specific extra columns")
     calculation: list[CalcStep] = Field(default_factory=list, description="Step by step calculation trace with sources")
     calculation_inputs: list[InputValue] = Field(default_factory=list,

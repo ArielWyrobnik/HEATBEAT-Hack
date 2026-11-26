@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { compact, num, usd, value } from '../format';
 import type { CalcStep, Flag, InputValue, ModelResult, OptionResult, Vendor } from '../types/api';
+import HeatFlow, { heatFirst, HeatOrderSelect, reuseShare, type HeatOrder } from './HeatFlow';
 import Tornado from './Tornado';
 
 /**
@@ -169,8 +170,11 @@ export function Details({ o, r, planned = false }: { o: OptionResult; r: ModelRe
     : k.capex_usd;
   const inputs = o.calculation_inputs?.length ? o.calculation_inputs : r.inputs;
   const nReal = inputs.filter((i) => i.flag === 'real' || i.flag === 'user').length;
+  const hasHeatFlow = Boolean(o.heat_loops?.length);
+  const recoveredHeat = k.heat_recovered_mwh_yr ?? 0;
   return (
     <div className="opt-body">
+      <HeatFlow option={o} />
       <div className="kpis">
         <Kpi label="Saved per year" v={`${money(k.cash_value_usd_yr ?? k.net_value_usd_yr)}`} def={DEFS.cash}
              neg={(k.cash_value_usd_yr ?? 0) < 0} />
@@ -179,9 +183,9 @@ export function Details({ o, r, planned = false }: { o: OptionResult; r: ModelRe
         <Kpi label="Water saved" v={`${compact(k.water_saved_m3_yr)} m3/yr`} def={DEFS.water} neg={(k.water_saved_m3_yr ?? 0) < 0} />
       </div>
 
-      {(k.heat_recovered_mwh_yr ?? 0) > 0 && (
-        <p className="impl-line"><b>Heat recovered</b> {compact(k.heat_recovered_mwh_yr)} MWh/yr{o.product && <> · {o.product}</>}</p>
-      )}
+      {recoveredHeat > 0 && (hasHeatFlow
+        ? o.product && <p className="impl-line"><b>Annual output</b> {o.product}</p>
+        : <p className="impl-line"><b>Heat recovered</b> {compact(recoveredHeat)} MWh/yr{o.product && <> · {o.product}</>}</p>)}
       {o.already_in_place?.map((t) => <p key={t} className="already-line"><span className="already">already in place</span> {t}</p>)}
       {o.implementation && <p className="impl-line"><b>How it is built.</b> {o.implementation}</p>}
       <Vendors vendors={o.vendors} />
@@ -227,12 +231,19 @@ export const coolingOnly = (o: OptionResult) =>
   o.components.length === 1 && COOLING_COMPONENTS.includes(o.components[0]);
 
 export default function Results({ r }: { r: ModelResult }) {
-  const [reuse, setReuse] = useState(false);
+  const [palette, setPalette] = useState<'cooling' | 'reuse' | null>(null);
+  const [order, setOrder] = useState<HeatOrder>('heat');
   const engineering = r.model === 'heat_chain';
-  const top = r.options.filter((o) => o.feasible && !o.is_today &&
-    (!engineering || coolingOnly(o) !== reuse)).slice(0, 3);
+  const feasible = r.options.filter((o) => o.feasible && !o.is_today);
+  const reuse = engineering && (palette === null ? feasible.some((o) => !coolingOnly(o)) : palette === 'reuse');
+  const heatPriority = reuse && order === 'heat';
+  const options = feasible.filter((o) => !engineering || coolingOnly(o) !== reuse);
+  if (heatPriority) options.sort(heatFirst);
+  const top = options.slice(0, 3);
+  const firstOption = top[0]?.option_id;
   const [open, setOpen] = useState<string | null>(null);
-  useEffect(() => setOpen(r.verdict_level === 'no_gain' ? null : top[0]?.option_id ?? null), [r, reuse]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => setOpen(!heatPriority && r.verdict_level === 'no_gain' ? null : firstOption ?? null),
+    [r, reuse, heatPriority, firstOption]);
   const b = r.baseline;
   return (
     <div className="results">
@@ -242,10 +253,11 @@ export default function Results({ r }: { r: ModelResult }) {
       </p>
 
       {engineering && <div className="seg" role="group" aria-label="Solution palette">
-        <button type="button" aria-pressed={!reuse} className={!reuse ? 'on' : ''} onClick={() => setReuse(false)}>Cooling</button>
-        <button type="button" aria-pressed={reuse} className={reuse ? 'on' : ''} onClick={() => setReuse(true)}>Heat reuse</button>
+        <button type="button" aria-pressed={!reuse} className={!reuse ? 'on' : ''} onClick={() => setPalette('cooling')}>Cooling</button>
+        <button type="button" aria-pressed={reuse} className={reuse ? 'on' : ''} onClick={() => setPalette('reuse')}>Heat reuse</button>
       </div>}
-      <h4>Best options <small title={DEFS.npv}>ranked by value over 20 years (NPV) ⓘ</small></h4>
+      {reuse && <HeatOrderSelect order={order} onChange={setOrder} />}
+      <h4>Best options {!heatPriority && <small title={DEFS.npv}>ranked by value over 20 years (NPV) ⓘ</small>}</h4>
       {top.length === 0 && <p className="muted">No option passes the technical checks at this site.</p>}
       <ol className="options">
         {top.map((o, i) => {
@@ -259,6 +271,7 @@ export default function Results({ r }: { r: ModelResult }) {
                 <span className="opt-name">
                   {o.name}
                   <small>
+                    {reuse && <>{reuseShare(o, b.it_energy_mwh_yr)} to reuse · </>}
                     {(npv ?? 0) < 0 ? 'loses money here'
                       : (k.cash_value_usd_yr ?? 0) < 0 ? `costs ${money(-(k.cash_value_usd_yr ?? 0))}/yr more, pays off through water saved`
                       : `saves ${money(k.cash_value_usd_yr ?? k.net_value_usd_yr)}/yr · ${k.payback_yr === 0 ? 'no extra investment' : `payback ${payback(k.payback_yr)}`}`}

@@ -111,6 +111,7 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
     plans = plans or build_plans(site, P)
     loops = sorted(site.loops, key=lambda l: -l.t_return_c)
     rem = {l.name: np.full(H, float(l.q_mw)) for l in loops}
+    heat_to_uses = {l.name: {} for l in loops}
     e_it = site.it_mw * H
     res = {"tech": tech, "uses": uses, "storage": storage, "ko": None}
     hp_work = np.zeros(H)
@@ -141,6 +142,7 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
             cold = np.where(rec_ok, np.minimum(pre["chiller_load_full_mw"], P["ads_cop"] * rem[liq.name]), 0.0)
             drive = cold / P["ads_cop"]
             rem[liq.name] = rem[liq.name] - drive
+            heat_to_uses[liq.name][u] = float(drive.sum())
             flow(f"{liq.name} loop", "adsorption chiller", float(drive.sum()))
             flow("air loop", "adsorption chiller", float(cold.sum()), "cooling")
             flow("adsorption chiller", "adsorber recooler", float((cold + drive).sum()))
@@ -166,12 +168,14 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
                 take = rem[l.name].copy()
             else:
                 take = np.minimum(rem[l.name], np.clip(need - got, 0, None) * frac)
-            if take.sum() <= 0:
+            taken = float(take.sum())
+            if taken <= 0:
                 continue
             out = take / frac
             rem[l.name] = rem[l.name] - take
+            heat_to_uses[l.name][u] = taken
             node = "heat exchanger" if direct else f"heat pump ({u})"
-            flow(f"{l.name} loop", node, float(take.sum()))
+            flow(f"{l.name} loop", node, taken)
             if not direct:
                 flow("grid electricity", node, float((out / c).sum()), "electricity")
             flow(node, pl.label, float(out.sum()))
@@ -219,7 +223,9 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
         spare_out = np.clip(np.minimum(rem[l.name] / frac, cap_out - cur_out), 0, None)
         take_out, give, cap_mwh, cst = dh.apply_storage(storage, spare_out, deficit, P)
         rem[l.name] = rem[l.name] - take_out * frac
-        flow(f"{l.name} loop", f"storage ({storage})", float((take_out * frac).sum()))
+        stored_heat = float((take_out * frac).sum())
+        heat_to_uses[l.name][useful_dh] = heat_to_uses[l.name].get(useful_dh, 0.0) + stored_heat
+        flow(f"{l.name} loop", f"storage ({storage})", stored_heat)
         if not direct:
             flow("grid electricity", f"storage ({storage})", float((take_out / c).sum()), "electricity")
         flow(f"storage ({storage})", pl.label, float(give.sum()))
@@ -248,6 +254,19 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
         flow("grid electricity", TECH_LABEL[tech] + " (chiller)", rej[l.name]["chiller_mwh"], "electricity")
     for l in loops:
         flow("IT load", f"{l.name} loop", l.q_mw * H)
+    # Trace only heat from the servers. The full energy balance also includes electricity,
+    # conversion outputs and losses, which must not be added to this source heat budget.
+    heat_loops = []
+    for l in loops:
+        offload = float(air_offload.sum()) if l.name == "air" else 0.0
+        routes = [{"name": plans[u].label, "mwh_yr": amount, "kind": "reuse"}
+                  for u, amount in heat_to_uses[l.name].items() if amount > 0]
+        if offload > 0:
+            routes.append({"name": "Adsorption chiller (air-side cooling)", "mwh_yr": offload, "kind": "cooling"})
+        remainder = float(rem[l.name].sum()) - offload
+        if remainder > 0:
+            routes.append({"name": TECH_LABEL[tech], "mwh_yr": remainder, "kind": "cooling"})
+        heat_loops.append({"name": l.name, "mwh_yr": l.q_mw * H, "return_c": l.t_return_c, "routes": routes})
     parts = list(rej.values()) + ([ads_rej] if ads_rej else [])
     fan = sum(r["fan_mwh"] for r in parts)
     pump = sum(r["pump_mwh"] for r in parts)
@@ -326,7 +345,8 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
         "heat_rejected_mwh": q_rej + ads_out + orc_cond, "water_m3": water, "water_produced_m3": water_prod,
         "heat_delivered_mwh": useful_heat,
         "cold_delivered_mwh": float(sum(delivered[u].sum() for u in uses if plans[u].kind == "cold")),
-        "heat_recovered_mwh": float(sum(l.q_mw * H - rem[l.name].sum() for l in loops)),
+        "heat_recovered_mwh": sum(sum(uses.values()) for uses in heat_to_uses.values()),
+        "heat_loops": heat_loops,
         "losses_mwh": sum(float(v.sum()) for v in losses.values()) + float(store_loss.sum()),
         "pue": total_fac / e_it, "wue_l_kwh": water * 1000 / (e_it * 1000),
         "ere": (total_fac + plant - reused) / e_it,
