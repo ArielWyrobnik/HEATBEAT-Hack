@@ -17,7 +17,8 @@ def test_rows_well_formed():
     assert set(t["evidence"]) <= {"operator", "press", "permit", "third_party", "inferred"}
     assert set(t["scope"]) <= set(cs.SITE_SCOPES) | {"area", "operator_fleet"}
     assert (t["source_url"].str.startswith("https://")).all(), "every row needs a source with a URL"
-    sites = set(hd.list_sites()["site_id"])
+    # sites.csv also lists reference sites that the stored database may not have yet
+    sites = set(hd.list_sites()["site_id"]) | set(pd.read_csv(cs._DIR / "sites.csv")["site_id"])
     assert set(t["site_id"]) <= sites
 
 

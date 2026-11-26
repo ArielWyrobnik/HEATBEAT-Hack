@@ -1,0 +1,22 @@
+site_id,field,value,unit,scope,confidence,evidence,source_id,note
+us-tn-memphis-xai,heat_rejection,tower,,site,medium,third_party,epoch_colossus1,Epoch satellite count: 33 evaporative cooling towers (310 MW); all air-cooled chillers removed by Feb 2026
+us-la-richland-meta,heat_rejection,dry,,site,medium,third_party,epoch_hyperion,"Epoch: air-cooled chillers, 816 units (2,285 MW) projected for phase 1; site under construction"
+us-tx-midlothian-google,heat_rejection,tower,,site,medium,third_party,epoch_midlothian,Epoch satellite count: 18 SPX NC8422V-1 evaporative cooling towers (133 MW)
+us-ut-eagle-mountain-meta,heat_rejection,dry,,site,medium,third_party,epoch_eagle_mountain,"Epoch: 68 dry coolers (171 MW) on the AI buildings; older halls use some evaporative cooling (Meta reports 133 ML withdrawal 2024), so the campus is mixed with dry dominant"
+us-nj-secaucus-equinix,heat_rejection,tower,,campus,medium,operator,equinix_ny4_spec,"NY4: water-cooled centrifugal chillers (needs cooling towers); NY5: water-cooled DX penthouse units. NY2, NY6 not checked"
+us-tx-dallas-infomart,heat_rejection,dry,,campus,medium,operator,equinix_da1_spec,"DA1: electric air-cooled screw compressor chillers; DA2, DA3 not checked"
+us-ca-la-one-wilshire,heat_rejection,tower,,site,medium,press,dcf_one_wilshire_2020,"central condenser water system with cooling tower water, full economization about 72 % of the year"
+us-ca-la-one-wilshire,pue,1.2,,site,medium,press,dcf_one_wilshire_2020,"design PUE at full load (CoreSite, 2020)"
+us-ca-la-one-wilshire,already_implemented,free_cooling,,site,medium,press,dcf_one_wilshire_2020,water-side economizer about 260 days a year
+us-ma-boston-one-summer,heat_rejection,tower,,site,high,operator,mass_markley_2021,chillers with heat rejection by cooling towers and fan systems on the roof
+us-ny-nyc-60-hudson,heat_rejection,tower,,site,medium,press,dck_60hudson_2014,"rooftop modular cooling towers (8,500 tons condenser water each) plus 1,500 t absorption chiller on cogeneration heat (2014)"
+us-ny-nyc-60-hudson,already_implemented,absorption_chiller,,site,low,press,dck_60hudson_2014,"absorption chiller driven by cogeneration exhaust heat (planned 2014, status not checked)"
+us-oh-new-albany,heat_rejection,tower,,cluster,low,third_party,epoch_google_new_albany,"Google New Albany: 70 evaporative cooling towers (530 MW); Meta Prometheus cooling unknown, so the cluster is not documented as a whole"
+us-wi-mount-pleasant-microsoft,heat_rejection_note,"mostly dry, direct evaporative on a small share of servers less than 5 % of the year",,site,high,operator,msft_wi_2025,
+us-sc-berkeley-google,pue,1.1,,site,high,operator,google_pue_2026q2,trailing twelve months to Q2 2026 (main facility; Council Bluffs and The Dalles have more facilities at 1.06 to 1.08)
+us-ia-council-bluffs-google,pue,1.11,,site,high,operator,google_pue_2026q2,trailing twelve months to Q2 2026 (main facility; Council Bluffs and The Dalles have more facilities at 1.06 to 1.08)
+us-ga-douglas-google,pue,1.09,,site,high,operator,google_pue_2026q2,trailing twelve months to Q2 2026 (main facility; Council Bluffs and The Dalles have more facilities at 1.06 to 1.08)
+us-nc-lenoir-google,pue,1.1,,site,high,operator,google_pue_2026q2,trailing twelve months to Q2 2026 (main facility; Council Bluffs and The Dalles have more facilities at 1.06 to 1.08)
+us-ok-pryor-google,pue,1.11,,site,high,operator,google_pue_2026q2,trailing twelve months to Q2 2026 (main facility; Council Bluffs and The Dalles have more facilities at 1.06 to 1.08)
+us-tx-midlothian-google,pue,1.11,,site,high,operator,google_pue_2026q2,trailing twelve months to Q2 2026 (main facility; Council Bluffs and The Dalles have more facilities at 1.06 to 1.08)
+us-or-the-dalles-google,pue,1.1,,site,high,operator,google_pue_2026q2,trailing twelve months to Q2 2026 (main facility; Council Bluffs and The Dalles have more facilities at 1.06 to 1.08)
