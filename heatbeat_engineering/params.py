@@ -107,7 +107,28 @@ PARAMS: dict[str, Param] = {
     "abs_min_drive_c": P(75.0, 70.0, 85.0, "C", "literature", "Single effect LiBr needs 75 to 90 C drive (same source)"),
     # ---- biogas digester --------------------------------------------------------------------
     "bio_feed_t_day": P(300.0, 100.0, 600.0, "t/day", "assumption",
-                        "Reference co-digestion plant (manure + food waste). Site feedstock quantity is NOT in the data"),
+                        "Feedstock the nearest source (site_industry.csv) supplies to a new co-digestion plant (anchor). "
+                        "Site feedstock quantity is NOT in the data. More feed comes from the region (see density)"),
+    "bio_feed_density_t_day_km2": P(0.10, 0.03, 0.30, "t/day per km2", "assumption",
+                                    "Collectable organic waste (manure, food waste) per km2 around the plant. Sets the "
+                                    "collection radius and trucking cost of plants larger than the anchor supply. UNVERIFIED"),
+    "bio_digester_scale_exp": P(0.70, 0.60, 0.85, "-", "assumption",
+                                "CAPEX ~ size^exponent (six-tenths rule for process plants); digester CAPEX quoted at "
+                                "300 t/day. Economies of scale: a plant 4x larger costs about 2.6x. UNVERIFIED"),
+    "bio_upgrade_scale_exp": P(0.60, 0.45, 0.75, "-", "literature",
+                               "Upgrading specific cost falls from about 5000-6000 to 1500-2000 EUR per Nm3/h between 250 "
+                               "and 2000 Nm3/h (Bauer et al. 2013, Biogas upgrading: review of commercial technologies, "
+                               "SGC Rapport 2013:270), i.e. exponent about 0.45 to 0.6 (check edition)"),
+    "bio_om_usd_t": P(6.0, 3.0, 12.0, "USD/t feed", "assumption",
+                      "Digester O&M beyond the 2 % fixed share: staff, mixing power, digestate handling (new plants). UNVERIFIED"),
+    "bio_tipping_usd_t": P(0.0, 0.0, 40.0, "USD/t feed", "assumption",
+                           "Gate fee paid by waste suppliers. 0 = conservative (manure pays nothing); food waste often "
+                           "pays 20 to 60 USD/t (landfill tipping fees, EREF). UNVERIFIED"),
+    "bio_chp_cf": P(0.70, 0.50, 0.85, "-", "assumption",
+                    "Capacity factor of an existing digester gas generator (EIA-860), used to size existing digesters"),
+    "bio_chp_eff_e": P(0.35, 0.30, 0.40, "-", "literature",
+                       "Electrical efficiency of biogas engines 30 to 40 % (EPA CHP Partnership, Catalog of CHP "
+                       "Technologies, check edition)"),
     "bio_biogas_nm3_t": P(60.0, 30.0, 110.0, "Nm3/t", "literature",
                           "Biogas yield per wet tonne: manure 20 to 30, food waste 100 to 150 (IEA Bioenergy Task 37). Mix value assumed"),
     "bio_ch4_share": P(0.60, 0.55, 0.65, "-", "literature", "Methane share of biogas, IEA Bioenergy Task 37"),
@@ -120,14 +141,14 @@ PARAMS: dict[str, Param] = {
     "bio_truck_usd_t_km": P(0.20, 0.10, 0.35, "USD/t km", "assumption", "Bulk feedstock trucking, round trip included"),
     "bio_max_km": P(50.0, 30.0, 80.0, "km", "assumption", "Heat line or feedstock trucking beyond this is not feasible (KO)"),
     "bio_upgrade_capex_usd_nm3h": P(4000.0, 2500.0, 6000.0, "USD per Nm3/h raw biogas", "assumption",
-                                    "Biogas upgrading to RNG (membrane or water scrubber) incl. grid injection, sized for the "
-                                    "freed biogas flow. Small plants 2500 to 6000 USD per Nm3/h (order of magnitude from IEA "
+                                    "Biogas upgrading to RNG (membrane or water scrubber) incl. grid injection, quoted at 750 Nm3/h raw "
+                                    "biogas (300 t/day plant), scaled with bio_upgrade_scale_exp. 2500 to 6000 USD per Nm3/h (order of magnitude from IEA "
                                     "Bioenergy Task 37 upgrading reports). UNVERIFIED, check"),
     "bio_upgrade_kwh_nm3": P(0.25, 0.15, 0.35, "kWh_e/Nm3 raw biogas", "assumption",
                              "Electricity of the upgrading unit (membrane / water scrubber 0.2 to 0.3, IEA Bioenergy Task 37). UNVERIFIED"),
     "capex_digester_usd_m3": P(600.0, 400.0, 1000.0, "USD/m3 digester volume", "assumption",
-                               "New digester incl. feeding and gas storage, only when feedstock is trucked to a digester at the "
-                               "data center (the heat line case heats the existing plant). UNVERIFIED"),
+                               "New digester incl. feeding, heating coils and gas storage, quoted at 300 t/day (7500 m3), "
+                               "scaled with bio_digester_scale_exp. Only for new plants. UNVERIFIED"),
     "bio_ch4_kwh_nm3": P(9.97, 9.97, 9.97, "kWh/Nm3", "physics", "Methane LHV"),
     "rng_ci_g_mj": P(20.0, -50.0, 40.0, "g CO2e/MJ", "assumption",
                      "Carbon intensity of the RNG pathway for LCFS (food waste about 0 to 40; dairy manure negative)"),

@@ -66,7 +66,8 @@ class HeatChainModel:
     WARNINGS = [
         "CAPEX values are screening level (+/- 40 %) and partly unverified team assumptions; see docs/ENGINEERING.md.",
         "Data center loads, cooling types and coolant temperatures are mostly team estimates (low confidence).",
-        "Biogas uses a reference digester (300 t/day); feedstock quantity per site is not in the data.",
+        "Biogas: feedstock quantity per site is not in the data. New plants are sized by NPV from an assumed anchor "
+        "supply (300 t/day) plus regional collection; existing digesters are sized from their EIA capacity (estimates).",
     ]
 
     def site_inputs(self, site_id, is_greenfield=None, overrides=None):
@@ -447,10 +448,18 @@ def implementation(r: dict, s, P: dict) -> str:
                          f"{s.x['p_heat_usd_mwh'] * P['dh_heat_price_share']:.0f} USD/MWh "
                          f"({P['dh_heat_price_share'] * 100:.0f} % of local gas heat cost)." + distance_note + sizing_note)
         elif u.startswith("biogas"):
-            parts.append(f"Digester heating: {x.get('volume_m3', 0):,} m3 digester (D {x.get('diameter_m')} m), "
-                         f"{x.get('delivered_mwh', 0):,} MWh/yr heat ({x.get('feed_mwh', 0):,} feed, {x.get('wall_mwh', 0):,} walls), "
-                         f"{x.get('logistics')}; frees {x.get('rng_freed_mwh', 0):,} MWh RNG at {x.get('rng_value_usd_mwh')} USD/MWh "
-                         f"(feedstock: {x.get('feedstock')}).")
+            txt = (f"Digester heating: {x.get('feed_t_day', 0):,} t/day plant, {x.get('volume_m3', 0):,} m3 digester "
+                   f"(D {x.get('diameter_m')} m), {x.get('delivered_mwh', 0):,} MWh/yr heat ({x.get('feed_mwh', 0):,} feed, "
+                   f"{x.get('wall_mwh', 0):,} walls), {x.get('logistics')}; the DC heat frees {x.get('rng_freed_mwh', 0):,} MWh/yr "
+                   f"biogas sold as RNG at {x.get('rng_value_usd_mwh')} USD/MWh (feedstock: {x.get('feedstock')}).")
+            if x.get("case") == "new plant":
+                txt += (f" New plant, size chosen by NPV (economies of scale vs. collection radius "
+                        f"{x.get('collection_radius_km', 0)} km). The whole plant is worth "
+                        f"{x.get('plant_npv_usd', 0) / 1e6:,.1f} M USD over 20 years with DC heat, "
+                        f"{x.get('standalone_npv_usd', 0) / 1e6:,.1f} M USD without; only the difference counts here.")
+            else:
+                txt += " Existing digester, size from its EIA generator capacity."
+            parts.append(txt)
         elif u == "feedwater":
             parts.append(f"Feedwater preheat at {s.x.get('pp_name')}: DN{x.get('dn_mm')} line {s.x['d_pp_m'] / 1000:.1f} km, "
                          f"{x.get('delivered_mwh', 0):,} MWh/yr, +{x.get('extra_turbine_mwh_e', 0):,} MWh_e turbine output.")

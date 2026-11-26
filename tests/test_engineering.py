@@ -4,6 +4,7 @@ import pytest
 
 from heatbeat_engineering import defaults, evaluate_site, synthetic_site
 from heatbeat_engineering import heat_pump as hp
+from heatbeat_engineering import biogas
 from heatbeat_engineering.biogas import heat_demand
 from heatbeat_engineering.chains import build_plans, enumerate_chains, simulate
 from heatbeat_engineering.heat_rejection import reject
@@ -217,7 +218,7 @@ def test_storage_that_shifts_nothing_is_ko():
     assert (dh["storage"] == "").all()
 
 
-def test_biogas_capex_counts_upgrading_and_new_digester():
+def test_biogas_new_plant_is_sized_and_counts_only_what_dc_heat_adds():
     P = defaults()
     near = synthetic_site(d_bio_m=500.0)
     far = synthetic_site(d_bio_m=40000.0)
@@ -225,12 +226,31 @@ def test_biogas_capex_counts_upgrading_and_new_digester():
         pl = build_plans(s, P)["biogas_meso"]
         out = pl.settle(pl.demand_mw)
         d = out["detail"]
-        assert d["upgrade_capex_usd"] > 0
-        if d["logistics"] == "truck feedstock to DC":
-            assert d["digester_capex_usd"] > 0
-        else:
-            assert d["digester_capex_usd"] == 0
-        assert out["capex_usd"] > d["upgrade_capex_usd"]
+        assert d["case"] == "new plant"
+        assert d["feed_t_day"] in biogas.FEED_SIZES
+        # digester CAPEX is in the counterfactual too (same plant without the DC), so the chain does not carry it
+        assert d["digester_capex_usd"] == 0 and d["plant_capex_usd"] > 0
+        assert d["rng_freed_mwh"] > 0
+        if s is near:  # next to the feedstock the plant with DC heat beats the same plant heating itself
+            assert d["plant_npv_usd"] > d["standalone_npv_usd"]
+        best = max(d["size_curve"], key=lambda c: c["npv_usd"])
+        assert best["feed_t_day"] == d["feed_t_day"]
+
+
+def test_biogas_economies_of_scale():
+    P = defaults()
+    small, big = biogas.digester_capex(100.0, P), biogas.digester_capex(400.0, P)
+    assert big < 4 * small  # 4x the plant costs less than 4x
+    assert biogas.upgrade_capex(1000.0, P) / 1000 < biogas.upgrade_capex(100.0, P) / 100
+
+
+def test_biogas_existing_digester_sized_from_eia_capacity():
+    P = defaults()
+    s = synthetic_site(d_bio_m=3000.0, bio_kind="biogas (digester, other biomass gas)", bio_capacity_mw=5.0)
+    pl = build_plans(s, P)["biogas_meso"]
+    d = pl.settle(pl.demand_mw)["detail"]
+    assert d["case"] == "existing digester"
+    assert d["feed_t_day"] == round(biogas.existing_feed_t_day(5.0, P))
 
 
 def test_net_value_splits_into_cash_and_water_value():
