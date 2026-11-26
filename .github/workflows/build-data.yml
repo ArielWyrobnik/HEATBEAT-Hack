@@ -3,6 +3,8 @@ name: Build location database
 # Fetches real weather and energy data (needs internet, which GitHub runners have),
 # writes data/parquet/*.parquet + data/build_report.json and commits them to the branch.
 # Each source runs as its own step with a time limit, so one slow source cannot block the rest.
+# Weather is NOT fetched here: heatbeat_data.get_site() fetches it live from Open-Meteo on first
+# use and caches it locally (GitHub runners hit the Open-Meteo free-tier rate limit).
 # Anything that did not arrive falls back to flagged synthetic data in the assemble step.
 on:
   workflow_dispatch:
@@ -45,10 +47,6 @@ jobs:
         timeout-minutes: 10
         continue-on-error: true
         run: python -m data_pipeline.build_db --stage regions
-      - name: Fetch weather (Open-Meteo, fallback NASA POWER)
-        timeout-minutes: 45
-        continue-on-error: true
-        run: python -m data_pipeline.build_db --stage weather
       - name: Fetch prices ERCOT
         timeout-minutes: 15
         continue-on-error: true

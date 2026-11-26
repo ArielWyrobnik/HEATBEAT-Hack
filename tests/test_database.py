@@ -17,19 +17,26 @@ def test_sites_complete(sites):
     assert sites["co2_kg_mwh"].notna().all()
 
 
-def test_every_site_has_full_year(sites):
+def test_every_site_has_full_year_of_prices_and_valid_stored_weather(sites):
+    """Prices must be complete. Weather may be missing for a site (it is then fetched live on first
+    use), but every site that has stored weather must have the full year and plausible values."""
     hours = int(hd.meta()["reference_year"]) % 4 == 0 and 8784 or 8760
     for sid in sites["site_id"]:
-        s = hd.get_site(sid)
-        assert len(s.weather) == hours, sid
+        s = hd.get_site(sid, live=False)
         assert len(s.prices) == hours, sid
+        assert s.prices["price_usd_mwh"].notna().all(), sid
+        if len(s.weather) == 0:
+            continue
+        assert len(s.weather) == hours, sid
         assert s.weather[["t_db_c", "rh_pct", "t_wb_c"]].notna().all().all(), sid
         assert (s.weather["t_wb_c"] <= s.weather["t_db_c"] + 0.5).mean() > 0.99, sid
-        assert s.prices["price_usd_mwh"].notna().all(), sid
 
 
 def test_summary_is_plain_python():
-    s = hd.get_site(hd.list_sites()["site_id"].iloc[0]).summary()
+    with_weather = hd._q("SELECT DISTINCT site_id FROM weather_hourly")["site_id"]
+    if with_weather.empty:
+        pytest.skip("no stored weather")
+    s = hd.get_site(with_weather.iloc[0], live=False).summary()
     assert all(isinstance(v, (int, float, str, type(None))) for v in s.values())
 
 

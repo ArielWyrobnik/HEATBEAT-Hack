@@ -10,6 +10,7 @@ This is the shared input for all solution models (heat reuse, free cooling, load
 |---|---|---|
 | `data/parquet/*.parquet` | Source of truth, one file per table | yes |
 | `data/heatbeat.db` | SQLite copy, built automatically on first use of `heatbeat_data` | no (git-ignored) |
+| `data/cache/weather/<site_id>.parquet` | Weather fetched live on first use of a site (git-ignored) | no |
 | `data/build_report.json` | What was fetched, coverage per region, synthetic shares | yes |
 | `data_pipeline/sites.csv` | Curated site list (edit this to add sites) | yes |
 | `data_pipeline/grid_regions.csv` | Grid region mapping and fallback estimates | yes |
@@ -22,11 +23,18 @@ import heatbeat_data as hd
 sites = hd.list_sites()                 # for the map: site_id, name, lat, lon, capacity_mw, price, CO2
 s = hd.get_site("us-va-ashburn-equinix")
 s.weather                               # hourly: t_db_c, rh_pct, t_dew_c, t_wb_c, wind_ms, ghi_wm2
+                                        # (fetched live from Open-Meteo on first use, then cached)
 s.prices                                # hourly: price_usd_mwh, price_kind, is_synthetic
 s.hourly()                              # weather and price joined on one UTC index
 s.local(s.weather)                      # same frame in the site's local time zone
 s.summary()                             # annual indicators as a plain dict
 ```
+
+Weather: if the database has no stored weather for a site, `get_site()` calls the Open-Meteo API
+once (fallback NASA POWER), needs internet for that first call (1 to 3 s), and caches the result in
+`data/cache/weather/`. Use `get_site(id, live=False)` to skip the call. To pre-store weather for all
+sites, run `python -m data_pipeline.build_db --stage weather` and then `--stage assemble` on a machine
+with internet.
 
 SQL users: `sqlite3 data/heatbeat.db` (run any `heatbeat_data` call once to create it).
 
@@ -109,7 +117,8 @@ and attaches `heatbeat.db` as a workflow artifact. Locally (needs internet):
 
 ```bash
 pip install -r requirements.txt
-python -m data_pipeline.build_db           # real data, about 30 to 90 minutes, cached in data/cache
+python -m data_pipeline.build_db           # real data, cached in data/cache
+python -m data_pipeline.build_db --stage weather   # or regions / prices --iso CAISO / assemble
 python -m data_pipeline.build_db --offline # synthetic placeholders, only to test code
 python -m pytest -q
 ```

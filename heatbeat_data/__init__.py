@@ -142,11 +142,46 @@ class Site:
         return {k: (v.item() if hasattr(v, "item") else v) for k, v in out.items()}
 
 
-def get_site(site_id: str) -> Site:
+def _weather(site_id: str, lat: float, lon: float, live: bool) -> pd.DataFrame:
+    """Stored weather if the database has the full year, else the local cache, else a live fetch.
+
+    A live fetch (Open-Meteo, fallback NASA POWER) needs internet and is cached in
+    data/cache/weather/<site_id>.parquet, so it happens once per site and machine.
+    """
+    w = _hourly("weather_hourly", "site_id", site_id)
+    if len(w) >= 8760:
+        return w
+    from data_pipeline.common import CACHE_DIR  # same paths as the pipeline
+    path = CACHE_DIR / "weather" / f"{site_id}.parquet"
+    if path.exists():
+        df = pd.read_parquet(path)
+    elif live:
+        from data_pipeline.fetch_weather import fetch_nasa_power, fetch_open_meteo
+        df = None
+        for name, fn in (("open_meteo_era5", fetch_open_meteo), ("nasa_power", fetch_nasa_power)):
+            try:
+                df = fn(lat, lon)
+                df["source"] = name
+                break
+            except Exception:  # noqa: BLE001
+                continue
+        if df is None:
+            raise RuntimeError(f"weather for {site_id} is not stored and the live fetch failed (internet?)")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        df.to_parquet(path)
+    else:
+        return w
+    df.index = pd.to_datetime(df.index, utc=True)
+    df.index.name = "ts_utc"
+    return df
+
+
+def get_site(site_id: str, live: bool = True) -> Site:
+    """Load one site. With live=True, weather missing from the database is fetched once and cached."""
     s = _q("SELECT * FROM sites WHERE site_id = ?", (site_id,))
     if s.empty:
         raise KeyError(f"unknown site_id {site_id!r}; see list_sites()")
     m = s.iloc[0].to_dict()
     g = _q("SELECT * FROM grid_regions WHERE grid_region_id = ?", (m["grid_region_id"],)).iloc[0].to_dict()
-    return Site(meta=m, grid=g, weather=_hourly("weather_hourly", "site_id", site_id),
+    return Site(meta=m, grid=g, weather=_weather(site_id, m["lat"], m["lon"], live),
                 prices=_hourly("price_hourly", "grid_region_id", m["grid_region_id"]))
