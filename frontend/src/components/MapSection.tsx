@@ -86,6 +86,7 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
     if (!g) return;
     g.clearLayers();
     markers.current.clear();
+    if (planning) return;
     dataCenters.forEach((d) => {
       const mk = L.marker([d.lat, d.lng], { icon: makeIcon(false), title: d.name });
       if (fromApi && onSelect) {
@@ -97,7 +98,7 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
       mk.addTo(g);
       markers.current.set(d.id, mk);
     });
-  }, [dataCenters, fromApi, onSelect]);
+  }, [dataCenters, fromApi, onSelect, planning]);
 
   // highlight the selected pin
   useEffect(() => {
@@ -106,7 +107,7 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
       mk.setIcon(makeIcon(sel));
       mk.setZIndexOffset(sel ? 1000 : 0);
     });
-  }, [selectedId, dataCenters]);
+  }, [selectedId, dataCenters, planning]);
 
   // planned site marker and crosshair cursor
   useEffect(() => {
@@ -125,10 +126,11 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
     String(a.country ?? '').localeCompare(String(b.country ?? '')) || a.name.localeCompare(b.name)), [dataCenters]);
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
+    if (planning) return [];
     if (!q) return sorted;
     return sorted.filter((d) => [d.name, d.operator, d.city, d.region, d.country]
       .some((v) => typeof v === 'string' && v.toLowerCase().includes(q)));
-  }, [query, sorted]);
+  }, [query, sorted, planning]);
   const [active, setActive] = useState(0);
   useEffect(() => setActive(0), [query]);
 
@@ -199,14 +201,14 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
   return (
     <section className="map-section" id="map">
       <div className="map-head">
-        <h2>Data centers worldwide</h2>
-        <p>
+        <h2>{planning ? 'Plan a data center' : 'Data centers worldwide'}</h2>
+        {planning ? <p>Click the map or search for a place to choose your site.</p> : <p>
           {dataCenters.length > 0 ? `${dataCenters.length} data centers` : 'Location data coming soon'}
           {dataCenters.length > 0 && !fromApi && ' · backend offline, start it with ./scripts/dev.sh to see rankings'}
           {fromApi && dataCenters.length > 0 && (showsAll
             ? <> · all sites (<a href="?sites=verified#map">only documented cooling</a>)</>
             : <> with documented cooling (<a href="?sites=all#map">show all</a>)</>)}
-        </p>
+        </p>}
       </div>
 
       <div className="map-wrap">
@@ -221,10 +223,10 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
             onFocus={() => setOpen(true)}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
             onKeyDown={onKey}
-            placeholder="Pick a data center or search an operator, city or place…"
+            placeholder={planning ? 'Search for a city or place…' : 'Pick a data center or search an operator, city or place…'}
             aria-label="Search"
           />
-          {dataCenters.length > 0 && (
+          {!planning && dataCenters.length > 0 && (
             <button type="button" className={`list-toggle${open ? ' on' : ''}`} aria-label="Show all data centers"
               title="Show all data centers"
               onMouseDown={(e) => { e.preventDefault(); setOpen(!open); (e.currentTarget.form?.querySelector('input') as HTMLInputElement | null)?.focus(); }}>
@@ -249,7 +251,7 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
                   </li>
                 </Fragment>
               ))}
-              {query.trim() && matches.length === 0 && <li className="r-empty">No data center matches, places below</li>}
+              {!planning && query.trim() && matches.length === 0 && <li className="r-empty">No data center matches, places below</li>}
               {places.map((p) => (
                 <li key={p.lat + p.lon} onMouseDown={() => focusPlace(p)}>
                   <span className="tag">Place</span>
@@ -264,7 +266,7 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
         <div ref={mapEl} className="map" />
         {fromApi && (
           <div className="map-btns">
-            {onBoardToggle && (
+            {!planning && onBoardToggle && (
               <button className={`plan-toggle${boardOpen ? ' on' : ''}`} onClick={onBoardToggle}>
                 {boardOpen ? 'Hide ranking' : 'Where can we do the most?'}
               </button>

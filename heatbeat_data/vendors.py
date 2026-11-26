@@ -41,17 +41,19 @@ ROLE = {
     "dry_cooler": "dry_cooler", "adiabatic_cooler": "adiabatic_cooler", "cooling_tower": "cooling_tower",
     "heat_pump": "heat_pump", "district_heating": "district_heating",
     "tank": "tank", "ates": "ates", "btes": "btes", "btes_ates": "btes",
+    "fish_farm": "aquaculture",
     "biogas": "biogas", "biogas_meso": "biogas", "biogas_thermo": "biogas",
     "feedwater": "feedwater", "boiler_feedwater": "feedwater",
     "desal_med": "desal", "desal_md": "desal", "desalination": "desal",
     "orc": "orc", "adsorption": "adsorption", "absorption_cooling": "adsorption",
 }
 # importance when only n companies fit: heat use first, then the parts that make it work, then heat rejection
-PRIORITY = ["district_heating", "biogas", "desal", "feedwater", "orc", "adsorption", "heat_pump",
+PRIORITY = ["aquaculture", "district_heating", "biogas", "desal", "feedwater", "orc", "adsorption", "heat_pump",
             "btes", "ates", "tank", "cooling_tower", "adiabatic_cooler", "dry_cooler"]
 ROLE_LABEL = {
     "dry_cooler": "dry cooler", "adiabatic_cooler": "adiabatic cooler", "cooling_tower": "cooling tower",
     "heat_pump": "heat pump", "district_heating": "district heating", "tank": "storage tank",
+    "aquaculture": "aquaculture systems",
     "ates": "aquifer storage", "btes": "borehole storage", "biogas": "digester", "feedwater": "power plant steam cycle",
     "desal": "desalination", "orc": "ORC", "adsorption": "adsorption chiller", "liquid_cooling": "liquid cooling",
     "immersion": "immersion cooling", "two_phase": "two-phase cooling", "controls": "cooling controls",

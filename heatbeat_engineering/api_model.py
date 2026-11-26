@@ -113,11 +113,18 @@ class HeatChainModel:
         if mode == "reuse_only":
             df = df[df["uses"] != "none"].reset_index(drop=True)
         pick = list(dict.fromkeys(list(df["chain_id"].head(10)) + list(best_per_use(df)["chain_id"])))
+        pick = list(dict.fromkeys([*pick, *df.loc[df["uses"] == "none", "chain_id"]]))
+        if planned:
+            # Keep standalone designs for every use and every heat rejection technology.
+            # A high-ranking combined chain should not hide its standalone alternatives.
+            standalone = df[~df["uses"].str.contains("+", regex=False)]
+            standalone = standalone.drop_duplicates(["uses", "tech", "storage"])
+            pick = list(dict.fromkeys([*pick, *standalone["chain_id"]]))
         rank = {cid: i + 1 for i, cid in enumerate(df["chain_id"])}
         options = []
         for cid in sorted(pick, key=lambda c: rank[c]):
             r = results[cid]
-            options.append(self._option(cid, r, rank[cid], base, s, P))
+            options.append(self._option(cid, r, rank[cid], base, s, P, planned=planned))
         for name, why in df.attrs.get("ko", {}).items():
             options.append(OptionResult(option_id=f"ko:{name}", name=name, rank=None, feasible=False, ko_reasons=[why]))
         torn = None
@@ -172,7 +179,7 @@ class HeatChainModel:
                            warnings=warnings,
                            inputs_used={k: _c(v) for k, v in {**s.x, "it_mw": s.it_mw}.items()}, **extra)
 
-    def _option(self, cid, r, rank, base, s, P):
+    def _option(self, cid, r, rank, base, s, P, *, planned=False):
         k = Kpis(heat_recovered_mwh_yr=r["heat_recovered_mwh"], heat_delivered_mwh_yr=r["heat_delivered_mwh"],
                  electricity_used_mwh_yr=r["plant_mwh"], electricity_saved_mwh_yr=r["electricity_saved_mwh_yr"],
                  co2_avoided_t_yr=r["co2_avoided_t_yr"], water_saved_m3_yr=r["water_saved_m3_yr"],
@@ -215,9 +222,9 @@ class HeatChainModel:
         name = r["label"]
         today = r["tech"] == s.baseline_rejection and not r["uses"] and not r["storage"]
         if today:
-            name += " (today's setup, no change)"
+            name += " (reference design)" if planned else " (today's setup, no change)"
         if "is_today" in fields:
-            extra["is_today"] = today
+            extra["is_today"] = today and not planned
         return OptionResult(**extra, option_id=cid, name=name, rank=rank, feasible=True,
                             score=round(r["npv_usd"] / 1e6, 2), components=r["components"],
                             product=", ".join(prod) or "cooling only", kpis=k, energy_balance=flows,
