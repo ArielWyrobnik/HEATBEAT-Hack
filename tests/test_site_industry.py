@@ -17,7 +17,7 @@ def test_one_row_per_us_site():
 def test_excel_keys_present_and_sane():
     t = hd.site_industry()
     assert list(t.columns[1:6]) == KEYS
-    for k in ["d_pp_m", "q_fw_mw", "d_bio_m"]:
+    for k in ["d_pp_m", "q_fw_mw", "d_bio_m", "d_co2_m", "d_market_m"]:
         assert t[k].notna().all(), k
     for k in KEYS:
         v = t[k].dropna()
