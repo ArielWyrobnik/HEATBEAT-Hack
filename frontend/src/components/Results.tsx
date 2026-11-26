@@ -240,6 +240,7 @@ export default function Results({ r }: { r: ModelResult }) {
   const [palette, setPalette] = useState<'cooling' | 'reuse' | null>(null);
   const [order, setOrder] = useState<HeatOrder>('profitableHeat');
   const engineering = r.model === 'heat_chain';
+  const dsx = r.model === 'dsx';
   const feasible = r.options.filter((o) => o.feasible && !o.is_today);
   const reuse = engineering && (palette === null ? feasible.some((o) => !coolingOnly(o)) : palette === 'reuse');
   const options = feasible.filter((o) => !engineering || coolingOnly(o) !== reuse);
@@ -263,7 +264,9 @@ export default function Results({ r }: { r: ModelResult }) {
       </div>}
       {reuse && <HeatOrderSelect order={order} onChange={setOrder} />}
       {comparison.fallback && <p className="muted">{PROFIT_FALLBACK}</p>}
-      <h4>Best options {!reuse && <small title={DEFS.npv}>ranked by value over 20 years (NPV) ⓘ</small>}</h4>
+      <h4>Best options {dsx
+        ? <small title="DSX: 0.30 thermodynamics + 0.30 climate fit + 0.25 economics + 0.15 utilisation, after the knock-out gates. Eco grade A to F is scored separately.">ranked by viability (0 to 5) ⓘ</small>
+        : !reuse && <small title={DEFS.npv}>ranked by value over 20 years (NPV) ⓘ</small>}</h4>
       {top.length === 0 && <p className="muted">{reuse ? 'No tested design recovers heat at this site.' : 'No option passes the technical checks at this site.'}</p>}
       <ol className="options">
         {top.map((o, i) => {
@@ -279,6 +282,7 @@ export default function Results({ r }: { r: ModelResult }) {
                 <span className="opt-name">
                   {o.name}
                   <small>
+                    {dsx && <>viability {num(o.score, 2)} of 5 · eco {o.eco_grade} · </>}
                     {reuse && <>{reuseShare(o, b.it_energy_mwh_yr)} to reuse · </>}
                     {(projectNpv ?? 0) < 0 ? 'loses money here'
                       : (k.cash_value_usd_yr ?? 0) < 0 ? `costs ${money(-(k.cash_value_usd_yr ?? 0))}/yr more, pays off through water saved`
@@ -296,6 +300,15 @@ export default function Results({ r }: { r: ModelResult }) {
           );
         })}
       </ol>
+
+      {dsx && r.options.some((o) => !o.feasible) && (
+        <details className="notes">
+          <summary>{r.options.filter((o) => !o.feasible).length} pathways knocked out, and why</summary>
+          <ul>{r.options.filter((o) => !o.feasible).map((o) => (
+            <li key={o.option_id}><b>{o.name}:</b> {o.ko_reasons.join('; ')}</li>
+          ))}</ul>
+        </details>
+      )}
 
       {r.warnings.length > 0 && (
         <details className="notes">

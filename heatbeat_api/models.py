@@ -13,8 +13,8 @@ imports a model's internals, it only calls these three. To plug in a new model:
         def run(self, site_id, mode, is_greenfield=None, overrides=None, weather=None, tornado=True): ...
     MODEL = HeatChainModel()
 
-`load_models()` picks up `heatbeat_engineering.api_model.MODEL` automatically when that module
-exists. The model with `info.default=True` (else the first one) answers requests without `?model=`.
+`load_models()` picks up `heatbeat_dsx.api_model.MODEL` and `heatbeat_engineering.api_model.MODEL`
+automatically when those modules exist. The model with `info.default=True` (else the first one) answers requests without `?model=`.
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from .schemas import (Baseline, CoolingProfile, EnergyFlow, Flag, InputValue, Kp
                       OptionResult, PlanRequest, Tornado, TornadoBar)
 
 # Modules that may provide a model as `<module>.MODEL`. Missing modules are skipped.
-PLUGIN_MODULES = ["heatbeat_engineering.api_model"]
+PLUGIN_MODULES = ["heatbeat_dsx.api_model", "heatbeat_engineering.api_model"]
 
 
 @runtime_checkable
@@ -352,4 +352,5 @@ def load_models() -> dict[str, SiteModel]:
 
 
 def default_model(models: dict[str, SiteModel]) -> str:
+    """First model with info.default (PLUGIN_MODULES order, so DSX before the engineering model)."""
     return next((n for n, m in models.items() if m.info.default), next(iter(models)))

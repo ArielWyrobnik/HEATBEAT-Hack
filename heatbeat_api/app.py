@@ -39,11 +39,14 @@ api = APIRouter(prefix="/api")
 
 MODELS = load_models()
 DEFAULT_MODEL = default_model(MODELS)
+# The planner (/plan, /plan/defaults) keeps the engineering heat chain as default: it sizes the whole
+# design (cooling plant, budget, Vera Rubin racks). Site rankings default to DEFAULT_MODEL (DSX).
+PLAN_MODEL = next((n for n, m in MODELS.items() if hasattr(m, "plan_defaults")), DEFAULT_MODEL)
 _lock = threading.Lock()  # heatbeat_data opens SQLite per query; serialize model runs to keep it simple
 
 
-def _model(name: str | None):
-    name = name or DEFAULT_MODEL
+def _model(name: str | None, default: str | None = None):
+    name = name or default or DEFAULT_MODEL
     if name not in MODELS:
         raise HTTPException(404, f"unknown model {name!r}; available: {list(MODELS)}")
     return MODELS[name]
@@ -117,7 +120,8 @@ def _cached_run(model_name, site_id, mode, is_greenfield) -> ModelResult:
 
 @api.get("/health")
 def health() -> dict:
-    return {"status": "ok", "models": list(MODELS), "default_model": DEFAULT_MODEL, "live_weather": LIVE}
+    return {"status": "ok", "models": list(MODELS), "default_model": DEFAULT_MODEL, "plan_model": PLAN_MODEL,
+            "live_weather": LIVE}
 
 
 @api.get("/config")
@@ -270,7 +274,7 @@ def _point_weather(lat: float, lon: float) -> pd.DataFrame | None:
 def plan_defaults(lat: float = Query(..., ge=-90, le=90), lon: float = Query(..., ge=-180, le=180),
                   model: str | None = None) -> PlanDefaults:
     """Regional default inputs for any map point so the planning UI can pre-fill customizable parameters."""
-    m = _model(model)
+    m = _model(model, PLAN_MODEL)
     if not hasattr(m, "plan_defaults"):
         raise HTTPException(501, f"model {m.info.name!r} does not expose plan defaults")
     with _lock:
@@ -280,7 +284,7 @@ def plan_defaults(lat: float = Query(..., ge=-90, le=90), lon: float = Query(...
 @api.post("/plan", response_model=ModelResult)
 def plan(req: PlanRequest) -> ModelResult:
     """A future data center anywhere on the map: location + IT size (MW) + cooling -> ranked options."""
-    m = _model(req.model)
+    m = _model(req.model, PLAN_MODEL)
     if not hasattr(m, "plan"):
         raise HTTPException(501, f"model {m.info.name!r} cannot plan new sites")
     if req.cooling_profile not in {c.cooling_profile_id for c in _cooling()}:
