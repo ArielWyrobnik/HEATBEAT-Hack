@@ -19,8 +19,8 @@ interface Props {
 
 const planIcon = L.divIcon({ className: 'dc-pin dc-pin-plan', html: '<span class="dc-pin-core"></span>', iconSize: [22, 22], iconAnchor: [11, 11] });
 
-const makeIcon = (selected: boolean) => L.divIcon({
-  className: selected ? 'dc-pin dc-pin-selected' : 'dc-pin',
+const makeIcon = (selected: boolean, reference = false) => L.divIcon({
+  className: `dc-pin${reference ? ' dc-pin-ref' : ''}${selected ? ' dc-pin-selected' : ''}`,
   html: '<span class="dc-pin-core"></span>',
   iconSize: [18, 18],
   iconAnchor: [9, 9],
@@ -83,7 +83,7 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
     g.clearLayers();
     markers.current.clear();
     dataCenters.forEach((d) => {
-      const mk = L.marker([d.lat, d.lng], { icon: makeIcon(false), title: d.name });
+      const mk = L.marker([d.lat, d.lng], { icon: makeIcon(false, !!d.reference), title: d.name });
       if (fromApi && onSelect) {
         mk.bindTooltip(esc(d.name), { direction: 'top', offset: [0, -8], className: 'dc-tooltip' });
         mk.on('click', () => onSelect(d.id));
@@ -99,7 +99,7 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
   useEffect(() => {
     markers.current.forEach((mk, id) => {
       const sel = id === selectedId;
-      mk.setIcon(makeIcon(sel));
+      mk.setIcon(makeIcon(sel, !!dataCenters.find((d) => d.id === id)?.reference));
       mk.setZIndexOffset(sel ? 1000 : 0);
     });
   }, [selectedId, dataCenters]);
@@ -188,10 +188,11 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
       <div className="map-head">
         <h2>Data centers worldwide</h2>
         <p>
-          {dataCenters.length > 0 ? `${dataCenters.length} locations loaded` : 'Location data coming soon'}
+          {dataCenters.length > 0 ? `${dataCenters.length - dataCenters.filter((d) => d.reference).length} data centers and ${dataCenters.filter((d) => d.reference).length} reference sites (gold)` : 'Location data coming soon'}
           {dataCenters.length > 0 && (fromApi
             ? ' · click a pin for its ranking'
             : ' · backend offline, start it with ./scripts/dev.sh to see rankings')}
+          {fromApi && dataCenters.length > 0 && dataCenters.every((d) => d.reference) && ' · backend offline: only the reference sites are available'}
         </p>
       </div>
 

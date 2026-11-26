@@ -6,6 +6,9 @@ import type { DataCenter } from '../types/datacenter';
 import { createPortal } from 'react-dom';
 import CalcModal from './CalcModal';
 import Tornado from './Tornado';
+import { OptionEcosystem, ReferenceBanner, TopStack } from './Ecosystem';
+
+export const MODE_LABEL: Record<string, string> = { as_built: 'As built' };
 
 const FLAG_LABEL: Record<Flag, string> = { real: 'Real', estimated: 'Estimated', synthetic: 'Synthetic', user: 'User' };
 
@@ -87,6 +90,7 @@ function OptionKpis({ o, placeholderCosts, onCalc }: { o: OptionResult; placehol
       <Kpi label="ERE" v={num(k.ere, 2)} />
       <Kpi label="COP" v={k.cop == null ? 'no heat pump' : num(k.cop, 1)} />
     </div>
+    <OptionEcosystem optionId={o.option_id} />
     </>
   );
 }
@@ -99,7 +103,7 @@ export function Results({ r }: { r: ModelResult }) {
   const b = r.baseline;
   // score scale differs per model (0 to 5, or NPV in million USD that can be negative)
   const maxScore = Math.max(1e-9, ...feasible.map((o) => Math.abs(o.score ?? 0)));
-  const placeholderCosts = r.model === 'excel_ranking';
+  const placeholderCosts = r.model === 'excel_ranking' || r.model === 'dsx_evaluator';
   const best = feasible[0];
   const [modal, setCalc] = useCalc(r);
   return (
@@ -147,6 +151,8 @@ export function Results({ r }: { r: ModelResult }) {
         </details>
       )}
 
+      <TopStack r={r} />
+
       {r.tornado && best && <Tornado data={r.tornado} optionName={r.options.find((o) => o.option_id === r.tornado!.option_id)?.name ?? best.name} />}
       <p className="muted small">Model {r.model}, mode {r.mode}. Score: {r.score_scale}.</p>
     </>
@@ -161,7 +167,7 @@ export function FullResults({ r }: { r: ModelResult }) {
   useEffect(() => setPick(feasible[0]?.option_id ?? null), [r]); // eslint-disable-line react-hooks/exhaustive-deps
   const b = r.baseline;
   const maxScore = Math.max(1e-9, ...feasible.map((o) => Math.abs(o.score ?? 0)));
-  const placeholderCosts = r.model === 'excel_ranking';
+  const placeholderCosts = r.model === 'excel_ranking' || r.model === 'dsx_evaluator';
   const o = feasible.find((x) => x.option_id === pick) ?? feasible[0];
   const k = o?.kpis;
   const costs = Object.entries(o?.capex_breakdown ?? {});
@@ -242,7 +248,8 @@ export function FullResults({ r }: { r: ModelResult }) {
               </tbody>
             </table>
           </div>
-          <p className="muted small">Click a row to see how it is built and what it costs. Model {r.model}, mode {r.mode}.</p>
+          <p className="muted small">Click a row to see how it is built, what it costs, where it already works and who could build it. Model {r.model}, mode {r.mode}.</p>
+          <TopStack r={r} />
         </section>
 
         <section className="full-detail">
@@ -270,6 +277,7 @@ export function FullResults({ r }: { r: ModelResult }) {
                 <Kpi label="COP" v={k.cop == null ? 'no heat pump' : num(k.cop, 1)} />
                 <Kpi label="Capacity factor" v={k.capacity_factor == null ? 'n/a' : `${num(100 * k.capacity_factor)} %`} />
               </div>
+              <OptionEcosystem optionId={o.option_id} />
             </>
           ) : <p className="muted">No feasible option to show.</p>}
           </div>
@@ -381,6 +389,7 @@ export default function SitePanel({ site, onClose }: { site: DataCenter; onClose
           <button className="close" onClick={onClose} aria-label="Close">×</button>
         </div>
       </header>
+      <ReferenceBanner site={site} />
       <div className="chips">
         {s.it_load_mw != null && <span>IT {num(s.it_load_mw)} MW</span>}
         {s.cooling_type && <span>{s.cooling_type.replace(/_/g, ' ')}</span>}
@@ -399,7 +408,7 @@ export default function SitePanel({ site, onClose }: { site: DataCenter; onClose
         {info && info.modes.length > 1 && (
           <div className="seg" role="group" aria-label="Mode">
             {info.modes.map((m) => (
-              <button key={m} className={(mode ?? info.default_mode) === m ? 'on' : ''} onClick={() => setMode(m)}>{m}</button>
+              <button key={m} className={(mode ?? info.default_mode) === m ? 'on' : ''} onClick={() => setMode(m)}>{MODE_LABEL[m] ?? m}</button>
             ))}
           </div>
         )}

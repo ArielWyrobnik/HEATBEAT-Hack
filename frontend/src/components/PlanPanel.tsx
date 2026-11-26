@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { num } from '../format';
 import type { CoolingProfile, ModelInfo, ModelResult, SiteInputs } from '../types/api';
-import { ExpandButton, FullResults, Inputs, Results, useExpand } from './SitePanel';
+import { ExpandButton, FullResults, Inputs, MODE_LABEL, Results, useExpand } from './SitePanel';
 
 export interface PlanPoint { lat: number; lng: number }
 
@@ -116,7 +116,7 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
             {info && info.modes.length > 1 && (
               <span className="seg">
                 {info.modes.map((m) => (
-                  <button key={m} className={(mode ?? r.mode) === m ? 'on' : ''} onClick={() => { setMode(m); run(m); }}>{m.replace(/_/g, ' ')}</button>
+                  <button key={m} className={(mode ?? r.mode) === m ? 'on' : ''} onClick={() => { setMode(m); run(m); }}>{MODE_LABEL[m] ?? m.replace(/_/g, ' ')}</button>
                 ))}
               </span>
             )}

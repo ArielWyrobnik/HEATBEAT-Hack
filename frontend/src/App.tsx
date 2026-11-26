@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import HowItWorks from './components/HowItWorks';
+import EcosystemSection from './components/Ecosystem';
 import MapSection from './components/MapSection';
 import PlanPanel, { type PlanPoint } from './components/PlanPanel';
 import SitePanel from './components/SitePanel';
@@ -37,6 +38,7 @@ export default function App() {
           {site && !planning && <SitePanel site={site} onClose={() => setSelected(null)} />}
           {planning && planPoint && <PlanPanel point={planPoint} onClose={() => { setPlanning(false); setPlanPoint(null); }} />}
         </MapSection>
+        <EcosystemSection />
       </main>
       <footer className="footer">
         <span>Heat Beat</span> · built at the NVIDIA Hackathon 2026
