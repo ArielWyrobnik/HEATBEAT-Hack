@@ -182,3 +182,19 @@ def test_every_model_fulfils_the_contract(model):
 
 def test_adapter_is_a_site_model():
     assert isinstance(ExcelRankingModel(), SiteModel)
+
+
+def test_leaderboard_ranks_sites_by_best_change():
+    rows = c.get("/api/leaderboard", params={"scope": "verified"}).json()
+    listed = {s["site_id"] for s in c.get("/api/sites", params={"scope": "verified"}).json()}
+    assert rows and {r["site_id"] for r in rows} <= listed
+    npv = [r["npv_usd"] for r in rows if r["npv_usd"] is not None]
+    assert npv == sorted(npv, reverse=True)
+    top = rows[0]
+    assert top["option_name"] and "today's setup" not in top["option_name"]
+    # the row restates the best non-today option of the site's own ranking
+    res = ModelResult.model_validate(c.get(f"/api/sites/{top['site_id']}/ranking").json())
+    best = next(o for o in res.options if o.feasible and not o.is_today)
+    assert best.option_id == top["option_id"]
+    assert abs(best.kpis.cash_value_usd_yr - top["cash_value_usd_yr"]) < 1
+    assert sum(o.is_today for o in res.options) <= 1

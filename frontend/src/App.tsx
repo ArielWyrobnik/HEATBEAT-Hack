@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
-import HowItWorks from './components/HowItWorks';
+import Leaderboard from './components/Leaderboard';
 import MapSection from './components/MapSection';
 import PlanPanel, { type PlanPoint } from './components/PlanPanel';
 import SitePanel from './components/SitePanel';
@@ -14,6 +14,8 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null);
   const [planning, setPlanning] = useState(false);
   const [planPoint, setPlanPoint] = useState<PlanPoint | null>(null);
+  const [board, setBoard] = useState(false);
+  const [focus, setFocus] = useState<{ id: string; n: number } | null>(null);
 
   useEffect(() => {
     loadDataCenters().then((r) => { setDataCenters(r.dataCenters); setFromApi(r.fromApi); });
@@ -31,9 +33,11 @@ export default function App() {
       <Header />
       <main>
         <Hero />
-        <HowItWorks />
         <MapSection dataCenters={dataCenters} fromApi={fromApi} selectedId={selected} onSelect={onSelect}
-          planning={planning} onPlanToggle={togglePlan} planPoint={planPoint} onMapClick={onMapClick}>
+          planning={planning} onPlanToggle={togglePlan} planPoint={planPoint} onMapClick={onMapClick}
+          focus={focus} boardOpen={board} onBoardToggle={() => setBoard(!board)}>
+          {board && <Leaderboard selectedId={selected} onClose={() => setBoard(false)}
+            onPick={(id) => { onSelect(id); setFocus({ id, n: Date.now() }); }} />}
           {site && !planning && <SitePanel site={site} onClose={() => setSelected(null)} />}
           {planning && planPoint && <PlanPanel point={planPoint} onClose={() => { setPlanning(false); setPlanPoint(null); }} />}
         </MapSection>

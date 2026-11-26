@@ -1,4 +1,4 @@
-import type { CoolingProfile, ModelInfo, ModelResult, PlanRequest, SiteInputs, SiteSummary } from './types/api';
+import type { CoolingProfile, LeaderboardRow, ModelInfo, ModelResult, PlanRequest, SiteInputs, SiteSummary } from './types/api';
 
 export interface EvaluateRequest {
   site_id: string;
@@ -43,6 +43,7 @@ export const api = {
   evaluate: (req: EvaluateRequest) => post<ModelResult>('/evaluate', req),
   /** scope: 'verified' (sites with documented cooling) or 'all'; omitted = server default (HEATBEAT_SITES) */
   sites: (scope?: string) => get<SiteSummary[]>('/sites', { scope }),
+  leaderboard: (scope?: string) => get<LeaderboardRow[]>('/leaderboard', { scope }),
   models: () => get<ModelInfo[]>('/models'),
   inputs: (id: string, p: { model?: string; is_greenfield?: number }) => get<SiteInputs>(`/sites/${id}/inputs`, p),
   ranking: (id: string, p: { model?: string; mode?: string; is_greenfield?: number }) =>

@@ -116,6 +116,8 @@ export interface OptionResult {
   calculation_inputs?: InputValue[];
   /** Parts of this option the site already has today, with source */
   already_in_place?: string[];
+  /** True for the option that is the site's current setup (no change) */
+  is_today?: boolean;
 }
 
 /** One fact about what the data center does today (site_current_setup.csv) */
@@ -221,4 +223,23 @@ export interface ModelInfo {
   default_mode: string;
   description: string;
   default: boolean;
+}
+
+/** One data center in the opportunity ranking (GET /api/leaderboard) */
+export interface LeaderboardRow {
+  site_id: string;
+  name: string;
+  city?: string | null;
+  region?: string | null;
+  country?: string | null;
+  operator?: string | null;
+  it_load_mw?: number | null;
+  verdict_level?: string | null;
+  option_id?: string | null;
+  option_name?: string | null;
+  npv_usd?: number | null;
+  cash_value_usd_yr?: number | null;
+  co2_avoided_t_yr?: number | null;
+  water_saved_m3_yr?: number | null;
+  payback_yr?: number | null;
 }

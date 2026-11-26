@@ -18,8 +18,8 @@ from fastapi import APIRouter, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .models import clean, cooling_profiles, default_model, load_models
-from .schemas import (CoolingProfile, EvaluateRequest, ModelInfo, ModelResult, PlanRequest, SiteInputs,
-                      SiteSummary)
+from .schemas import (CoolingProfile, EvaluateRequest, LeaderboardRow, ModelInfo, ModelResult, PlanRequest,
+                      SiteInputs, SiteSummary)
 
 # HEATBEAT_LIVE=0 never fetches weather from the internet (CI, offline demo); default 1.
 LIVE = os.getenv("HEATBEAT_LIVE", "1") != "0"
@@ -181,6 +181,45 @@ def ranking(site_id: str, model: str | None = None, mode: str | None = None,
     return _cached_run(m.info.name, site_id, mode or m.info.default_mode, is_greenfield)
 
 
+def best_change(r: ModelResult):
+    """Best feasible option that changes something at the site (not today's setup), or None."""
+    return next((o for o in r.options if o.feasible and not o.is_today), None)
+
+
+@lru_cache(maxsize=4)
+def _leaderboard(model_name: str, scope: str) -> tuple[LeaderboardRow, ...]:
+    m = MODELS[model_name]
+    rows = []
+    for s in sites(country=None, scope=scope):
+        try:
+            r = _cached_run(model_name, s.site_id, m.info.default_mode, None)
+        except HTTPException:  # weather missing offline: leave the site out of the ranking
+            continue
+        o = best_change(r)
+        k = o.kpis if o else None
+        npv = (o.details.get("npv_usd") if o else None)
+        if npv is None and o is not None and o.score is not None and r.score_scale.startswith("NPV"):
+            npv = o.score * 1e6
+        rows.append(LeaderboardRow(
+            site_id=s.site_id, name=s.name, city=s.city, region=s.region, country=s.country, operator=s.operator,
+            it_load_mw=r.baseline.it_load_mw, verdict_level=r.verdict_level,
+            option_id=o.option_id if o else None, option_name=o.name if o else None, npv_usd=npv,
+            cash_value_usd_yr=k.cash_value_usd_yr if k else None, co2_avoided_t_yr=k.co2_avoided_t_yr if k else None,
+            water_saved_m3_yr=k.water_saved_m3_yr if k else None, payback_yr=k.payback_yr if k else None))
+    rows.sort(key=lambda x: -(x.npv_usd if x.npv_usd is not None else -1e18))
+    return tuple(rows)
+
+
+@api.get("/leaderboard", response_model=list[LeaderboardRow])
+def leaderboard(scope: str | None = Query(None, description="verified or all, default as /api/sites"),
+                model: str | None = None) -> list[LeaderboardRow]:
+    """Data centers ranked by how much the best improvement over today's setup is worth (NPV, best first)."""
+    scope = (scope or SITES_SCOPE).lower()
+    if scope not in SCOPES:
+        raise HTTPException(422, f"scope must be one of {SCOPES}")
+    return list(_leaderboard(_model(model).info.name, scope))
+
+
 @api.post("/evaluate", response_model=ModelResult)
 def evaluate(req: EvaluateRequest) -> ModelResult:
     """What-if for a database site: rerun the model with changed inputs (not cached)."""
@@ -256,6 +295,20 @@ def nearest_site(lat: float, lon: float, with_weather: bool = False) -> tuple[Si
 
 
 app.include_router(api)
+
+
+@app.on_event("startup")
+def _warm_leaderboard() -> None:
+    """Fill the ranking cache in the background so the first visitor does not wait (HEATBEAT_WARM=0 skips)."""
+    if os.getenv("HEATBEAT_WARM", "1") == "0":
+        return
+
+    def run():
+        try:
+            _leaderboard(DEFAULT_MODEL, SITES_SCOPE if SITES_SCOPE in SCOPES else "verified")
+        except Exception:  # noqa: BLE001  warm up only, the endpoint computes on demand anyway
+            pass
+    threading.Thread(target=run, daemon=True).start()
 
 # Production: serve the built frontend (frontend/dist) from the same process, so one free web service
 # hosts the whole app. Set HEATBEAT_STATIC to another folder, or leave dist/ unbuilt for API only.

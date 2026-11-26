@@ -213,8 +213,11 @@ class HeatChainModel:
                 bd["baseline cooling plant (not needed in this chain)"] = -round(base_cap)
             extra["capex_breakdown"] = bd
         name = r["label"]
-        if r["tech"] == s.baseline_rejection and not r["uses"] and not r["storage"]:
+        today = r["tech"] == s.baseline_rejection and not r["uses"] and not r["storage"]
+        if today:
             name += " (today's setup, no change)"
+        if "is_today" in fields:
+            extra["is_today"] = today
         return OptionResult(**extra, option_id=cid, name=name, rank=rank, feasible=True,
                             score=round(r["npv_usd"] / 1e6, 2), components=r["components"],
                             product=", ".join(prod) or "cooling only", kpis=k, energy_balance=flows,
