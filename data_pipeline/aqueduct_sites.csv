@@ -58,3 +58,7 @@ il-petah-tikva,4.0000,211017,ISR.4_1,HaMerkaz,2.4047,5.0000,4,Extremely High (>8
 il-tel-aviv,4.0000,211017,ISR.7_1,Tel Aviv,2.4047,5.0000,4,Extremely High (>80%),2.6855,5.0000,4,Extremely high (>80%),5.0471,5.0000,4,Extremely high (>80%),0,0,0,
 il-haifa,4.0000,211017,ISR.3_1,Haifa,2.4047,5.0000,4,Extremely High (>80%),2.6855,5.0000,4,Extremely high (>80%),5.0471,5.0000,4,Extremely high (>80%),0,0,0,
 il-beer-sheva-hypothetical,4.0000,211016,ISR.2_1,HaDarom,4.2891,5.0000,4,Extremely High (>80%),5.0872,5.0000,4,Extremely high (>80%),,5.0000,4,Extremely high (>80%),0,0,1,
+us-nd-williston-crusoe,hand_estimate,,,,,1.0,,"hand estimate, not looked up",,1.0,,,,1.0,,,0,0,0,"reference validation site: hand estimate, rerun fetch_aqueduct.py"
+us-ny-syracuse-university,hand_estimate,,,,,0.5,,"hand estimate, not looked up",,0.5,,,,0.5,,,0,0,0,"reference validation site: hand estimate, rerun fetch_aqueduct.py"
+us-hi-kona-nelha,hand_estimate,,,,,1.5,,"hand estimate, not looked up",,1.5,,,,1.5,,,0,0,0,"reference validation site: hand estimate, rerun fetch_aqueduct.py"
+us-wa-seattle-westin,hand_estimate,,,,,1.0,,"hand estimate, not looked up",,1.0,,,,1.0,,,0,0,0,"reference validation site: hand estimate, rerun fetch_aqueduct.py"

@@ -79,3 +79,11 @@ us-wi-mount-pleasant-microsoft,p_water_usd_m3,0.85,data,racine_water_2020;racine
 us-wi-mount-pleasant-microsoft,wsi_index,3.5,data,wri_aqueduct_4,"Aqueduct 4.0 baseline water stress: High (40-80%); 2030 BAU score 3.6442, 2050 BAU 3.7852"
 us-wy-cheyenne-microsoft,p_water_usd_m3,1.5,assumption,team_assumption,Cheyenne Board of Public Utilities (not researched); range 1.0 to 2.2 USD/m3; sewer 1.5 USD/m3 extra on discharged water
 us-wy-cheyenne-microsoft,wsi_index,5.0,data,wri_aqueduct_4,"Aqueduct 4.0 baseline water stress: Extremely High (>80%); 2030 BAU score 5.0, 2050 BAU 5.0"
+us-nd-williston-crusoe,p_water_usd_m3,1.2,assumption,team_assumption,"Hand estimate for the reference validation (map reading and project description, not fetched); rerun the fetch script with internet to replace"
+us-ny-syracuse-university,p_water_usd_m3,2,assumption,team_assumption,"Hand estimate for the reference validation (map reading and project description, not fetched); rerun the fetch script with internet to replace"
+us-hi-kona-nelha,p_water_usd_m3,3.5,assumption,team_assumption,"Hand estimate for the reference validation (map reading and project description, not fetched); rerun the fetch script with internet to replace"
+us-wa-seattle-westin,p_water_usd_m3,3,assumption,team_assumption,"Hand estimate for the reference validation (map reading and project description, not fetched); rerun the fetch script with internet to replace"
+us-nd-williston-crusoe,wsi_index,1,assumption,reference_hand_estimate,"Hand estimate for the reference validation (map reading and project description, not fetched); rerun the fetch script with internet to replace"
+us-ny-syracuse-university,wsi_index,0.5,assumption,reference_hand_estimate,"Hand estimate for the reference validation (map reading and project description, not fetched); rerun the fetch script with internet to replace"
+us-hi-kona-nelha,wsi_index,1.5,assumption,reference_hand_estimate,"Hand estimate for the reference validation (map reading and project description, not fetched); rerun the fetch script with internet to replace"
+us-wa-seattle-westin,wsi_index,1,assumption,reference_hand_estimate,"Hand estimate for the reference validation (map reading and project description, not fetched); rerun the fetch script with internet to replace"

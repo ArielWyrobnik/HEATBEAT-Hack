@@ -1,0 +1,42 @@
+site_id,field,value,unit,scope,confidence,evidence,source_id,note
+no-rjukan-greenmountain,already_implemented,fish_farm,,site,high,operator,waa_hima_2026,Excel option key; not an engineering chain
+no-rjukan-greenmountain,status,operating,,site,high,press,waa_hima_2026,heat reuse operational fall 2025
+no-rjukan-greenmountain,reuse_mw_th,1.75,MW_th,site,medium,press,waa_hima_2026,phase 1 capacity; phase 2 aims at 8 MW
+no-rjukan-greenmountain,reuse_since_year,2025,year,site,high,press,waa_hima_2026,
+no-rjukan-greenmountain,heat_reuse,"warm water loop to the Hima Seafood RAS trout farm 800 m away, target 8,000 t trout/yr",,site,high,operator,gm_heat_value_2026,"2021 plan said 9,000 t (gm_hima_2021)"
+fi-mantsala-nebius,already_implemented,dh;free_cooling,,site,high,operator,nebius_heat,
+fi-mantsala-nebius,heat_rejection,dry,,site,high,operator,nebius_greenfield_fi,"free air cooling, no chillers, no water loops"
+fi-mantsala-nebius,cooling_profile_id,air_economizer,,site,high,operator,nebius_greenfield_fi,
+fi-mantsala-nebius,pue,1.13,,site,medium,operator,nebius_greenfield_fi,at full capacity
+fi-mantsala-nebius,status,operating,,site,high,operator,nebius_heat,
+fi-mantsala-nebius,reuse_mwh_yr,20000,MWh/yr,site,medium,operator,nebius_75mw_2024,"approximately 20,000 MWh/yr (2024 press release); 30 GWh over two years (nebius_heat)"
+fi-mantsala-nebius,reuse_since_year,2015,year,site,high,operator,nebius_heat,phased in 2015-2016
+fi-mantsala-nebius,heat_reuse,"air to water heat exchangers give 35 to 40 C, utility (Nivos) boosts to 55 to 60 C; up to 72% of town heat demand; 3,220 tCO2e avoided in 2024",,site,high,operator,nebius_heat,
+us-nd-williston-crusoe,already_implemented,stranded_gas_power,,operator_region,high,press,crusoe_argus_2021,flare gas to power for modular compute; no heat reuse
+us-nd-williston-crusoe,status,operating,,operator_region,medium,press,crusoe_argus_2021,"44 modules in MT, ND, WY, CO in 2021"
+ie-arklow-echelon,already_implemented,biogas,,site,medium,press,bioenergy_echelon_2021,data center heat keeps the Biocore digester warm
+ie-arklow-echelon,status,planned,,site,medium,press,rte_echelon_2021,co-location agreed 2021; no commissioning date in sources
+us-ny-syracuse-university,already_implemented,chp_absorption;heat_reuse_office,,site,high,third_party,nyserda_su_gdc,"absorption chillers run on microturbine exhaust, not on data center heat"
+us-ny-syracuse-university,status,operating,,site,medium,third_party,nyserda_su_gdc,operating experience beginning 2011; current status not verified
+us-ny-syracuse-university,heat_reuse,12 x 65 kW Capstone C65 gas microturbines (780 kW); exhaust to 2 Thermax absorption chillers and hot water; also heats and cools 621 Skytop Rd,,site,high,third_party,nyserda_su_gdc,
+nl-amsterdam,already_implemented,ates;heat_reuse_office,,site,medium,third_party,baxtel_am_sp,"Equinix AM3/AM4 Science Park: ATES wells, waste heat to neighbouring Science Park buildings"
+nl-amsterdam,status,operating,,site,medium,third_party,baxtel_am_sp,AM4 heat export to Diemen DH only at feasibility stage in 2025 (equinix_diemen_2025)
+nl-amsterdam,pue,1.2,,site,medium,press,ioplus_am3_2026,Equinix Science Park
+nl-amsterdam,heat_reuse,groundwater at 10 C from 150 m wells for cooling; heat network to nearby Amsterdam University of Applied Sciences buildings,,site,medium,press,ioplus_am3_2026,row describes the Equinix campus inside the cluster site
+nl-eindhoven-northc,already_implemented,ates;heat_reuse_office,,site,high,operator,northc_ehv1_factsheet,ATES free cooling; heat to the High Tech Campus heat ring (grundfos_northc)
+nl-eindhoven-northc,status,operating,,site,high,operator,northc_ehv1_factsheet,
+se-falun-ecodatacenter,already_implemented,dh;pellet_drying,,site,medium,press,dcd_falun_nordic,"hot water pipes to the Falu Energi & Vatten CHP plant, sawdust drying for pellets"
+se-falun-ecodatacenter,pue,1.2,,site,medium,operator,ecodc_falun,
+se-falun-ecodatacenter,reuse_mw_th,10,MW_th,site,medium,press,dcd_falun_nordic,up to 10 MW from B1 to dry pellets
+se-falun-ecodatacenter,status,operating,,site,medium,press,idea_ecodc_2025,
+us-hi-kona-nelha,already_implemented,desal_fo,,site,medium,press,doe_trevi_2022,"Trevi forward osmosis on seawater with solar thermal regeneration, no data center"
+us-hi-kona-nelha,status,pilot,,site,medium,press,dcd_endeavour_trevi,not yet deployed at a data center
+us-wa-seattle-westin,already_implemented,dh;heat_pump,,site,high,operator,amazon_doppler_2017,eco district to the Amazon Doppler campus
+us-wa-seattle-westin,status,operating,,site,high,operator,amazon_doppler_2017,
+us-wa-seattle-westin,reuse_mw_th,5,MW_th,site,medium,press,phc_amazon_2018,designed to export up to 5 MW
+us-wa-seattle-westin,heat_reuse,"condenser water at about 65 F lifted to about 130 F by five heat recovery chillers, radiant floors in about 4 to 5 million sq ft; about 80 million kWh saved over 25 years",,site,high,operator,amazon_doppler_2017,
+fr-paris,already_implemented,dh;heat_pump;greenhouse,,site,high,press,dck_pa10_2024,"Equinix PA10 Saint-Denis: heat to Plaine Saulnier and the Olympic Aquatics Centre, 430 m2 rooftop greenhouse"
+fr-paris,status,operating,,site,high,press,dck_pa10_2024,PA10 opened 2023
+fr-paris,reuse_mwh_yr,10000,MWh/yr,site,medium,press,dck_pa10_2024,"will produce 10,000 MWh of heat per year"
+fr-paris,reuse_mw_th,6.6,MW_th,site,medium,press,techzine_pa10_2024,network can capture 6.6 MW from PA10
+fr-paris,heat_reuse,"heat recovered at 28 C all year, three heat pumps raise it to 65 C; free of charge for 15 years",,site,high,press,dck_pa10_2024,row describes Equinix PA10 inside the cluster site

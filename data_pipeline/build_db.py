@@ -140,9 +140,17 @@ def main() -> None:
     ap.add_argument("--offline", action="store_true", help="synthetic placeholders only, for pipeline tests")
     ap.add_argument("--stage", default="all", choices=["all", "weather", "regions", "prices", "assemble"])
     ap.add_argument("--iso", help="with --stage prices: one of CAISO, ERCOT, MISO, NYISO, ISONE, SPP, PJM")
+    ap.add_argument("--missing-only", action="store_true",
+                    help="with --stage weather: only sites without stored weather in data/parquet (new sites)")
     a = ap.parse_args()
     if a.stage == "weather":
-        _, st = get_weather(load_sites())
+        sites = load_sites()
+        stored = PARQUET_DIR / "weather_hourly.parquet"
+        if a.missing_only and stored.exists():
+            have = set(pd.read_parquet(stored, columns=["site_id"])["site_id"])
+            sites = sites[~sites["site_id"].isin(have)]
+            log.info("weather stage, missing only: %s", list(sites["site_id"]))
+        _, st = get_weather(sites)
         log.info("weather stage: %d sites, missing: %s", len(st), [k for k, v in st.items() if v == "missing"])
     elif a.stage == "regions":
         _, st = enrich_regions(load_grid_regions())

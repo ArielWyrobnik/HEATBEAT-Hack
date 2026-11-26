@@ -86,6 +86,11 @@ jobs:
           PJM_API_KEY: ${{ secrets.PJM_API_KEY }}
         run: python -m data_pipeline.build_db --stage prices --iso PJM
 
+      - name: Fetch weather for sites without stored weather (new sites only)
+        timeout-minutes: 25
+        continue-on-error: true
+        run: python -m data_pipeline.build_db --stage weather --missing-only
+
       - name: Save fetch cache
         if: always()
         uses: actions/cache/save@v4
