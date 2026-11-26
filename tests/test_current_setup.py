@@ -85,3 +85,30 @@ def test_validation_table(model):
     sa = df.set_index("site_id").loc["us-tx-san-antonio-microsoft"]
     assert sa["reported_wue_l_kwh"] == pytest.approx(1.82)
     assert abs(sa["model_wue_l_kwh"] - 1.82) < 0.5  # tower baseline close to the measured WUE
+
+
+def test_verdict_says_no_gain_where_site_already_runs_dry_cooling():
+    """Abilene runs closed-loop liquid cooling with air-cooled chillers (Crusoe): nothing should beat it."""
+    from heatbeat_engineering import evaluate
+    from heatbeat_engineering.verdict import verdict
+    df, base, _, s = evaluate(site_id="us-tx-abilene-stargate", live=False, greenfield=None)
+    v = verdict(df, base, s)
+    assert s.baseline_rejection == "dry" and v["level"] == "no_gain"
+    assert v["alternative_npv_usd"] < 0 and "public source" in v["text"]
+
+
+def test_verdict_levels_and_assumed_baseline_note():
+    from heatbeat_engineering import evaluate
+    from heatbeat_engineering.verdict import verdict
+    df, base, _, s = evaluate(site_id="us-ga-atlanta-qts", live=False, greenfield=None)
+    assert verdict(df, base, s)["level"] == "gain"
+    df, base, _, s = evaluate(site_id="us-il-chicago-cermak", live=False, greenfield=None)
+    v = verdict(df, base, s)
+    assert s.prov["baseline_rejection"]["status"] == "assumption" and "not documented" in v["text"]
+
+
+def test_api_result_carries_verdict():
+    pytest.importorskip("fastapi")
+    from heatbeat_engineering.api_model import MODEL
+    r = MODEL.run("us-wi-mount-pleasant-microsoft", tornado=False)
+    assert r.verdict_level == "no_gain" and r.verdict

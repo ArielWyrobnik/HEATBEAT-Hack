@@ -64,6 +64,8 @@ Rules:
 No US site in the list exports heat to a district heating network. Not found: Chicago, Elk Grove, Santa Clara,
 One Wilshire, Hillsboro, Las Vegas, Apple Maiden, NYC, Boston, Dallas, Chandler, Mesa (cooling not published).
 
+Audit of what this changed per site, and an inventory of all inputs: `docs/audit/README.md`.
+
 ## Model against reported values
 
 `current_setup_check.csv`. WUE and PUE match where sites publish them: San Antonio WUE 1.83 modelled vs
