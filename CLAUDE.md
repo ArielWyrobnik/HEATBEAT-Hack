@@ -29,16 +29,25 @@ Local context: Israel has low heating demand, high cooling demand, water scarcit
 
 ## Current state (2026-11-26)
 
-Early stage. `main` holds this file, a short README and the frontend in `frontend/`. `main` is the default branch.
+Focus: US sites first. Israel is set aside for now (Ariel, 2026-11-26).
 
-| Work | Branch | Status |
-|---|---|---|
-| Data center location database: 59 sites, hourly 2024 weather, electricity prices, carbon intensity, `heatbeat_data` Python access module, GitHub Actions build. Docs in `docs/DATA.md`. | `claude/project-thread-n1j7gu` | In progress, open as PR #1 |
-| Frontend: landing page and world map with search (React, TypeScript, Vite, Leaflet) in `frontend/`. Pins load from `frontend/public/datacenters.json`, still empty. | `main` (merged from `claude/funny-hopper-859d23`) | On main, in progress |
+PRs #1, #3, #4, #5, #6 and #7 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020, shorter Open-Meteo timeout). What is on `main`:
 
-Not started yet: the solution models, the ranking logic, and the connection between map, database and models.
+| Part | Where | Docs | Status |
+|---|---|---|---|
+| Location database: 59 sites, electricity prices, carbon intensity, `heatbeat_data` access module, GitHub Actions build. Weather is fetched live on first use (Open-Meteo, fallback NASA POWER) and cached. | `data_pipeline/`, `heatbeat_data/` | `docs/DATA.md` | Merged. The hourly price data is not committed yet: the build workflow run on the old PR #1 branch was still running at merge time, so its data commit lands on that branch and needs a follow-up PR (or a new workflow run on `main`). Until then the 4 data tests in `tests/test_database.py` fail with FileNotFoundError. |
+| Heat source per site: IT load, cooling type, chip generation, coolant temperatures, `hd.site_heat_profiles()` | `data_pipeline/cooling_profiles.csv`, `site_profiles.csv`, `heat_sources.csv`, `heatbeat_data/heat_profiles.py` | `docs/HEAT_PROFILES.md` | Merged. Most site MW and chip values are team estimates (low confidence). |
+| Solution catalogue: 21 solutions with ideal parameters, schema validation, `screen()` first pass ranking | `heatbeat_solutions/` | `docs/SOLUTIONS.md` | Merged. Market prices not included yet. |
+| Demo: Streamlit input overview with live API calls and pipeline checks | `demo/` | `demo/README.md` | Merged. |
+| Frontend: landing page, "How it works" section, world map (React, TypeScript, Vite, Leaflet) | `frontend/` | | Merged. Map pins load from `frontend/public/datacenters.json`. |
 
-Known gaps in the database (see PR #1): PJM prices need a `PJM_API_KEY` secret, non-US retail prices and the Israel tariff mapping are unverified placeholders.
+Next steps:
+
+- Shortlist solutions and collect economic and regional market data per solution (plan in the Claude Doc "Lösungs-Ranking: Datenschema und Aufgabenverteilung"). Regional values go into a planned `data_pipeline/market_prices.csv` keyed by `country_iso2` + `region` like `sites.csv`.
+- Water prices for US regions (separate thread).
+- Ranking logic and the connection between map, database and models.
+
+Known gaps: PJM prices need a `PJM_API_KEY` secret, non-US retail prices and the Israel tariff mapping are unverified placeholders.
 
 ## Working rules
 
