@@ -93,6 +93,9 @@ export interface CalcStep {
   note?: string | null;
 }
 
+export interface HeatRoute { name: string; mwh_yr: number; kind: 'reuse' | 'cooling' }
+export interface HeatLoop { name: string; mwh_yr: number; return_c: number; routes: HeatRoute[] }
+
 export interface OptionResult {
   option_id: string;
   name: string;
@@ -109,6 +112,8 @@ export interface OptionResult {
   capex_breakdown: Record<string, number>;
   kpis: Kpis;
   energy_balance: EnergyFlow[];
+  /** Where the server heat goes: annual server heat per cooling loop, split by destination */
+  heat_loops?: HeatLoop[];
   details: Record<string, unknown>;
   /** Step by step calculation trace with sources (engineering model) */
   calculation?: CalcStep[];

@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import CalcModal from './CalcModal';
 import Tornado from './Tornado';
 import { OptionEcosystem, ReferenceBanner, TopStack } from './Ecosystem';
+import HeatFlow from './HeatFlow';
 import { ScoreBreakdown, StackedScore, hasSubscores } from './ScoreBreakdown';
 
 export const MODE_LABEL: Record<string, string> = { as_built: 'As built' };
@@ -71,12 +72,13 @@ function OptionKpis({ o, placeholderCosts, onCalc }: { o: OptionResult; placehol
     <>
     <div className="calc-row"><CalcButton onClick={onCalc} /></div>
     <ScoreBreakdown details={o.details} score={o.score} ecoScore={o.details?.eco_score} feasible={o.feasible} pies={false} />
+    <HeatFlow option={o} />
     {(o.implementation || costs.length > 0) && (
       <div className="impl">
         {o.implementation && <p><b>How it is built:</b> {o.implementation}</p>}
         {costs.length > 0 && (
           <p className="costs"><b>Investment:</b> {costs.map(([c, v]) => `${COST_LABEL[c] ?? c.replace(/_/g, ' ')} ${usd(v)}`).join(' + ')}
-            {' '}= {usd(k.capex_usd)}{placeholderCosts && <small> (placeholder costs)</small>}</p>
+            {' '}= {usd(k.capex_usd)}{placeholderCosts && <small> (some costs unverified)</small>}</p>
         )}
       </div>
     )}
@@ -85,7 +87,7 @@ function OptionKpis({ o, placeholderCosts, onCalc }: { o: OptionResult; placehol
       <Kpi label="CO2 avoided" v={`${compact(k.co2_avoided_t_yr)} t/yr`} />
       <Kpi label="Water saved" v={`${compact(k.water_saved_m3_yr)} m3/yr`} />
       <Kpi label="Net value" v={`${usd(k.net_value_usd_yr)}/yr`} />
-      <Kpi label="CAPEX" v={usd(k.capex_usd)} sub={placeholderCosts ? 'placeholder' : undefined} />
+      <Kpi label="CAPEX" v={usd(k.capex_usd)} sub={placeholderCosts ? 'partly unverified' : undefined} />
       <Kpi label="Payback" v={k.payback_yr == null ? 'never' : `${num(k.payback_yr, 1)} yr`} />
       <Kpi label="PUE" v={before(k.pue_baseline, k.pue_with, 3)} />
       <Kpi label="WUE L/kWh" v={before(k.wue_baseline_l_kwh, k.wue_with_l_kwh)} />
@@ -211,10 +213,11 @@ export function FullResults({ r }: { r: ModelResult }) {
               <Kpi label="CO2 avoided" v={`${compact(k.co2_avoided_t_yr)} t/yr`} />
               <Kpi label="Water saved" v={`${compact(k.water_saved_m3_yr)} m3/yr`} />
               <Kpi label="Net value" v={`${usd(k.net_value_usd_yr)}/yr`} />
-              <Kpi label="CAPEX" v={usd(k.capex_usd)} sub={placeholderCosts ? 'placeholder' : undefined} />
+              <Kpi label="CAPEX" v={usd(k.capex_usd)} sub={placeholderCosts ? 'partly unverified' : undefined} />
               <Kpi label="Payback" v={k.payback_yr == null ? 'never' : `${num(k.payback_yr, 1)} yr`} />
               <Kpi label="PUE" v={before(k.pue_baseline, k.pue_with, 3)} />
             </div>
+            <HeatFlow option={o} />
           </div>
         )}
       </section>
@@ -281,7 +284,7 @@ export function FullResults({ r }: { r: ModelResult }) {
                 <table className="cost-table">
                   <tbody>
                     {costs.map(([c, v]) => <tr key={c}><td>{COST_LABEL[c] ?? c.replace(/_/g, ' ')}</td><td className="n">{usd(v)}</td></tr>)}
-                    <tr className="sum"><td>Total CAPEX{placeholderCosts && <small> (placeholder costs)</small>}</td><td className="n">{usd(k.capex_usd)}</td></tr>
+                    <tr className="sum"><td>Total CAPEX{placeholderCosts && <small> (some costs unverified)</small>}</td><td className="n">{usd(k.capex_usd)}</td></tr>
                   </tbody>
                 </table>
               )}

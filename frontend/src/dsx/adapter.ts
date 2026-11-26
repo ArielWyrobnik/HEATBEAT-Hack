@@ -277,6 +277,14 @@ function toOption(ctx: Ctx, o: DsxOption, rank: number | null): OptionResult {
       capacity_factor: a.utilisation,
     },
     energy_balance: flows,
+    // where the server heat goes: all IT energy becomes heat in the cooling loop; the pathway takes Q_src
+    heat_loops: o.ko_pass && (b.it_energy_mwh_yr ?? 0) > 0 ? [{
+      name: String(ctx.site.cooling_type), mwh_yr: b.it_energy_mwh_yr!, return_c: Number(ctx.site.t_dc_base_c),
+      routes: [
+        { name: o.name, mwh_yr: Math.min(a.q_src_mwh, b.it_energy_mwh_yr!), kind: 'reuse' as const },
+        { name: ctx.evaporative ? 'Cooling tower' : 'Dry cooler', mwh_yr: Math.max(0, b.it_energy_mwh_yr! - a.q_src_mwh), kind: 'cooling' as const },
+      ],
+    }] : [],
     details: {
       build_mode: o.mode, t_sink_c: o.t_sink_c, ...o.subscores, viability_ungated: o.viability_ungated,
       eco_score: o.eco_score, ...o.eco_subscores, direct_hx_hours: a.direct_hx_hours,
@@ -344,7 +352,7 @@ export async function runDsx(a: DsxRunArgs): Promise<ModelResult> {
   const warnings: string[] = [];
   if (climate.synthetic) warnings.push(`Climate: ${climate.source}.`);
   warnings.push(...notes);
-  warnings.push(`CAPEX uses generic specific costs, so payback is indicative.${evaporative ? ' Water saved is scaled from the baseline evaporative cooling water.' : ''}`);
+  warnings.push(`CAPEX: heat pump, absorption chiller, ORC, ATES and desalination costs are sourced; the other plant costs are DSX planning values, so payback is indicative.${evaporative ? ' Water saved is scaled from the baseline evaporative cooling water.' : ''}`);
 
   return {
     site_id: a.siteId,
