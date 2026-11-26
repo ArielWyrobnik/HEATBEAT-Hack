@@ -1,0 +1,32 @@
+name: Build site ecology and geology
+
+# Fetches protected areas, wetlands, critical habitat, aquifers and bedrock geology per site
+# (hosts the cloud sandbox cannot reach) and commits data_pipeline/ecology/raw_site_features.csv.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "data_pipeline/ecology/**"
+      - ".github/workflows/build-ecology.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-ecology-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas requests
+      - name: Probe endpoints
+        timeout-minutes: 10
+        continue-on-error: true
+        run: python data_pipeline/ecology/probe.py
