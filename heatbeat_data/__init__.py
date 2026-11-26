@@ -191,4 +191,7 @@ def get_site(site_id: str, live: bool = True) -> Site:
 from .heat_profiles import cooling_profiles, heat_profile, heat_sources, site_heat_profiles  # noqa: E402
 
 __all__ += ["cooling_profiles", "heat_profile", "heat_sources", "site_heat_profiles"]
+
+from .market import excel_inputs, market_for, market_prices, site_market  # noqa: E402
+__all__ += ["excel_inputs", "market_for", "market_prices", "site_market"]
 Site.heat_profile = lambda self: heat_profile(self.site_id)
