@@ -413,3 +413,7 @@ button.link { background: none; border: 0; color: #6bb8ff; cursor: pointer; font
 .vendors .v-unv { font-size: 10px; padding: 1px 5px; color: #d9a441; border: 1px dashed #6b5320; cursor: help; }
 .vendors small { display: block; color: var(--muted); font-size: 12px; }
 .plan-panel .panel-body > .vendors { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); }
+
+.plan-form .with-unit select { width: auto; }
+.plan-alternatives { display: grid; gap: 4px; color: var(--muted); font-size: 12px; }
+.plan-alternatives select { width: 100%; padding: 8px; background: var(--surface); color: var(--text); border: 1px solid var(--border); font: inherit; }

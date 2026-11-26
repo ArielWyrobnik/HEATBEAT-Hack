@@ -159,9 +159,14 @@ export function Vendors({ vendors, title = 'Who can build it' }: { vendors?: Ven
   );
 }
 
-function Details({ o, r }: { o: OptionResult; r: ModelResult }) {
+export function Details({ o, r, planned = false }: { o: OptionResult; r: ModelResult; planned?: boolean }) {
   const k = o.kpis;
-  const costs = Object.entries(o.capex_breakdown ?? {});
+  const costs = Object.entries(planned && r.model === 'heat_chain'
+    ? (o.details.capex_breakdown_usd as Record<string, number> | undefined) ?? {}
+    : o.capex_breakdown ?? {});
+  const investment = planned && r.model === 'heat_chain'
+    ? costs.reduce((total, [, amount]) => total + amount, 0)
+    : k.capex_usd;
   const inputs = o.calculation_inputs?.length ? o.calculation_inputs : r.inputs;
   const nReal = inputs.filter((i) => i.flag === 'real' || i.flag === 'user').length;
   return (
@@ -170,15 +175,18 @@ function Details({ o, r }: { o: OptionResult; r: ModelResult }) {
         <Kpi label="Saved per year" v={`${money(k.cash_value_usd_yr ?? k.net_value_usd_yr)}`} def={DEFS.cash}
              neg={(k.cash_value_usd_yr ?? 0) < 0} />
         <Kpi label="Payback" v={payback(k.payback_yr)} def={DEFS.payback} />
-        <Kpi label="CO2 avoided" v={`${tonnes(k.co2_avoided_t_yr)}/yr`} def={DEFS.co2} neg={(k.co2_avoided_t_yr ?? 0) < 0} />
+        <Kpi label="CO2 avoided" v={`${tonnes(k.co2_avoided_t_yr)}/yr`} def={planned ? 'Tonnes of CO2 per year compared with the baseline design.' : DEFS.co2} neg={(k.co2_avoided_t_yr ?? 0) < 0} />
         <Kpi label="Water saved" v={`${compact(k.water_saved_m3_yr)} m3/yr`} def={DEFS.water} neg={(k.water_saved_m3_yr ?? 0) < 0} />
       </div>
 
+      {(k.heat_recovered_mwh_yr ?? 0) > 0 && (
+        <p className="impl-line"><b>Heat recovered</b> {compact(k.heat_recovered_mwh_yr)} MWh/yr{o.product && <> · {o.product}</>}</p>
+      )}
       {o.already_in_place?.map((t) => <p key={t} className="already-line"><span className="already">already in place</span> {t}</p>)}
       {o.implementation && <p className="impl-line"><b>How it is built.</b> {o.implementation}</p>}
       <Vendors vendors={o.vendors} />
       {costs.length > 0 && (
-        <p className="impl-line"><b>Investment {money(k.capex_usd)}.</b>{' '}
+        <p className="impl-line"><b>Investment {money(investment)}.</b>{' '}
           {costs.map(([c, v]) => `${c.replace(/_/g, ' ')} ${money(v)}`).join(', ')}
           <span className="muted"> (cost figures are team assumptions, not quotes)</span></p>
       )}
@@ -214,15 +222,17 @@ function Details({ o, r }: { o: OptionResult; r: ModelResult }) {
   );
 }
 
-/** Best options that change something (today's setup is left out, the verdict covers it). */
-export function topOptions(r: ModelResult, n = 3) {
-  return r.options.filter((o) => o.feasible && !o.is_today && !/today's setup/.test(o.name)).slice(0, n);
-}
+export const COOLING_COMPONENTS = ['dry_cooler', 'adiabatic_cooler', 'cooling_tower'];
+export const coolingOnly = (o: OptionResult) =>
+  o.components.length === 1 && COOLING_COMPONENTS.includes(o.components[0]);
 
 export default function Results({ r }: { r: ModelResult }) {
-  const top = topOptions(r);
+  const [reuse, setReuse] = useState(false);
+  const engineering = r.model === 'heat_chain';
+  const top = r.options.filter((o) => o.feasible && !o.is_today &&
+    (!engineering || coolingOnly(o) !== reuse)).slice(0, 3);
   const [open, setOpen] = useState<string | null>(null);
-  useEffect(() => setOpen(r.verdict_level === 'no_gain' ? null : top[0]?.option_id ?? null), [r]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => setOpen(r.verdict_level === 'no_gain' ? null : top[0]?.option_id ?? null), [r, reuse]); // eslint-disable-line react-hooks/exhaustive-deps
   const b = r.baseline;
   return (
     <div className="results">
@@ -231,6 +241,10 @@ export default function Results({ r }: { r: ModelResult }) {
         <b>Today</b> PUE {num(b.pue, 2)} · water {compact(b.water_use_m3_yr)} m3/yr · {tonnes(b.co2_t_yr)} CO2/yr · power {money(b.electricity_cost_usd_yr)}/yr
       </p>
 
+      {engineering && <div className="seg" role="group" aria-label="Solution palette">
+        <button type="button" aria-pressed={!reuse} className={!reuse ? 'on' : ''} onClick={() => setReuse(false)}>Cooling</button>
+        <button type="button" aria-pressed={reuse} className={reuse ? 'on' : ''} onClick={() => setReuse(true)}>Heat reuse</button>
+      </div>}
       <h4>Best options <small title={DEFS.npv}>ranked by value over 20 years (NPV) ⓘ</small></h4>
       {top.length === 0 && <p className="muted">No option passes the technical checks at this site.</p>}
       <ol className="options">

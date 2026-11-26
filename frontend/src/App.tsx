@@ -24,7 +24,7 @@ export default function App() {
   const onSelect = useCallback((id: string) => { setSelected(id); setPlanning(false); setPlanPoint(null); }, []);
   const onMapClick = useCallback((lat: number, lng: number) => { setPlanPoint({ lat, lng }); setSelected(null); }, []);
   const togglePlan = () => {
-    if (planning) { setPlanning(false); setPlanPoint(null); } else { setPlanning(true); setSelected(null); }
+    if (planning) { setPlanning(false); setPlanPoint(null); } else { setPlanning(true); setSelected(null); setBoard(false); }
   };
   const site = dataCenters.find((d) => d.id === selected) ?? null;
 
