@@ -44,7 +44,7 @@ def fetch_open_meteo(lat: float, lon: float) -> pd.DataFrame:
         "hourly": "temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,shortwave_radiation",
         "wind_speed_unit": "ms", "timezone": "UTC",
     }
-    j = http_get(OPEN_METEO_URL, params=params).json()
+    j = http_get(OPEN_METEO_URL, params=params, timeout=30).json()  # some requests stall; retry fast
     h = j["hourly"]
     df = pd.DataFrame({
         "t_db_c": h["temperature_2m"], "rh_pct": h["relative_humidity_2m"], "t_dew_c": h["dew_point_2m"],

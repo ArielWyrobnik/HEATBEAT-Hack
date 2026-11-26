@@ -77,7 +77,7 @@ All timestamps are UTC, hour-beginning.
 | US hourly prices, ISO regions | Day-ahead hourly LMP from CAISO, ERCOT, MISO, NYISO, ISO-NE, SPP, PJM via [gridstatus](https://pypi.org/project/gridstatus/) | real where `is_synthetic = 0`; see `build_report.json` for coverage | public ISO data; gridstatus BSD-3 |
 | US hourly prices, non-market regions (Southeast, Northwest, Southwest, TVA) | annual EIA retail price x synthetic shape | **synthetic** | n/a |
 | PJM (Virginia, Illinois, Ohio, New Jersey) | needs a free PJM Data Miner API key (repo secret `PJM_API_KEY`); without it, **synthetic** | depends | PJM terms |
-| US retail price | [EIA average price by state](https://www.eia.gov/electricity/data/state/), latest year, Total Electric Industry | real | public domain |
+| US retail price | [EIA Electric Power Annual Table 2.10](https://www.eia.gov/electricity/annual/html/epa_02_10.html), 2024, commercial and industrial, transcribed | real | public domain |
 | US carbon intensity | [EPA eGRID2023 rev2](https://www.epa.gov/egrid/summary-data) subregion total output CO2 rate, lb/MWh converted to kg/MWh | real, annual average | public domain |
 | Non-US carbon intensity | [Ember yearly electricity data](https://ember-energy.org/data/yearly-electricity-data/), latest year | real, annual average | CC BY 4.0 |
 | Non-US retail price (except Israel) | rough team estimates in `grid_regions.csv` | **unverified estimate**, flagged `estimate_unverified` | n/a |
