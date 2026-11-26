@@ -105,3 +105,9 @@ def test_sourced_costs_replace_planning_values():
     assert orc["capex_plant_usd"] == pytest.approx(orc["peak_del_mw"] * 1000 * 3000, rel=1e-3)
     assert src["district_heating"]["annual"]["capex_pipe_usd"] == pytest.approx(500 * 3150, abs=1)
     assert base["fish_farm_ras"]["annual"]["capex_plant_usd"] == src["fish_farm_ras"]["annual"]["capex_plant_usd"]
+
+
+def test_chilled_water_return_is_not_the_heat_temperature():
+    from heatbeat_dsx.api_model import _site
+    assert _site({**us_defaults(), "cooling_type": "air", "t_dc_base_c": 13})["t_dc_base_c"] == 32
+    assert _site({**us_defaults(), "cooling_type": "liquid", "t_dc_base_c": 42})["t_dc_base_c"] == 42

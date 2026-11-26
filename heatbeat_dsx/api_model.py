@@ -76,6 +76,11 @@ def _site(x: dict) -> dict:
     s = {k: (int(v) if isinstance(v, bool) else v) for k, v in x.items()}
     s["baseline_evaporative"] = 1 if x.get("baseline_cooling_evaporative", True) else 0
     s.setdefault("p_dac_credit_usd_ton", s.get("p_co2_usd_ton", 0))
+    # air sites on a chilled water plant report the chilled water return (13 C, cold side) as heat
+    # temperature; the server heat leaves the room as exhaust air at 32 C (exhaust_air_temp_c of
+    # air_chilled_legacy, data_pipeline/cooling_profiles.csv, medium confidence)
+    if s.get("cooling_type") == "air" and float(s.get("t_dc_base_c", 30)) < 25:
+        s["t_dc_base_c"] = 32.0
     return s
 
 
