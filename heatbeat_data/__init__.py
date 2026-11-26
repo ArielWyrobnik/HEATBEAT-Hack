@@ -201,3 +201,9 @@ from .water import aqueduct, hourly_wue, site_water, site_water_row, water_sourc
 
 __all__ += ["aqueduct", "hourly_wue", "site_water", "site_water_row", "water_sources", "water_tariffs", "wue_profiles"]
 Site.water = lambda self: site_water_row(self.site_id, self.weather)
+
+# Ecology and geology scores per site (Excel inputs eco_sens_index, geo_storage_score, mit_tier).
+from .site_ecology_data import ecology, excel_ecology_inputs, site_ecology  # noqa: E402
+
+__all__ += ["ecology", "excel_ecology_inputs", "site_ecology"]
+Site.ecology = lambda self: ecology(self.site_id)
