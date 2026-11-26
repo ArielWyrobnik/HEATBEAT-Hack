@@ -90,7 +90,7 @@ const STEPS: Step[] = [
     summary:
       'Feasible pathways get a viability score from 0 to 5 and a separate eco grade from A to F, so high profit cannot hide environmental harm.',
     details: [
-      'Viability = 35 % thermodynamics + 30 % climate fit + 25 % economics (payback) + 10 % utilisation.',
+      'Viability = 30 % thermodynamics + 30 % climate fit + 25 % economics (payback) + 15 % utilisation.',
       'Eco grade = 40 % net CO2 abatement + 30 % water balance + 30 % local habitat, adjusted by the mitigation tier.',
       'Show calculation opens every step with its formula, the numbers put in and their sources; a tornado chart shows which inputs move the net value most.',
     ],
@@ -302,20 +302,6 @@ export default function HowItWorks() {
         </div>
 
         <div className="how-block">
-          <h3>Example: a 100 MW Vera Rubin site</h3>
-          <div className="calc">
-            <div><span>IT load</span><b>100 MW</b></div>
-            <div><span>x liquid heat share</span><b>0.95</b></div>
-            <div><span>= heat in the water loop</span><b>95 MW at about 55 C</b></div>
-            <div><span>x 8,760 hours</span><b>about 832,000 MWh of heat per year</b></div>
-          </div>
-          <p className="fineprint">
-            Illustrative upper bound. Assumes constant full IT load all year and the NVIDIA reference loop
-            temperatures. The real models use the hourly load range of each site and lose heat in transport.
-          </p>
-        </div>
-
-        <div className="how-block">
           <h3>What every model reports</h3>
           <div className="kpis">
             {KPIS.map((k) => (
@@ -334,25 +320,6 @@ export default function HowItWorks() {
             PUE, WUE and ERE follow the definitions of The Green Grid. Each model compares a baseline (site
             without the solution) with a counterfactual (site with it) and includes a tornado chart of the inputs
             that move the result most.
-          </p>
-        </div>
-
-        <div className="how-block israel">
-          <h3>Why location changes the answer: Israel</h3>
-          <div className="israel-grid">
-            <div><b>Low heating demand</b><p>Mild winters mean little use for district or greenhouse heating. Heat based options score low.</p></div>
-            <div><b>High cooling demand</b><p>Long hot summers favour heat driven cooling, for example adsorption chillers fed by the warm loop.</p></div>
-            <div><b>Water scarcity</b><p>Water saved by dry or free cooling and reclaimed water counts more than in wet climates.</p></div>
-            <div><b>Coastal desalination</b><p>A large desalination sector next to the coast makes feed water preheating and thermal desalination worth checking.</p></div>
-          </div>
-          <p>
-            The same Vera Rubin rack screened in a Tel Aviv-like climate puts flexible compute, low temperature
-            drying, dry cooling, desalination preheating and adsorption chillers on top. In a Stockholm-like
-            climate fish farms, greenhouses, biogas and district heating lead.
-          </p>
-          <p className="fineprint">
-            Example screenings run on synthetic climate summaries, not database output. Shown to illustrate the
-            method.
           </p>
         </div>
 

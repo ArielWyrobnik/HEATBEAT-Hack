@@ -147,7 +147,14 @@ export function Results({ r }: { r: ModelResult }) {
       {ko.length > 0 && (
         <details className="ko">
           <summary>{ko.length} options knocked out</summary>
-          <ul>{ko.map((o) => <li key={o.option_id}><b>{o.name}</b> {o.ko_reasons[0] ?? ''}</li>)}</ul>
+          <ul>{ko.map((o) => (
+            <li key={o.option_id}>
+              <b>{o.name}</b>
+              {o.ko_reasons.length > 0 && (
+                <ul className="ko-reasons">{o.ko_reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+              )}
+            </li>
+          ))}</ul>
         </details>
       )}
 
@@ -241,7 +248,10 @@ export function FullResults({ r }: { r: ModelResult }) {
                 {ko.map((x) => (
                   <tr key={x.option_id} className="ko-row">
                     <td>KO</td>
-                    <td className="opt-name">{x.name}<small>{x.ko_reasons[0] ?? ''}</small></td>
+                    <td className="opt-name">
+                      {x.name}
+                      {x.ko_reasons.map((reason) => <small key={reason} className="ko-reason">{reason}</small>)}
+                    </td>
                     <td colSpan={8} />
                   </tr>
                 ))}

@@ -533,3 +533,7 @@ body.panel-full { overflow: hidden; }
 .co { display: inline-block; font-size: 12px; font-style: normal; padding: 2px 7px; border: 1px solid; margin: 0 4px 4px 0; white-space: nowrap; }
 .tie-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 12px; color: var(--muted); margin-top: 12px; }
 @media (max-width: 1100px) { .full .stack-grid { grid-template-columns: 1fr; } }
+
+/* full rejection lists */
+.ko-reasons { margin: 2px 0 6px; padding-left: 16px; list-style: disc; display: grid; gap: 2px; font-size: 12px; }
+.rank-table .ko-reason { display: block; }

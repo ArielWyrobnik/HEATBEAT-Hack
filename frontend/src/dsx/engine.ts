@@ -5,7 +5,7 @@
  * Typed facade: ./types.ts. Used by ./adapter.ts to plug the evaluator into Heat Beat as a model.
  */
 export const ENGINE = (() => {
-  const VERSION = "3.2.0";
+  const VERSION = "3.3.0";
   const HOURS = 8760;
   const C = {
     carnot_eta: 0.50, approach_k: 5.0, cop_cap: 8.0, air_offset_c: 12.0,
@@ -167,13 +167,13 @@ export const ENGINE = (() => {
         qdel[i] = qsrc[i] * C.orc_eta_frac * carnot;
       }
       const Qs0 = sum(qsrc); meanEta = Qs0 > 0 ? sum(qdel) / Qs0 : 0;
-      pThermo = 5 * lin(meanEta, 0, 0.08);
+      pThermo = 5 * lin(meanEta, 0, 0.12);
     } else {
       [cop, direct] = heatPump(tdc, o.t_sink);
       whp = qsrc.map((v, i) => direct[i] ? 0 : v / (cop[i] - 1));
       qdel = qsrc.map((v, i) => v + whp[i]);
       const Qd0 = sum(qdel), free = Qd0 > 0 ? 1 - sum(whp) / Qd0 : 0;
-      pThermo = 5 * lin(free, 0.5, 1.0);
+      pThermo = 5 * lin(free, 0.0, 1.0);
     }
     const Qs = sum(qsrc), Qd = sum(qdel), W = sum(whp);
 
@@ -206,7 +206,7 @@ export const ENGINE = (() => {
     const netAnnual = value + carbonRev - hpCost - C.opex_frac * capex;
     const payback = netAnnual > 0 ? capex / netAnnual : Infinity;
     const pEcon = netAnnual <= 0 ? 0 : 5 * lin(payback, C.payback_worst_yr, C.payback_best_yr);
-    const rawV = 0.35 * pThermo + 0.30 * pClimate + 0.25 * pEcon + 0.10 * pUtil;
+    const rawV = 0.30 * pThermo + 0.30 * pClimate + 0.25 * pEcon + 0.15 * pUtil;
     const viability = r(gate * rawV, 2);
 
     const intensity = Qd > 0 ? netAbated * 1000 / Qd : 0;

@@ -173,8 +173,8 @@ function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
     },
     {
       title: 'Viability score',
-      formula: 'viability = G × (0.35·P_thermo + 0.30·P_climate + 0.25·P_econ + 0.10·P_util), each 0 to 5',
-      terms: [calc('p_thermo', 'P thermo (free heat share)', s.p_thermo, '0-5'), calc('p_climate', 'P climate (demand hours)', s.p_climate, '0-5'),
+      formula: 'viability = G × (0.30·P_thermo + 0.30·P_climate + 0.25·P_econ + 0.15·P_util), each 0 to 5;  P_thermo = 5 × free-heat share (ORC: 5 × efficiency / 12 %)',
+      terms: [calc('p_thermo', 'P thermo (share of delivered heat not from heat-pump power)', s.p_thermo, '0-5'), calc('p_climate', 'P climate (demand hours)', s.p_climate, '0-5'),
         calc('p_econ', 'P econ (payback 15 → 3 yr)', s.p_econ, '0-5'), calc('p_util', 'P util (heat used, distance)', s.p_util, '0-5')],
       result: o.viability, unit: 'of 5',
     },
