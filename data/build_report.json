@@ -11,7 +11,7 @@
   },
   "meta": {
     "build_mode": "online",
-    "built_utc": "2026-11-26T11:37:31+00:00",
+    "built_utc": "2026-11-26T12:25:57+00:00",
     "reference_year": "2024",
     "schema_version": "1",
     "timestamps": "UTC, hour-beginning"
@@ -66,10 +66,12 @@
       "kind": "synthetic_shape"
     },
     "US-CAISO-NP15": {
-      "kind": "synthetic_shape"
+      "coverage": 0.9991,
+      "kind": "wholesale_da_lmp"
     },
     "US-CAISO-SP15": {
-      "kind": "synthetic_shape"
+      "coverage": 0.9991,
+      "kind": "wholesale_da_lmp"
     },
     "US-ERCOT-NORTH": {
       "coverage": 0.9993,
@@ -159,7 +161,7 @@
     }
   },
   "synthetic_share": {
-    "price_rows": 0.7955658014571949,
+    "price_rows": 0.7501526535850306,
     "weather_sites": 0.0
   },
   "weather": {
