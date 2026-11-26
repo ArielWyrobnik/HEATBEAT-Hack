@@ -454,8 +454,9 @@ with t_chk:
     res += ck.weather_checks(w_nasa, "NASA weather") if do_nasa else []
     if w_db is not None and w_live is not None and status.get("build_mode") == "online":
         res += ck.compare_weather(w_live, w_db, "LIVE vs DB weather (same API, should match)", 0.2)
-    if w_nasa is not None and (w_live is not None or w_db is not None):
-        res += ck.compare_weather(w_nasa, w_live if w_live is not None else w_db,
+    om_ref = w_live if w_live is not None else (w_db if status.get("build_mode") == "online" else None)
+    if w_nasa is not None and om_ref is not None:
+        res += ck.compare_weather(w_nasa, om_ref,
                                   "NASA vs Open-Meteo (independent sources)", 2.0,
                                   independent=True)
     res += ck.price_checks(prices) if status["ok"] else []
