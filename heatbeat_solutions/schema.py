@@ -60,6 +60,7 @@ class Ambient:
     t_db_ideal_c: Range
     t_db_tolerable_c: Range
     note: str = ""
+    supply_approach_k: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -106,6 +107,7 @@ def _parse_solution(d: dict) -> Solution:
             t_db_ideal_c=_range(a.get("t_db_ideal_c"), f"{sid}.ambient.t_db_ideal_c"),
             t_db_tolerable_c=_range(a.get("t_db_tolerable_c"), f"{sid}.ambient.t_db_tolerable_c"),
             note=a.get("note", ""),
+            supply_approach_k=None if a.get("supply_approach_k") is None else float(a["supply_approach_k"]),
         ),
         demand_driver=d["demand_driver"],
         seasonality=d["seasonality"],
