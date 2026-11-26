@@ -97,36 +97,42 @@ NREL county level biomass data would fill this but was not reachable.
 
 ### Cold chain and food offtake (`d_market_m`)
 
-1. OpenStreetMap via the Overpass API (ODbL), 60 km around each site: cold storage and refrigerated
-   warehouses (tags and names such as Lineage, Americold), seafood or fish processing, produce terminal
-   markets and food wholesale. Layer `osm_market.csv`, fetched by GitHub Actions.
-2. EPA GHGRP NAICS 3117 (seafood processing).
+Source: Overture Maps Foundation places, release 2026-11-18.0 (open POI data, largely from Meta and
+Microsoft plus OpenStreetMap), read from the public AWS bucket `overturemaps-us-west-2` like
+`fetch_gis.py`. Places with Overture confidence >= 0.6 within 60 km of each site, layer
+`overture_market.csv`:
 
-If none of these is within 60 km, OSM food processing sites are used (`low`). If there is nothing at all,
-`d_market_m` is set to 72,000 m (60 km times circuity) as a lower bound and flagged `low`. OSM coverage of
-warehouses is uneven, so a large value can also mean "not mapped".
+* **core**: cold storage (storage or warehouse categories whose name matches Lineage, Americold, "cold
+  storage", "refrigerated warehouse" and similar), `seafood_wholesaler`, `produce_wholesaler`, plus EPA
+  GHGRP seafood processing (NAICS 3117).
+* **broad** (fallback, `low`): `wholesale_grocer`, `food_beverage_distributor`, `meat_wholesaler`,
+  `restaurant_wholesale`.
 
-### Industrial zoning proxy (`ind_zoning`, extra)
+`d_market_m` is the routing distance to the nearest core hub; if none is within 60 km the nearest broad hub
+is used; if there is nothing at all it is set to 72,000 m (60 km times circuity) as a lower bound, flagged
+`low`. Overture categories come from business listings and are sometimes wrong (for example an LED
+importer tagged as produce wholesaler), so treat `market_name` as a hint and check it for the final pitch.
 
-The Excel input 18 `ind_zoning` needs a municipal zoning map, which has no national API. As a proxy,
-`ind_zoning = 1` if OpenStreetMap has any `landuse=industrial` area within 3 km of the site coordinate
-(`n_industrial_landuse_3km` gives the count). Always `low` confidence and `assumption` status: land use
-is not zoning, and most site coordinates are city level.
+OpenStreetMap via Overpass was tried first and dropped: from GitHub runners the queries timed out
+(run 45815498075, 2026-11-26) and OSM tagging mixed in seafood restaurants.
+
+`ind_zoning` is not produced here; it comes from `data_pipeline/site_gis.csv` (`hd.gis_inputs`).
 
 ## Hand over to the ranking engine
 
 `data_pipeline/site_ranking_inputs_industry.csv` repeats the Excel keys in long format
 (`site_id,key,value,status,source,note`), which `heatbeat_ranking` reads automatically.
-`status` is `data` for distances computed from registries and `assumption` for `q_fw_mw`, `ind_zoning`
-and market lower bounds.
+`status` is `data` for distances computed from registries and `assumption` for `q_fw_mw` and market
+lower bounds.
 
 ## Rebuilding
 
 ```
 python -m data_pipeline.fetch_industry --stage eia        # works anywhere with access to AWS S3
+python -m data_pipeline.fetch_industry --stage overture   # same, Overture places on AWS S3
 python -m data_pipeline.fetch_industry --stage assemble   # offline, from the committed layers
 ```
 
-The GHGRP, AgSTAR and OSM stages need epa.gov and overpass-api.de, which the cloud sandbox cannot reach.
+The GHGRP and AgSTAR stages need epa.gov, which the cloud sandbox cannot reach.
 Workflow `.github/workflows/build-industry.yml` runs all stages on a GitHub runner and commits the layers
 and `site_industry.csv`. Run it from the Actions tab ("Build site industry layers", Run workflow).

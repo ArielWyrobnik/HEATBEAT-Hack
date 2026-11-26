@@ -14,7 +14,7 @@ Stages (each writes small point layers to data_pipeline/industry/, which are com
     python -m data_pipeline.fetch_industry --stage eia       # EIA-860/923 via PUDL (S3 parquet)
     python -m data_pipeline.fetch_industry --stage ghgrp     # EPA GHGRP data summary spreadsheets
     python -m data_pipeline.fetch_industry --stage agstar    # EPA AgSTAR livestock digester database
-    python -m data_pipeline.fetch_industry --stage osm       # OpenStreetMap via Overpass
+    python -m data_pipeline.fetch_industry --stage overture  # Overture Maps places (AWS S3)
     python -m data_pipeline.fetch_industry --stage assemble  # -> data_pipeline/site_industry.csv
 
 Only US sites are covered. Distances are great circle distances multiplied by a circuity factor
@@ -26,7 +26,6 @@ import argparse
 import io
 import math
 import re
-import time
 import zipfile
 from pathlib import Path
 
@@ -266,103 +265,63 @@ def stage_agstar() -> None:
 
 
 # --------------------------------------------------------------------------------------------------
-# OpenStreetMap (Overpass API): cold storage, seafood, produce wholesale near each site
+# Overture Maps places (open POI data from Meta, Microsoft and OSM on AWS S3): food distribution hubs
+# This replaced the Overpass stage for d_market_m: Overpass timed out from GitHub runners (2026-11-26).
 # --------------------------------------------------------------------------------------------------
-OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
-OSM_RADIUS_M = 60_000
-_OSM_FILTERS = [
-    '["industrial"~"^(cold_storage|refrigerated_warehouse|fish_processing|seafood|food|food_processing|slaughterhouse|meat|dairy)$"]',
-    '["building"~"^(cold_storage|refrigerated_warehouse)$"]',
-    '["warehouse"~"cold|refrigerat|frozen",i]',
-    '["product"~"fish|seafood|frozen|produce|vegetable|fruit",i]',
-    '["amenity"="marketplace"]["wholesale"]',
-    '["shop"="wholesale"]',
-    '["building"]["name"~"cold storage|refrigerated|seafood|produce market|produce terminal|terminal market|lineage|americold",i]',
-]
+OVERTURE_RELEASE = "2026-11-18.0"  # same release as data_pipeline/fetch_gis.py
+OVERTURE_PLACES = f"overturemaps-us-west-2/release/{OVERTURE_RELEASE}/theme=places/type=place"
+MARKET_RADIUS_M = 60_000
+MARKET_MIN_CONFIDENCE = 0.6  # Overture place confidence (0..1)
+# Overture taxonomy primary category -> market kind. Tier "core" counts for d_market_m; tier "broad"
+# (general food distributors, cash and carry) is only a fallback when no core hub is within the radius.
+MARKET_CATEGORIES = {
+    "seafood_wholesaler": ("seafood wholesale", "core"),
+    "produce_wholesaler": ("produce wholesale", "core"),
+    "wholesale_grocer": ("food wholesale / distributor", "broad"),
+    "food_beverage_distributor": ("food wholesale / distributor", "broad"),
+    "meat_wholesaler": ("food wholesale / distributor", "broad"),
+    "restaurant_wholesale": ("food wholesale / distributor", "broad"),
+}
+STORAGE_CATEGORIES = {"warehouse", "storage_facility", "b2b_transportation_and_storage_service",
+                      "distribution_service", "freight_and_cargo_service", "supplier_or_distributor",
+                      "food_beverage_distributor", "b2b_food_products"}
+COLD_NAME = (r"cold storage|refrigerated warehous|freezer warehouse|lineage logistics|^lineage$|americold logistics"
+             r"|^americold$|us cold storage|united states cold storage")
 
 
-def _osm_kind(tags: dict) -> str:
-    text = " ".join(f"{k}={v}" for k, v in tags.items()).lower()
-    if re.search(r"cold|refrigerat|frozen|lineage|americold", text):
-        return "cold storage"
-    if re.search(r"fish|seafood", text):
-        return "seafood"
-    if re.search(r"produce|vegetable|fruit|terminal market|marketplace|wholesale", text):
-        return "produce / wholesale food hub"
-    return "food processing"
+def stage_overture() -> None:
+    import pyarrow.compute as pc
+    import pyarrow.dataset as ds
+    import pyarrow.fs as pafs
 
-
-def _overpass(q: str, label: str, tries: int = 4, timeout: int = 150) -> dict | None:
-    for attempt in range(tries):
-        url = OVERPASS[attempt % len(OVERPASS)]
-        try:
-            r = requests.post(url, data={"data": q}, timeout=timeout, headers={"User-Agent": USER_AGENT})
-            if r.status_code == 200:
-                return r.json()
-            log.warning("Overpass %s HTTP %s for %s", url, r.status_code, label)
-        except Exception as exc:  # noqa: BLE001
-            log.warning("Overpass %s failed for %s: %s", url, label, exc)
-        time.sleep(10 * (attempt + 1))
-    return None
-
-
-ZONING_RADIUS_M = 3_000
-
-
-def stage_osm_zoning() -> None:
-    """Proxy for ind_zoning: is there OSM landuse=industrial within 3 km of the site coordinate?"""
+    dset = ds.dataset(OVERTURE_PLACES, filesystem=pafs.S3FileSystem(anonymous=True, region="us-west-2"),
+                      format="parquet")
     rows = []
     for _, s in _us_sites().iterrows():
-        q = (f'[out:json][timeout:90];(way(around:{ZONING_RADIUS_M},{s.lat},{s.lon})["landuse"="industrial"];'
-             f'relation(around:{ZONING_RADIUS_M},{s.lat},{s.lon})["landuse"="industrial"];);out ids;')
-        data = _overpass(q, s.site_id + " zoning")
-        if data is None:
-            continue
-        rows.append({"site_id": s.site_id, "n_industrial_landuse_3km": len(data.get("elements", []))})
-        time.sleep(2)
-    if not rows:
-        raise RuntimeError("Overpass zoning query returned nothing")
-    out = pd.DataFrame(rows)
-    out["source"] = "OpenStreetMap landuse=industrial via Overpass API (ODbL), queried " + time.strftime("%Y-%m-%d")
-    _write_layer(out, "osm_industrial_landuse.csv")
-
-
-def stage_osm() -> None:
-    """One small Overpass query per site and filter (a single combined query timed out on GitHub runners)."""
-    sites = _us_sites()
-    rows = []
-    for _, s in sites.iterrows():
-        elements = []
-        for f in _OSM_FILTERS:
-            q = f"[out:json][timeout:90];nwr(around:{OSM_RADIUS_M},{s.lat},{s.lon}){f};out center tags;"
-            data = _overpass(q, f"{s.site_id} {f[:30]}", tries=2, timeout=120)
-            if data is not None:
-                elements += data.get("elements", [])
-            time.sleep(1)
-        data = {"elements": elements}
-        n = 0
-        for el in data.get("elements", []):
-            lat = el.get("lat", el.get("center", {}).get("lat"))
-            lon = el.get("lon", el.get("center", {}).get("lon"))
-            if lat is None:
-                continue
-            tags = el.get("tags", {})
-            if tags.get("shop") == "wholesale" and not re.search(
-                    r"food|produce|fish|seafood|fruit|vegetable|meat|grocer", " ".join(tags.values()), re.I):
-                continue
-            rows.append({"osm_id": f"{el['type']}/{el['id']}", "name": tags.get("name", ""),
-                         "lat": lat, "lon": lon, "kind": _osm_kind(tags), "query_site": s.site_id})
-            n += 1
-        log.info("OSM %s: %d features", s.site_id, n)
-        if rows:  # write after every site, so a step timeout keeps what arrived
-            part = pd.DataFrame(rows).drop_duplicates("osm_id")
-            part["source"] = "OpenStreetMap contributors via Overpass API (ODbL), queried " + time.strftime("%Y-%m-%d")
-            _write_layer(part, "osm_market.csv")
-    if not rows:
-        raise RuntimeError("Overpass returned nothing for any site")
-    out = pd.DataFrame(rows).drop_duplicates("osm_id")
-    out["source"] = "OpenStreetMap contributors via Overpass API (ODbL), queried " + time.strftime("%Y-%m-%d")
-    _write_layer(out, "osm_market.csv")
+        dlat = MARKET_RADIUS_M / 111_320
+        dlon = dlat / max(math.cos(math.radians(s.lat)), 0.1)
+        x0, x1, y0, y1 = s.lon - dlon, s.lon + dlon, s.lat - dlat, s.lat + dlat
+        f = ((pc.field("bbox", "xmax") >= x0) & (pc.field("bbox", "xmin") <= x1)
+             & (pc.field("bbox", "ymax") >= y0) & (pc.field("bbox", "ymin") <= y1)
+             & (pc.field("confidence") >= MARKET_MIN_CONFIDENCE))
+        t = dset.to_table(filter=f, columns=["id", "names", "taxonomy", "bbox", "confidence"]).to_pandas()
+        cat = t["taxonomy"].map(lambda x: x.get("primary") if isinstance(x, dict) else None)
+        name = t["names"].map(lambda x: x.get("primary") if isinstance(x, dict) else None).fillna("")
+        cold = cat.isin(STORAGE_CATEGORIES) & name.str.contains(COLD_NAME, case=False, regex=True)
+        keep = cat.isin(MARKET_CATEGORIES.keys()) | cold
+        sub = t[keep]
+        kinds = np.where(cold[keep], "cold storage", cat[keep].map(lambda c: MARKET_CATEGORIES.get(c, ("", ""))[0]))
+        tiers = np.where(cold[keep], "core", cat[keep].map(lambda c: MARKET_CATEGORIES.get(c, ("", ""))[1]))
+        for (_, r), kind, tier, c in zip(sub.iterrows(), kinds, tiers, cat[keep]):
+            b = r["bbox"]
+            rows.append({"overture_id": r["id"], "name": r["names"].get("primary") if isinstance(r["names"], dict) else "",
+                         "lat": (b["ymin"] + b["ymax"]) / 2, "lon": (b["xmin"] + b["xmax"]) / 2,
+                         "kind": kind, "tier": tier, "category": c, "place_confidence": round(float(r["confidence"]), 2),
+                         "query_site": s.site_id})
+        log.info("Overture %s: %d of %d places kept", s.site_id, len(sub), len(t))
+    out = pd.DataFrame(rows).drop_duplicates("overture_id")
+    out["source"] = f"Overture Maps Foundation places, release {OVERTURE_RELEASE} (CDLA Permissive 2.0 / ODbL)"
+    _write_layer(out, "overture_market.csv")
 
 
 # --------------------------------------------------------------------------------------------------
@@ -429,17 +388,16 @@ def stage_assemble() -> pd.DataFrame:
     co2 = _layer("ghgrp_co2.csv")
     food = _layer("ghgrp_food.csv")
     agstar = _layer("agstar_digesters.csv")
-    osm = _layer("osm_market.csv")
-    zoning = _layer("osm_industrial_landuse.csv")
+    mkt = _layer("overture_market.csv")  # market points (Overture places)
 
     bio_main = _concat(bio_eia[bio_eia["layer"] == "biomass"] if bio_eia is not None else None,
                        agstar,
                        food[food["kind"].str.startswith("food")] if food is not None else None)
     landfill = bio_eia[bio_eia["layer"] == "landfill"] if bio_eia is not None else None
     co2_pts = _concat(co2, ccs)
-    market_core = _concat(osm[osm["kind"] != "food processing"] if osm is not None else None,
+    market_core = _concat(mkt[mkt["tier"] == "core"] if mkt is not None else None,
                           food[food["kind"].str.startswith("seafood")] if food is not None else None)
-    market_food = _concat(osm[osm["kind"] == "food processing"] if osm is not None else None)
+    market_food = _concat(mkt[mkt["tier"] == "broad"] if mkt is not None else None)
     qualifying = steam[steam["q_fw_mw"] >= 2.0] if steam is not None else None  # Excel KO: q_fw >= 2 MW
 
     rows = []
@@ -484,24 +442,18 @@ def stage_assemble() -> pd.DataFrame:
         # Market / cold chain
         hit = _nearest(s, market_core)
         base = "medium"
-        if hit is None or hit[1] > OSM_RADIUS_M:
+        if hit is None or hit[1] > MARKET_RADIUS_M:
             hit, base = _nearest(s, market_food), "low"
-        if hit and hit[1] <= OSM_RADIUS_M:
+        if hit and hit[1] <= MARKET_RADIUS_M:
             p, d = hit
             r.update(d_market_m=round(d * CIRCUITY), d_market_straight_m=round(d), market_name=p["name"],
                      market_kind=p.kind, market_source=p.source, market_confidence=_confidence(base, s, d))
-        elif osm is not None:
-            r.update(d_market_m=round(OSM_RADIUS_M * CIRCUITY), market_kind="none found within search radius",
-                     market_source=f"OpenStreetMap (lower bound: nothing tagged within {OSM_RADIUS_M // 1000} km)",
+        elif mkt is not None:
+            r.update(d_market_m=round(MARKET_RADIUS_M * CIRCUITY), market_kind="none found within search radius",
+                     market_source=f"Overture places (lower bound: nothing within {MARKET_RADIUS_M // 1000} km)",
                      market_confidence="low")
         else:
             r.update(market_confidence="low", market_source="no market layer available")
-        # Industrial zoning proxy
-        if zoning is not None and s.site_id in set(zoning["site_id"]):
-            n = int(zoning.set_index("site_id").loc[s.site_id, "n_industrial_landuse_3km"])
-            r.update(ind_zoning=int(n > 0), n_industrial_landuse_3km=n,
-                     zoning_source=zoning["source"].iloc[0] + "; proxy, not a zoning map",
-                     zoning_confidence="low")
         rows.append(r)
 
     out = pd.DataFrame(rows)
@@ -529,8 +481,6 @@ def _write_ranking_inputs(t: pd.DataFrame) -> None:
         ("d_co2_m", "co2", lambda r: f"{r.get('co2_name')}: {r.get('co2_kind')}; no pipeline routes; "
                                      f"confidence {r.get('co2_confidence')}"),
         ("d_bio_m", "bio", lambda r: f"{r.get('bio_name')}: {r.get('bio_kind')}; confidence {r.get('bio_confidence')}"),
-        ("ind_zoning", "zoning", lambda r: f"proxy: {r.get('n_industrial_landuse_3km')} OSM landuse=industrial "
-                                           f"areas within 3 km of the (approximate) site coordinate"),
         ("d_market_m", "market", lambda r: f"{r.get('market_name')}: {r.get('market_kind')}; "
                                            f"confidence {r.get('market_confidence')}"),
     ]
@@ -540,7 +490,7 @@ def _write_ranking_inputs(t: pd.DataFrame) -> None:
             v = r.get(key)
             if v is None or (isinstance(v, float) and math.isnan(v)):
                 continue
-            assumption = key in ("q_fw_mw", "ind_zoning") or "none found" in str(r.get("market_kind", "")) and key == "d_market_m"
+            assumption = key == "q_fw_mw" or "none found" in str(r.get("market_kind", "")) and key == "d_market_m"
             rows.append({"site_id": r["site_id"], "key": key, "value": v,
                          "status": "assumption" if assumption else "data",
                          "source": r.get(f"{block}_source"), "note": note(r)})
@@ -548,8 +498,7 @@ def _write_ranking_inputs(t: pd.DataFrame) -> None:
     log.info("wrote %s (%d rows)", RANKING_PATH, len(rows))
 
 
-STAGES = {"eia": stage_eia, "ghgrp": stage_ghgrp, "agstar": stage_agstar, "osm": stage_osm,
-          "osm_zoning": stage_osm_zoning,
+STAGES = {"eia": stage_eia, "ghgrp": stage_ghgrp, "agstar": stage_agstar, "overture": stage_overture,
           "assemble": stage_assemble}
 
 
