@@ -9,10 +9,15 @@ name: Build location database
 on:
   workflow_dispatch:
   push:
+    # Only files that change what this workflow fetches, so teammates' CSVs and modules in
+    # data_pipeline/ do not queue another long build.
     paths:
-      - "data_pipeline/**"
-      - "!data_pipeline/ecology/**"
-      - "!data_pipeline/site_ecology.csv"
+      - "data_pipeline/build_db.py"
+      - "data_pipeline/common.py"
+      - "data_pipeline/fetch_prices.py"
+      - "data_pipeline/fetch_retail_carbon.py"
+      - "data_pipeline/sites.csv"
+      - "data_pipeline/grid_regions.csv"
       - ".github/workflows/build-data.yml"
 
 permissions:
@@ -20,7 +25,8 @@ permissions:
 
 concurrency:
   group: build-data-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a running build: a newer push waits in the queue instead.
+  cancel-in-progress: false
 
 env:
   PYTHONUNBUFFERED: "1"
