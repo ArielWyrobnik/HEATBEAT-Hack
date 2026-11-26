@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
+import HowItWorks from './components/HowItWorks';
 import MapSection from './components/MapSection';
 import { loadDataCenters } from './data';
 import type { DataCenter } from './types/datacenter';
@@ -17,6 +18,7 @@ export default function App() {
       <Header />
       <main>
         <Hero />
+        <HowItWorks />
         <MapSection dataCenters={dataCenters} />
       </main>
       <footer className="footer">
