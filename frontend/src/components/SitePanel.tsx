@@ -28,6 +28,23 @@ export function useLoad<T>(fn: () => Promise<T>, deps: unknown[]): Load<T> {
   return s;
 }
 
+const VERDICT_TITLE: Record<string, string> = {
+  no_gain: 'Already optimal: nothing beats today\'s setup',
+  small_gain: 'Small gain only',
+  gain: 'Improvement found',
+};
+
+function Verdict({ r }: { r: ModelResult }) {
+  if (!r.verdict) return null;
+  const level = r.verdict_level ?? 'gain';
+  return (
+    <div className={`verdict verdict-${level}`}>
+      <strong>{VERDICT_TITLE[level] ?? 'Result'}</strong>
+      <span>{r.verdict}</span>
+    </div>
+  );
+}
+
 function Kpi({ label, v, sub }: { label: string; v: string; sub?: string }) {
   return (
     <div className="kpi">
@@ -172,6 +189,7 @@ export function Results({ r }: { r: ModelResult }) {
   return (
     <>
       {modal}
+      <Verdict r={r} />
       {r.warnings.length > 0 && (
         <ul className="warnings">{r.warnings.map((w) => <li key={w}>{w}</li>)}</ul>
       )}
@@ -239,6 +257,7 @@ export function FullResults({ r }: { r: ModelResult }) {
   return (
     <div className="full">
       {modal}
+      <Verdict r={r} />
       {r.warnings.length > 0 && <ul className="warnings">{r.warnings.map((w) => <li key={w}>{w}</li>)}</ul>}
 
       <section className="full-top">
