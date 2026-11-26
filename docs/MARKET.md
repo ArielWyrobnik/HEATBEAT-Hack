@@ -9,7 +9,7 @@ the script with their source). Access:
 
 ```python
 import heatbeat_data as hd
-hd.excel_inputs("us-tx-abilene-stargate")      # the 4 team Excel economics keys
+hd.excel_inputs("us-tx-abilene-stargate")      # team Excel economics keys + p_dac_credit_usd_ton
 hd.site_market("us-tx-abilene-stargate")       # every item for that site's state
 hd.site_market(sid, grid_co2_g_kwh=380)         # adds ci_heat_mix_g_kwh_th incl. electric heating
 hd.market_for("US", "CA", detail=True)          # value, low, high, unit, year, is_estimate, source_url, note
@@ -34,11 +34,11 @@ series that would replace them later: `natural-gas/pri/sum` (state prices by sec
 | aquaculture_ras | fish sales + displaced heat | `tilapia_import_usd_lb`, `catfish_farmgate_usd_lb`, `trout_farmgate_usd_lb`, `shellfish_aquaculture_usd_lb`, `seafood_import_share_pct`, `seafood_landings_*`, `fish_local_price_premium` (synthetic) |
 | anaerobic_digestion | biogas or RNG | `ng_citygate_usd_mmbtu` (commodity value), `rin_d3_usd`, `rng_d3_value_usd_mmbtu`, `lcfs_credit_usd_t` (CA, OR) |
 | low_temp_drying, microalgae | dried biomass | `wood_pellet_domestic_usd_ton`, `wood_pellet_export_usd_ton` |
-| dac_solid_sorbent | CO2 removal | `p_co2_usd_ton` (45Q DAC 180), `credit_45q_*`, `lcfs_credit_usd_t` (CA) |
+| dac_solid_sorbent | CO2 removal | `p_dac_credit_usd_ton` (45Q DAC 180), `credit_45q_*`, `lcfs_credit_usd_t` (CA) |
 | boiler feedwater preheat (team Excel) | displaced bleed steam | `p_steam_usd_mwh` |
 | adsorption / absorption chiller, orc_power, cooling options | saved electricity | from the location database (`site.grid`), not here |
 | swro_feed_preheat, med_desalination, membrane_distillation | water | water price data (separate dataset) |
-| all | carbon value of avoided emissions | `co2_compliance_usd_t` (CA, WA, RGGI states) |
+| all | carbon value of avoided emissions | `p_co2_usd_ton` = `co2_compliance_usd_t` (CA, WA, RGGI states, else 0) |
 
 ## Items and sources
 
@@ -78,7 +78,7 @@ by the fossil shares. `ci_fuel_g_kwh` (Excel key) is the gas boiler value, 213 g
 These costs are mostly already inside gas and power prices. Use them for a separate "carbon value"
 view, not on top of `p_fuel_usd_kwh`.
 
-**45Q** (`credit_45q_*`, `p_co2_usd_ton`): 85 USD/t point source, 180 USD/t DAC with geologic
+**45Q** (`credit_45q_*`, `p_dac_credit_usd_ton`): 85 USD/t point source, 180 USD/t DAC with geologic
 storage, utilization at parity since the One Big Beautiful Bill Act,
 [Global CCS Institute](https://www.globalccsinstitute.com/u-s-preserves-and-increases-45q-credit-in-one-big-beautiful-bill-act/).
 
