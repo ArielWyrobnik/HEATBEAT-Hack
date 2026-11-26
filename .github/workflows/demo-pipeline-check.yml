@@ -1,0 +1,24 @@
+name: Demo pipeline check
+
+# Runs the live API calls of the demo (Open-Meteo, NASA POWER, gridstatus CAISO) on a GitHub runner,
+# compares them with the stored database if it is present, and fails if a check fails.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "demo/**"
+      - ".github/workflows/demo-pipeline-check.yml"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q tests/test_demo.py
+      - run: python -m demo.pipeline_check --nasa --price
