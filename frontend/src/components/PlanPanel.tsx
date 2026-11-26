@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { num } from '../format';
 import type { CoolingProfile, ModelResult } from '../types/api';
-import Results from './Results';
+import Results, { Vendors } from './Results';
 
 export interface PlanPoint { lat: number; lng: number }
 
@@ -86,6 +86,7 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
         {state.s === 'loading' && <p className="muted">Fetching weather and running the model…</p>}
         {state.s === 'error' && <p className="error">{state.e}</p>}
         {r && <Results r={r} />}
+        {r && <Vendors vendors={r.cooling_vendors} title={`Who supplies the ${profile?.label ?? 'cooling'}`} />}
       </div>
     </aside>
   );

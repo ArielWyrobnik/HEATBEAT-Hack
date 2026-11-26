@@ -114,6 +114,23 @@ class CalcStep(BaseModel):
     note: str | None = None
 
 
+class Vendor(BaseModel):
+    """A company that can build one part of an option (heatbeat_data.vendors, docs/VENDORS.md)."""
+    vendor_id: str
+    name: str
+    role: str = Field(description="Part of the option it covers, e.g. district_heating")
+    role_label: str | None = None
+    one_line: str | None = None
+    url: str | None = None
+    where: str | None = Field(None, description="Base and distance, e.g. 'Saint Paul, MN, 11 km away'")
+    distance_km: float | None = None
+    nvidia: str | None = Field(None, description="NVIDIA link, e.g. 'NVIDIA DSX partner'; None = none found")
+    nvidia_source: str | None = None
+    verified: str = Field("unverified", description="verified, partly or unverified (see note)")
+    source_url: str | None = None
+    note: str | None = None
+
+
 class OptionResult(BaseModel):
     """One candidate: a single option (ranking engine) or a heat chain of components (engineering)."""
     option_id: str
@@ -136,6 +153,7 @@ class OptionResult(BaseModel):
     already_in_place: list[str] = Field(default_factory=list,
                                         description="Parts of this option the site already has today, with source")
     is_today: bool = Field(False, description="True for the option that is the site's current setup (no change)")
+    vendors: list[Vendor] = Field(default_factory=list, description="Up to 3 companies that can build it, nearest first")
 
 
 class SetupFact(BaseModel):
@@ -206,6 +224,8 @@ class ModelResult(BaseModel):
     verdict_level: str | None = Field(None, description="no_gain, small_gain or gain (heatbeat_engineering.verdict)")
     inputs_used: dict[str, Any] = Field(default_factory=dict)
     inputs: list["InputValue"] = Field(default_factory=list, description="Inputs with flags (filled for planned sites)")
+    cooling_vendors: list[Vendor] = Field(default_factory=list,
+                                          description="Planned sites: who supplies the chosen IT cooling")
     planned_site: "PlanRequest | dict[str, Any] | None" = Field(
         None, description="Set when the result is for a planned data center (the request, or a model's own summary)")
 

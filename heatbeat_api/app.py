@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .models import clean, cooling_profiles, default_model, load_models
 from .schemas import (CoolingProfile, EvaluateRequest, LeaderboardRow, ModelInfo, ModelResult, PlanRequest,
-                      SiteInputs, SiteSummary)
+                      SiteInputs, SiteSummary, Vendor)
 
 # HEATBEAT_LIVE=0 never fetches weather from the internet (CI, offline demo); default 1.
 LIVE = os.getenv("HEATBEAT_LIVE", "1") != "0"
@@ -176,9 +176,21 @@ def site_inputs(site_id: str, model: str | None = None,
 @api.get("/sites/{site_id}/ranking", response_model=ModelResult)
 def ranking(site_id: str, model: str | None = None, mode: str | None = None,
             is_greenfield: int | None = Query(None, ge=0, le=1)) -> ModelResult:
-    _site(site_id)
+    s = _site(site_id)
     m = _model(model)
-    return _cached_run(m.info.name, site_id, mode or m.info.default_mode, is_greenfield)
+    return with_vendors(_cached_run(m.info.name, site_id, mode or m.info.default_mode, is_greenfield), s.lat, s.lon)
+
+
+def with_vendors(r: ModelResult, lat: float, lon: float, cooling_profile: str | None = None) -> ModelResult:
+    """Copy of r with up to 3 companies per option that can build it (heatbeat_data.vendors)."""
+    import heatbeat_data as hd
+    r = r.model_copy(deep=True)
+    for o in r.options:
+        if o.feasible:
+            o.vendors = [Vendor(**v) for v in hd.vendors_for(o.components, lat, lon)]
+    if cooling_profile:
+        r.cooling_vendors = [Vendor(**v) for v in hd.vendors_for_cooling(cooling_profile, lat, lon)]
+    return r
 
 
 def best_change(r: ModelResult):
@@ -223,8 +235,9 @@ def leaderboard(scope: str | None = Query(None, description="verified or all, de
 @api.post("/evaluate", response_model=ModelResult)
 def evaluate(req: EvaluateRequest) -> ModelResult:
     """What-if for a database site: rerun the model with changed inputs (not cached)."""
-    _site(req.site_id)
-    return _run(_model(req.model), req.site_id, req.mode, req.is_greenfield, req.overrides or None, None, req.tornado)
+    s = _site(req.site_id)
+    return with_vendors(_run(_model(req.model), req.site_id, req.mode, req.is_greenfield, req.overrides or None, None,
+                             req.tornado), s.lat, s.lon)
 
 
 @api.get("/cooling-profiles", response_model=list[CoolingProfile])
@@ -280,7 +293,7 @@ def plan(req: PlanRequest) -> ModelResult:
         res.warnings.insert(0, weather_note)
     if km > 300:
         res.warnings.insert(0, f"The nearest database site is {km:.0f} km away: regional prices may not fit.")
-    return res
+    return with_vendors(res, req.lat, req.lon, req.cooling_profile)
 
 
 def nearest_site(lat: float, lon: float, with_weather: bool = False) -> tuple[SiteSummary, float]:

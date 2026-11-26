@@ -93,6 +93,23 @@ export interface CalcStep {
   note?: string | null;
 }
 
+/** A company that can build one part of an option (heatbeat_data.vendors, docs/VENDORS.md). */
+export interface Vendor {
+  vendor_id: string;
+  name: string;
+  role: string;
+  role_label?: string | null;
+  one_line?: string | null;
+  url?: string | null;
+  where?: string | null;
+  distance_km?: number | null;
+  nvidia?: string | null;
+  nvidia_source?: string | null;
+  verified: 'verified' | 'partly' | 'unverified' | string;
+  source_url?: string | null;
+  note?: string | null;
+}
+
 export interface OptionResult {
   option_id: string;
   name: string;
@@ -118,6 +135,7 @@ export interface OptionResult {
   already_in_place?: string[];
   /** True for the option that is the site's current setup (no change) */
   is_today?: boolean;
+  vendors?: Vendor[];
 }
 
 /** One fact about what the data center does today (site_current_setup.csv) */
@@ -189,6 +207,7 @@ export interface ModelResult {
   inputs_used: Record<string, unknown>;
   /** Inputs with flags, filled for planned sites */
   inputs: InputValue[];
+  cooling_vendors?: Vendor[];
   planned_site?: PlanRequest | null;
 }
 

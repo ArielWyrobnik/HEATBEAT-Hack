@@ -228,3 +228,8 @@ from .current_setup import (already_implemented, current_setup, current_setup_ta
 __all__ += ["already_implemented", "current_setup", "current_setup_table", "setup_sources", "verification_status",
             "verified_rejection"]
 Site.current_setup = lambda self: current_setup(self.site_id)
+
+# Companies that can build each solution (docs/VENDORS.md)
+from .vendors import vendors, vendors_for, vendors_for_cooling  # noqa: E402
+
+__all__ += ["vendors", "vendors_for", "vendors_for_cooling"]
