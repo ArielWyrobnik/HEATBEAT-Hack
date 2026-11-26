@@ -1,0 +1,27 @@
+source_id,title,url,published
+epoch_dalles,Epoch AI data center directory: Google The Dalles,https://epoch.ai/data/ai-data-centers/directory/google-the-dalles,2026-09-03
+epoch_cb_east,Epoch AI data center directory: Google Council Bluffs East,https://epoch.ai/data/ai-data-centers/directory/google-council-bluffs-east,2026-09-03
+epoch_midlothian,Epoch AI data center directory: Google Midlothian,https://epoch.ai/data/ai-data-centers/directory/google-midlothian,2026-09-03
+epoch_pryor_north,Epoch AI data center directory: Google Pryor (North),https://epoch.ai/data/ai-data-centers/directory/google-pryor-north,2026-09-03
+epoch_google_new_albany,Epoch AI data center directory: Google New Albany,https://epoch.ai/data/ai-data-centers/directory/google-new-albany,2026-09-17
+epoch_meta_prometheus,Epoch AI data center directory: Meta Prometheus (New Albany),https://epoch.ai/data/ai-data-centers/directory/meta-prometheus,2026-10-02
+epoch_colossus1,Epoch AI data center directory: xAI Colossus 1,https://epoch.ai/data/ai-data-centers/directory/colossus-1,2026-06-16
+epoch_fairwater_wi,Epoch AI data center directory: Microsoft Fairwater Wisconsin,https://epoch.ai/data/ai-data-centers/directory/microsoft-fairwater-wisconsin,2026-07-25
+epoch_hyperion,Epoch AI data center directory: Meta Hyperion,https://epoch.ai/data/ai-data-centers/directory/meta-hyperion,2026-09-21
+epoch_eagle_mountain,Epoch AI data center directory: Meta Eagle Mountain,https://epoch.ai/data/ai-data-centers/directory/meta-eagle-mountain,2026-07-17
+epoch_sarpy,Epoch AI data center directory: Meta Sarpy,https://epoch.ai/data/ai-data-centers/directory/meta-sarpy,2026-08-02
+epoch_methodology,"Epoch AI data centers methodology (IT power from cooling equipment, within 1.4x in 80 % of cases)",https://epoch.ai/data/data-centers-documentation/methodology,2026
+google_pue_2026q2,"Google data centers: efficiency, PUE per campus (Q2 2026, trailing twelve months)",https://www.datacenters.google/efficiency,2026-Q2
+meta_edi_2025_elec,"Meta 2025 Environmental Data Index: electricity consumption by facility (MWh, FY2024)",https://sustainability.atmeta.com/asset/2025-environmental-data-index,2025
+msft_wi_2025,Microsoft datacenters in Wisconsin (fact sheet),https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Wisconsin.pdf,2025-10
+equinix_ny4_spec,Equinix NY4 IBX technical specifications,https://static.datacentermap.com/company/equinix/datacenter2886/NY-ibx_ny4_en.pdf,2024-01-03
+equinix_ny5_spec,Equinix NY5 IBX technical specifications,https://cdn.baxtel.com/data-center/equinix-secaucus-ny2-ny4-ny5-ny6/files/NY5_IBX_Site_Sec_US-Letter-11.pdf,2017
+equinix_da1_spec,Equinix DA1 IBX technical specifications,https://static.datacentermap.com/company/equinix/datacenter1045/TX-ibx_da1_en.pdf,2023-11-30
+dlr_cermak_factsheet,Digital Realty: 350 East Cermak Road property factsheet,https://static.datacentermap.com/company/digital-realty-trust/datacenter980/DS_Digital_Realty_2308_ORD10_Property_Factsheet_EN.pdf,2023
+dcf_one_wilshire_2020,Data Center Frontier: A new horizon at One Wilshire,https://www.datacenterfrontier.com/cooling/article/11429180/a-new-horizon-at-one-wilshire,2020-02-06
+mass_markley_2021,"Mass.gov: Boston, the Markley Group fact sheet (One Summer Street)",https://www.mass.gov/doc/boston-the-markley-group-january-2021/download,2021-01-29
+dcm_one_summer,Datacentermap: One Summer St specs,https://datacentermap.com/usa/massachusetts/boston/one-summer-st/specs,
+dcm_mi1,Datacentermap: NAP of the Americas (Equinix MI1) specs,https://www.datacentermap.com/usa/florida/miami/terremark-miami/specs/,
+dck_60hudson_2014,Data Center Knowledge: Manhattan's 60 Hudson Street gets a power boost,https://www.datacenterknowledge.com/energy-power-supply/manhattan-s-iconic-60-hudson-street-gets-a-power-boost,2014-09-16
+dcd_qts_dc2,DCD: QTS opens 72 MW Atlanta facility DC2 (next to the 200 MW DC1),https://datacenterdynamics.com/en/news/qts-realty-trust-opens-72mw-atlanta-facility-dc2,
+dck_switch_tr1_2017,Data Center Knowledge: Switch launches its first enormous Reno data center,https://www.datacenterknowledge.com/archives/2017/02/15/switch-launches-its-first-enormous-reno-data-center,2017-02-15

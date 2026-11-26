@@ -1,0 +1,24 @@
+site_id,it_mw,adopted,kind,confidence,source_id,note
+us-or-the-dalles-google,154.0,1,third_party_it_estimate,medium,epoch_dalles,Epoch IT power after building 2 (Apr 2026); water-implied 77 MW (2023) fits building 1 only
+us-ia-council-bluffs-google,237.0,1,third_party_it_estimate,medium,epoch_cb_east,"Epoch IT power for Council Bluffs East (3 buildings, Jul 2026); water-implied 246 MW for 2023"
+us-tx-midlothian-google,103.0,1,third_party_it_estimate,medium,epoch_midlothian,Epoch IT power (Jul 2026)
+us-ok-pryor-google,368.0,1,third_party_it_estimate,medium,epoch_pryor_north,Epoch IT power for Pryor North after building 2 (Sep 2026)
+us-tn-memphis-xai,340.0,1,third_party_it_estimate,medium,epoch_colossus1,Epoch IT power for Colossus 1; Colossus 2 is a separate site
+us-wi-mount-pleasant-microsoft,369.0,1,third_party_it_estimate,medium,epoch_fairwater_wi,"Epoch: building 1 operational Apr 2026; 2,263 MW projected for 2028"
+us-la-richland-meta,1632.0,1,third_party_planned_it,low,epoch_hyperion,Epoch projected IT power of phase 1 (Q1 2028); 0 MW operating today
+us-oh-new-albany,804.0,1,third_party_it_estimate,low,epoch_google_new_albany;epoch_meta_prometheus,lower bound: Google New Albany 333 MW plus Meta Prometheus 471 MW (Epoch); AWS and others not counted
+us-il-chicago-cermak,70.0,1,upper_bound_ups,medium,dlr_cermak_factsheet,"UPS capacity 70,000 kW (utility 109,000 kW): the critical load cannot exceed this; actual load not published"
+us-fl-miami-equinix,17.0,1,upper_bound_facility,low,dcm_mi1,fully built-out power 17 MW (aggregator); IT is lower
+us-ga-douglas-google,86.0,1,derived_from_reported_water,low,diw_google_2023,implied by Google-reported 2023 water consumption with the validated tower model; assumes all halls evaporative
+us-nc-lenoir-google,84.0,1,derived_from_reported_water,low,diw_google_2023,implied by Google-reported 2023 water consumption with the validated tower model; assumes all halls evaporative
+us-sc-berkeley-google,188.0,1,derived_from_reported_water,low,diw_google_2023,implied by Google-reported 2023 water consumption with the validated tower model; assumes all halls evaporative
+us-or-prineville-meta,183.0,1,derived_from_reported_energy,high,meta_edi_2025_elec,"Meta-reported 1,728,291 MWh electricity 2024 / 8760 h / Meta fleet PUE 1.08 = average IT load"
+us-ia-altoona-meta,168.0,1,derived_from_reported_energy,high,meta_edi_2025_elec,"Meta-reported 1,585,392 MWh electricity 2024 / 8760 h / Meta fleet PUE 1.08 = average IT load"
+us-ne-sarpy-meta,133.0,1,derived_from_reported_energy,high,meta_edi_2025_elec,"Meta-reported 1,258,239 MWh electricity 2024 / 8760 h / Meta fleet PUE 1.08 = average IT load"
+us-ut-eagle-mountain-meta,118.0,1,derived_from_reported_energy,high,meta_edi_2025_elec,"Meta-reported 1,115,619 MWh electricity 2024 / 8760 h / Meta fleet PUE 1.08 = average IT load"
+us-ca-la-one-wilshire,,0,upper_bound_facility,medium,dcf_one_wilshire_2020,building power capacity 20 MVA; team estimate 10 MW IT kept
+us-ma-boston-one-summer,,0,upper_bound_facility,low,dcm_one_summer,fully built-out power 30 MW (aggregator); team estimate 15 MW IT kept
+us-ny-nyc-60-hudson,,0,upper_bound_facility,low,dck_60hudson_2014,"building utility capacity 50 MW (2014), many tenants; team estimate 20 MW IT kept"
+us-ga-atlanta-qts,,0,upper_bound_facility,low,dcd_qts_dc2,DC1 200 MW plus DC2 72 MW power capacity; team estimate 200 MW IT kept
+us-nv-reno-switch,,0,upper_bound_facility,low,dck_switch_tr1_2017,"Tahoe Reno 1 designed for up to 130 MW (2017), campus planned for 650 MW; team estimate 300 MW kept"
+us-nj-secaucus-equinix,,0,backup_generation,low,equinix_ny4_spec,"NY4 18 x 2.5 MW and NY5 5 x 2.5 MW generators (N+1), about 52 MW backup for two of the buildings; team estimate 60 MW kept"

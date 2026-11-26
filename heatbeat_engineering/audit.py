@@ -15,11 +15,14 @@ Files written
 --offline` at commit 0566f4b (main just before PR #41), so it can be reproduced with git.
 
 Input classes (column `class`)
-    sourced_site        a public source states it for this site (operator report, permit, press)
+    sourced_site        a public source states it for this site (operator report, permit, press); for IT load
+                        also a hard upper bound such as UPS capacity
     sourced_region      public dataset value for the state, grid region or utility (EIA, eGRID, ISO, tariff)
     measured_location   public dataset at the site coordinates (ERA5 weather, WRI Aqueduct)
     derived             computed from public data with a documented method (GIS distances, unit conversions);
                         `confidence` comes from the data file (low = rough method, e.g. campus centre coordinates)
+    third_party_estimate  estimate by an independent tracker with a published method (Epoch AI satellite and
+                        cooling equipment model, within 1.4x in 80 % of cases)
     literature_typical  typical value for the technology from literature, not specific to this site
     team_estimate       team judgement or a value the data file flags as estimate (IT load, engineering
                         estimates, scoring thresholds); `confidence` says how good the judgement is
@@ -116,6 +119,8 @@ def input_inventory(live: bool = False) -> pd.DataFrame:
     ind = pd.read_csv(DP / "site_industry.csv").set_index("site_id")
     eco = pd.read_csv(DP / "site_ecology.csv").set_index("site_id")
     mk = pd.read_csv(DP / "market_prices.csv")
+    itev = pd.read_csv(DP / "site_it_load_evidence.csv") if (DP / "site_it_load_evidence.csv").exists() else \
+        pd.DataFrame(columns=["site_id", "adopted", "kind", "note"])
     rows = []
 
     def add(sid, key, label, value, unit, cls, conf, source, note=""):
@@ -137,8 +142,15 @@ def input_inventory(live: bool = False) -> pd.DataFrame:
         g, st = site.grid, s.state
         p = prof.loc[sid]
         # data center itself
-        cls = "team_estimate" if int(p.get("is_assumed") or 0) or str(p["confidence"]) == "low" else "sourced_site"
-        add(sid, "it_mw", "IT load", s.it_mw, "MW", cls, p["confidence"], p["source_ids"], p.get("notes") or "")
+        evr = itev[(itev["site_id"] == sid) & (itev["adopted"] == 1)]
+        if len(evr):
+            kind = evr.iloc[0]["kind"]
+            cls = ("derived" if kind.startswith("derived") else "third_party_estimate" if kind.startswith("third")
+                   else "sourced_site")
+            note = f"{kind}: {evr.iloc[0]['note']}"
+        else:
+            cls, note = "team_estimate", p.get("notes") or ""
+        add(sid, "it_mw", "IT load", s.it_mw, "MW", cls, p["confidence"], p["source_ids"], note)
         cs = s.setup.get("cooling_profile_id") or {}
         ok = cs.get("confidence") in ("high", "medium") and cs.get("scope") in SITE_SCOPES
         add(sid, "cooling_profile", "Cooling at the rack", s.cooling_profile, "",

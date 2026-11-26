@@ -1,29 +1,44 @@
-site_id,status,heat_rejection,it_mw_assumed,model_water_m3_yr,reported_water_m3_yr,reported_kind,implied_it_mw,model_wue_l_kwh,reported_wue_l_kwh,model_pue,reported_pue,reported_pue_scope
-us-fl-miami-equinix,context,tower,20.0,344147,,,,1.96,,1.293,1.39,operator_fleet
-us-ga-atlanta-qts,verified,tower,200.0,3124054,,,,1.78,,1.174,,
-us-ga-douglas-google,verified,tower,200.0,3051388,1309752.0,consumption,86.0,1.74,,1.133,,
-us-ia-altoona-meta,partial,adiabatic,200.0,365901,242000.0,withdrawal,132.0,0.21,,1.125,1.08,operator_fleet
-us-ia-council-bluffs-google,verified,tower,300.0,4516888,3709702.0,consumption,246.0,1.72,,1.119,,
-us-ia-west-des-moines-microsoft,verified,adiabatic,300.0,559848,,,,0.21,,1.125,,
-us-la-richland-meta,partial,dry,1500.0,0,,,,0.0,,1.082,,
-us-nc-lenoir-google,partial,tower,150.0,2281919,1275683.0,consumption,84.0,1.74,,1.134,,
-us-ne-sarpy-meta,verified,adiabatic,200.0,467523,142000.0,withdrawal,61.0,0.27,,1.127,1.08,operator_fleet
-us-nj-secaucus-equinix,context,tower,60.0,916863,,,,1.74,,1.15,1.39,operator_fleet
-us-nv-reno-switch,partial,adiabatic,300.0,1446211,,,,0.55,,1.115,1.18,site
-us-oh-new-albany,partial,tower,100.0,1528356,566747.0,consumption,37.0,1.74,,1.15,,
-us-ok-pryor-google,verified,tower,300.0,4575954,3085109.0,consumption,202.0,1.74,,1.133,,
-us-or-prineville-meta,verified,adiabatic,300.0,773428,328000.0,withdrawal,127.0,0.29,0.22,1.113,1.07,site
-us-or-the-dalles-google,verified,tower,250.0,3720777,1143194.0,consumption,77.0,1.7,,1.107,,
-us-sc-berkeley-google,verified,tower,200.0,3077630,2888268.0,consumption,188.0,1.76,,1.143,,
-us-tn-memphis-xai,partial,tower,150.0,2245643,,,,1.71,,1.1,,
-us-tx-abilene-stargate,verified,dry,824.0,0,1514.0,consumption,,0.0,,1.108,,
-us-tx-midlothian-google,partial,tower,250.0,3848361,514816.0,consumption,33.0,1.76,,1.144,,
-us-tx-san-antonio-microsoft,verified,tower,200.0,3206799,,,,1.83,1.82,1.205,1.307,site
-us-ut-eagle-mountain-meta,partial,adiabatic,200.0,856248,133000.0,withdrawal,31.0,0.49,,1.115,1.08,operator_fleet
-us-va-ashburn-equinix,context,tower,200.0,3077000,,,,1.76,,1.157,1.39,operator_fleet
-us-va-boydton-microsoft,verified,adiabatic,400.0,820524,,,,0.23,0.17,1.137,1.144,site
-us-va-manassas,context,tower,60.0,923955,,,,1.76,,1.158,,
-us-va-sterling-digital,context,tower,200.0,3077000,,,,1.76,,1.157,,
-us-wa-quincy,verified,adiabatic,80.0,261745,,,,0.37,,1.114,,
-us-wi-mount-pleasant-microsoft,verified,dry,450.0,0,,,,0.0,,1.082,,
-us-wy-cheyenne-microsoft,verified,adiabatic,150.0,419173,,,,0.32,0.23,1.114,1.125,site
+site_id,status,error,heat_rejection,it_mw_assumed,model_water_m3_yr,reported_water_m3_yr,reported_kind,implied_it_mw,model_wue_l_kwh,reported_wue_l_kwh,model_pue,reported_pue,reported_pue_scope
+fi-mantsala-nebius,verified,"""unknown site_id 'fi-mantsala-nebius'; see list_sites()""",,,,,,,,,,,
+fr-paris,partial,,tower,40.0,599605.0,,,,1.71,,1.129,,
+ie-arklow-echelon,partial,"""unknown site_id 'ie-arklow-echelon'; see list_sites()""",,,,,,,,,,,
+nl-amsterdam,partial,,tower,20.0,299397.0,,,,1.71,,1.128,1.2,site
+nl-eindhoven-northc,partial,"""unknown site_id 'nl-eindhoven-northc'; see list_sites()""",,,,,,,,,,,
+no-rjukan-greenmountain,partial,"""unknown site_id 'no-rjukan-greenmountain'; see list_sites()""",,,,,,,,,,,
+se-falun-ecodatacenter,partial,"""unknown site_id 'se-falun-ecodatacenter'; see list_sites()""",,,,,,,,,,,
+us-ca-la-one-wilshire,verified,,tower,10.0,167402.0,,,,1.91,,1.259,1.2,site
+us-fl-miami-equinix,context,,tower,17.0,292525.0,,,,1.96,,1.293,1.39,operator_fleet
+us-ga-atlanta-qts,verified,,tower,200.0,3124054.0,,,,1.78,,1.174,,
+us-ga-douglas-google,verified,,tower,86.0,1312097.0,1309752.0,consumption,86.0,1.74,,1.133,1.09,site
+us-hi-kona-nelha,partial,"""unknown site_id 'us-hi-kona-nelha'; see list_sites()""",,,,,,,,,,,
+us-ia-altoona-meta,partial,,adiabatic,168.0,307357.0,242000.0,withdrawal,132.0,0.21,,1.125,1.08,operator_fleet
+us-ia-council-bluffs-google,verified,,tower,237.0,3568342.0,3709702.0,consumption,246.0,1.72,,1.119,1.11,site
+us-ia-west-des-moines-microsoft,verified,,adiabatic,300.0,559848.0,,,,0.21,,1.125,,
+us-la-richland-meta,verified,,dry,1632.0,0.0,,,,0.0,,1.082,,
+us-ma-boston-one-summer,verified,,tower,15.0,241036.0,,,,1.83,,1.209,,
+us-nc-lenoir-google,partial,,tower,84.0,1277875.0,1275683.0,consumption,84.0,1.74,,1.134,1.1,site
+us-nd-williston-crusoe,partial,"""unknown site_id 'us-nd-williston-crusoe'; see list_sites()""",,,,,,,,,,,
+us-ne-sarpy-meta,verified,,adiabatic,133.0,310903.0,142000.0,withdrawal,61.0,0.27,,1.127,1.08,operator_fleet
+us-nj-secaucus-equinix,verified,,tower,60.0,916863.0,,,,1.74,,1.15,1.39,operator_fleet
+us-nv-reno-switch,partial,,adiabatic,300.0,1446211.0,,,,0.55,,1.115,1.18,site
+us-ny-nyc-60-hudson,verified,,tower,20.0,324252.0,,,,1.85,,1.219,,
+us-ny-syracuse-university,partial,"""unknown site_id 'us-ny-syracuse-university'; see list_sites()""",,,,,,,,,,,
+us-oh-new-albany,partial,,tower,804.0,12287985.0,566747.0,consumption,37.0,1.74,,1.15,,
+us-ok-pryor-google,verified,,tower,368.0,5613171.0,3085109.0,consumption,202.0,1.74,,1.133,1.11,site
+us-or-prineville-meta,verified,,adiabatic,183.0,471791.0,328000.0,withdrawal,127.0,0.29,0.22,1.113,1.07,site
+us-or-the-dalles-google,verified,,tower,154.0,2291999.0,1143194.0,consumption,77.0,1.7,,1.107,1.1,site
+us-sc-berkeley-google,verified,,tower,188.0,2892972.0,2888268.0,consumption,188.0,1.76,,1.143,1.1,site
+us-tn-memphis-xai,verified,,tower,340.0,5090123.0,,,,1.71,,1.1,,
+us-tx-abilene-stargate,verified,,dry,824.0,0.0,1514.0,consumption,,0.0,,1.108,,
+us-tx-dallas-infomart,verified,,dry,40.0,0.0,,,,0.0,,1.311,,
+us-tx-midlothian-google,verified,,tower,103.0,1585525.0,514816.0,consumption,33.0,1.76,,1.144,1.11,site
+us-tx-san-antonio-microsoft,verified,,tower,200.0,3206799.0,,,,1.83,1.82,1.205,1.307,site
+us-ut-eagle-mountain-meta,verified,,dry,118.0,0.0,133000.0,withdrawal,,0.0,,1.148,1.08,operator_fleet
+us-va-ashburn-equinix,context,,tower,200.0,3077000.0,,,,1.76,,1.157,1.39,operator_fleet
+us-va-boydton-microsoft,verified,,adiabatic,400.0,820524.0,,,,0.23,0.17,1.137,1.144,site
+us-va-manassas,context,,tower,60.0,923955.0,,,,1.76,,1.158,,
+us-va-sterling-digital,context,,tower,200.0,3077000.0,,,,1.76,,1.157,,
+us-wa-quincy,verified,,adiabatic,80.0,261745.0,,,,0.37,,1.114,,
+us-wa-seattle-westin,partial,"""unknown site_id 'us-wa-seattle-westin'; see list_sites()""",,,,,,,,,,,
+us-wi-mount-pleasant-microsoft,verified,,dry,369.0,0.0,,,,0.0,,1.082,,
+us-wy-cheyenne-microsoft,verified,,adiabatic,150.0,419173.0,,,,0.32,0.23,1.114,1.125,site

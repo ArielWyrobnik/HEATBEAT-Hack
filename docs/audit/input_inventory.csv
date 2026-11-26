@@ -50,8 +50,8 @@ us-az-mesa,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimat
 us-ca-la-one-wilshire,it_mw,IT load,10.0,MW,team_estimate,low,team_assumption,Downtown carrier hotel.
 us-ca-la-one-wilshire,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
 us-ca-la-one-wilshire,loop_air,air loop temperatures and heat,"13/7 C, 10 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-ca-la-one-wilshire,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
-us-ca-la-one-wilshire,pue_reported,PUE used for comparison,1.6,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ca-la-one-wilshire,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://www.datacenterfrontier.com/cooling/article/11429180/a-new-horizon-at-one-wilshire,
+us-ca-la-one-wilshire,pue_reported,PUE used for comparison,1.2,,sourced_site,high,Data Center Frontier: A new horizon at One Wilshire (2020-02-06),the model computes its own PUE from the energy balance; this value is only a check
 us-ca-la-one-wilshire,coordinates,Location,"34.048, -118.256",deg,derived,building,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-ca-la-one-wilshire,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-ca-la-one-wilshire,p_elec_usd_mwh,Electricity price (retail industrial),215.3,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -95,9 +95,9 @@ us-ca-santa-clara,d_pp_m,Distance to thermal power plant,1323.0,m,derived,low,Do
 us-ca-santa-clara,q_fw_mw,Feedwater heat that plant could take,2.29,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-ca-santa-clara,d_bio_m,Distance to digester / feedstock,8374.0,m,derived,low,Zero Waste Energy Development Co LLC: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
 us-ca-santa-clara,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-fl-miami-equinix,it_mw,IT load,20.0,MW,team_estimate,low,team_assumption,Hot humid climate.
-us-fl-miami-equinix,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
-us-fl-miami-equinix,loop_air,air loop temperatures and heat,"13/7 C, 20 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-fl-miami-equinix,it_mw,IT load,17.0,MW,sourced_site,low,dcm_mi1,upper_bound_facility: fully built-out power 17 MW (aggregator); IT is lower
+us-fl-miami-equinix,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (dcm_mi1),
+us-fl-miami-equinix,loop_air,air loop temperatures and heat,"13/7 C, 17 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-fl-miami-equinix,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
 us-fl-miami-equinix,pue_reported,PUE used for comparison,1.6,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-fl-miami-equinix,coordinates,Location,"25.78, -80.19",deg,derived,building,sites.csv,"campus_approx = campus centre from maps, not a parcel"
@@ -143,12 +143,12 @@ us-ga-atlanta-qts,d_pp_m,Distance to thermal power plant,8804.0,m,derived,medium
 us-ga-atlanta-qts,q_fw_mw,Feedwater heat that plant could take,72.84,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-ga-atlanta-qts,d_bio_m,Distance to digester / feedstock,69095.0,m,derived,medium,GENERAL MILLS INC.: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
 us-ga-atlanta-qts,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-ga-douglas-google,it_mw,IT load,200.0,MW,team_estimate,low,google_ocp_2025;team_assumption,TPU share assumed 40%.
-us-ga-douglas-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
-us-ga-douglas-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 80 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-ga-douglas-google,loop_air,air loop temperatures and heat,"26/18 C, 120 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ga-douglas-google,it_mw,IT load,86.0,MW,derived,low,diw_google_2023,derived_from_reported_water: implied by Google-reported 2023 water consumption with the validated tower model; assumes all halls evaporative
+us-ga-douglas-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (diw_google_2023),
+us-ga-douglas-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 34 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ga-douglas-google,loop_air,air loop temperatures and heat,"26/18 C, 52 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-ga-douglas-google,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://datacenters.google/locations/douglas-county-georgia,
-us-ga-douglas-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ga-douglas-google,pue_reported,PUE used for comparison,1.09,,sourced_site,high,"Google data centers: efficiency, PUE per campus (Q2 2026, trailing twelve months) (2026-Q2)",the model computes its own PUE from the energy balance; this value is only a check
 us-ga-douglas-google,coordinates,Location,"33.75, -84.62",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-ga-douglas-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-ga-douglas-google,p_elec_usd_mwh,Electricity price (retail industrial),72.1,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -168,11 +168,11 @@ us-ga-douglas-google,d_pp_m,Distance to thermal power plant,18787.0,m,derived,me
 us-ga-douglas-google,q_fw_mw,Feedwater heat that plant could take,72.84,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-ga-douglas-google,d_bio_m,Distance to digester / feedstock,89016.0,m,derived,medium,GENERAL MILLS INC.: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
 us-ga-douglas-google,geo_storage_score,Geology score for ATES/BTES,5.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-ia-altoona-meta,it_mw,IT load,200.0,MW,team_estimate,low,team_assumption;meta_edi_2025,
-us-ia-altoona-meta,cooling_profile,Cooling at the rack,air_economizer,,team_estimate,low,site_profiles.csv (team_assumption;meta_edi_2025),
-us-ia-altoona-meta,loop_air,air loop temperatures and heat,"32/24 C, 200 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ia-altoona-meta,it_mw,IT load,168.0,MW,derived,high,meta_edi_2025_elec,"derived_from_reported_energy: Meta-reported 1,585,392 MWh electricity 2024 / 8760 h / Meta fleet PUE 1.08 = average IT load"
+us-ia-altoona-meta,cooling_profile,Cooling at the rack,air_economizer,,team_estimate,high,site_profiles.csv (meta_edi_2025_elec),
+us-ia-altoona-meta,loop_air,air loop temperatures and heat,"32/24 C, 168 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-ia-altoona-meta,baseline_rejection,Today's heat rejection,adiabatic,,team_estimate,low,typical for the cooling profile (no public source),
-us-ia-altoona-meta,pue_reported,PUE used for comparison,1.08,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ia-altoona-meta,pue_reported,PUE used for comparison,1.08,,team_estimate,high,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-ia-altoona-meta,coordinates,Location,"41.65, -93.47",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-ia-altoona-meta,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-ia-altoona-meta,p_elec_usd_mwh,Electricity price (retail industrial),68.0,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -192,12 +192,12 @@ us-ia-altoona-meta,d_pp_m,Distance to thermal power plant,13790.0,m,derived,medi
 us-ia-altoona-meta,q_fw_mw,Feedwater heat that plant could take,8.09,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-ia-altoona-meta,d_bio_m,Distance to digester / feedstock,11723.0,m,derived,low,ADM SOYBEAN PROCESSING - DES MOINES: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
 us-ia-altoona-meta,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-ia-council-bluffs-google,it_mw,IT load,300.0,MW,team_estimate,low,google_ocp_2025;team_assumption,TPU share assumed 40%.
-us-ia-council-bluffs-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
-us-ia-council-bluffs-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 120 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-ia-council-bluffs-google,loop_air,air loop temperatures and heat,"26/18 C, 180 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ia-council-bluffs-google,it_mw,IT load,237.0,MW,third_party_estimate,medium,epoch_cb_east,"third_party_it_estimate: Epoch IT power for Council Bluffs East (3 buildings, Jul 2026); water-implied 246 MW for 2023"
+us-ia-council-bluffs-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,medium,site_profiles.csv (epoch_cb_east),
+us-ia-council-bluffs-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 95 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ia-council-bluffs-google,loop_air,air loop temperatures and heat,"26/18 C, 142 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-ia-council-bluffs-google,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://flatwaterfreepress.org/data-centers-can-guzzle-serious-water-as-some-nebraskans-worry-tech-giants-seek-solutions/,
-us-ia-council-bluffs-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ia-council-bluffs-google,pue_reported,PUE used for comparison,1.11,,sourced_site,high,"Google data centers: efficiency, PUE per campus (Q2 2026, trailing twelve months) (2026-Q2)",the model computes its own PUE from the energy balance; this value is only a check
 us-ia-council-bluffs-google,coordinates,Location,"41.19, -95.86",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-ia-council-bluffs-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-ia-council-bluffs-google,p_elec_usd_mwh,Electricity price (retail industrial),68.0,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -241,11 +241,11 @@ us-ia-west-des-moines-microsoft,d_pp_m,Distance to thermal power plant,25147.0,m
 us-ia-west-des-moines-microsoft,q_fw_mw,Feedwater heat that plant could take,8.09,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-ia-west-des-moines-microsoft,d_bio_m,Distance to digester / feedstock,22124.0,m,derived,medium,ADM SOYBEAN PROCESSING - DES MOINES: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
 us-ia-west-des-moines-microsoft,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-il-chicago-cermak,it_mw,IT load,100.0,MW,team_estimate,low,team_assumption,Large multi-tenant carrier hotel; MW not verified.
-us-il-chicago-cermak,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
-us-il-chicago-cermak,loop_air,air loop temperatures and heat,"13/7 C, 100 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-il-chicago-cermak,it_mw,IT load,70.0,MW,sourced_site,medium,dlr_cermak_factsheet,"upper_bound_ups: UPS capacity 70,000 kW (utility 109,000 kW): the critical load cannot exceed this; actual load not published"
+us-il-chicago-cermak,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,medium,site_profiles.csv (dlr_cermak_factsheet),
+us-il-chicago-cermak,loop_air,air loop temperatures and heat,"13/7 C, 70 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-il-chicago-cermak,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
-us-il-chicago-cermak,pue_reported,PUE used for comparison,1.5,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-il-chicago-cermak,pue_reported,PUE used for comparison,1.5,,team_estimate,medium,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-il-chicago-cermak,coordinates,Location,"41.853, -87.618",deg,derived,building,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-il-chicago-cermak,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-il-chicago-cermak,p_elec_usd_mwh,Electricity price (retail industrial),88.3,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -289,11 +289,11 @@ us-il-elk-grove,d_pp_m,Distance to thermal power plant,33552.0,m,derived,medium,
 us-il-elk-grove,q_fw_mw,Feedwater heat that plant could take,2.25,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-il-elk-grove,d_bio_m,Distance to digester / feedstock,33552.0,m,derived,medium,Ingredion Incorporated Argo Plant: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
 us-il-elk-grove,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-la-richland-meta,it_mw,IT load,1500.0,MW,team_estimate,low,nvidia_45c_2026;team_assumption,Under construction; 2 GW is the press-reported initial facility size. Chip generation is an assumption (Rubin era by the time it fills).
-us-la-richland-meta,cooling_profile,Cooling at the rack,dlc_hot,,team_estimate,low,site_profiles.csv (nvidia_45c_2026;team_assumption),
-us-la-richland-meta,loop_liquid,liquid loop temperatures and heat,"55/45 C, 1,425 MW",,literature_typical,medium,cooling_profiles.csv (nvidia_45c_2026;compass_rubin_2026;coolit_rubin_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-la-richland-meta,loop_air,air loop temperatures and heat,"26/18 C, 75 MW",,literature_typical,medium,cooling_profiles.csv (nvidia_45c_2026;compass_rubin_2026;coolit_rubin_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-la-richland-meta,baseline_rejection,Today's heat rejection,dry,,team_estimate,low,typical for the cooling profile (no public source),
+us-la-richland-meta,it_mw,IT load,1632.0,MW,third_party_estimate,low,epoch_hyperion,third_party_planned_it: Epoch projected IT power of phase 1 (Q1 2028); 0 MW operating today
+us-la-richland-meta,cooling_profile,Cooling at the rack,dlc_hot,,team_estimate,low,site_profiles.csv (epoch_hyperion),
+us-la-richland-meta,loop_liquid,liquid loop temperatures and heat,"55/45 C, 1,550 MW",,literature_typical,medium,cooling_profiles.csv (nvidia_45c_2026;compass_rubin_2026;coolit_rubin_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-la-richland-meta,loop_air,air loop temperatures and heat,"26/18 C, 82 MW",,literature_typical,medium,cooling_profiles.csv (nvidia_45c_2026;compass_rubin_2026;coolit_rubin_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-la-richland-meta,baseline_rejection,Today's heat rejection,dry,,sourced_site,medium,https://epoch.ai/data/ai-data-centers/directory/meta-hyperion,
 us-la-richland-meta,pue_reported,PUE used for comparison,1.2,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-la-richland-meta,coordinates,Location,"32.39, -91.73",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-la-richland-meta,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
@@ -317,7 +317,7 @@ us-la-richland-meta,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,tea
 us-ma-boston-one-summer,it_mw,IT load,15.0,MW,team_estimate,low,team_assumption,
 us-ma-boston-one-summer,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
 us-ma-boston-one-summer,loop_air,air loop temperatures and heat,"13/7 C, 15 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-ma-boston-one-summer,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-ma-boston-one-summer,baseline_rejection,Today's heat rejection,tower,,sourced_site,high,https://www.mass.gov/doc/boston-the-markley-group-january-2021/download,
 us-ma-boston-one-summer,pue_reported,PUE used for comparison,1.6,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-ma-boston-one-summer,coordinates,Location,"42.354, -71.059",deg,derived,building,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-ma-boston-one-summer,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
@@ -338,12 +338,12 @@ us-ma-boston-one-summer,d_pp_m,Distance to thermal power plant,2347.0,m,derived,
 us-ma-boston-one-summer,q_fw_mw,Feedwater heat that plant could take,2.0,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-ma-boston-one-summer,d_bio_m,Distance to digester / feedstock,9489.0,m,derived,medium,Deer Island Treatment Plant: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
 us-ma-boston-one-summer,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-nc-lenoir-google,it_mw,IT load,150.0,MW,team_estimate,low,google_ocp_2025;team_assumption,Older campus; TPU share assumed 30%.
-us-nc-lenoir-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
-us-nc-lenoir-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 45 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-nc-lenoir-google,loop_air,air loop temperatures and heat,"26/18 C, 105 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-nc-lenoir-google,it_mw,IT load,84.0,MW,derived,low,diw_google_2023,derived_from_reported_water: implied by Google-reported 2023 water consumption with the validated tower model; assumes all halls evaporative
+us-nc-lenoir-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (diw_google_2023),
+us-nc-lenoir-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 25 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-nc-lenoir-google,loop_air,air loop temperatures and heat,"26/18 C, 59 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-nc-lenoir-google,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
-us-nc-lenoir-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-nc-lenoir-google,pue_reported,PUE used for comparison,1.1,,sourced_site,high,"Google data centers: efficiency, PUE per campus (Q2 2026, trailing twelve months) (2026-Q2)",the model computes its own PUE from the energy balance; this value is only a check
 us-nc-lenoir-google,coordinates,Location,"35.89, -81.54",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-nc-lenoir-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-nc-lenoir-google,p_elec_usd_mwh,Electricity price (retail industrial),77.69999999999999,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -387,11 +387,11 @@ us-nc-maiden-apple,d_pp_m,Distance to thermal power plant,26601.0,m,derived,medi
 us-nc-maiden-apple,q_fw_mw,Feedwater heat that plant could take,84.02,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-nc-maiden-apple,d_bio_m,Distance to digester / feedstock,60588.0,m,derived,medium,Orbit Energy Charlotte: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
 us-nc-maiden-apple,geo_storage_score,Geology score for ATES/BTES,5.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-ne-sarpy-meta,it_mw,IT load,200.0,MW,team_estimate,low,team_assumption;meta_edi_2025,
-us-ne-sarpy-meta,cooling_profile,Cooling at the rack,air_economizer,,team_estimate,low,site_profiles.csv (team_assumption;meta_edi_2025),
-us-ne-sarpy-meta,loop_air,air loop temperatures and heat,"32/24 C, 200 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ne-sarpy-meta,it_mw,IT load,133.0,MW,derived,high,meta_edi_2025_elec,"derived_from_reported_energy: Meta-reported 1,258,239 MWh electricity 2024 / 8760 h / Meta fleet PUE 1.08 = average IT load"
+us-ne-sarpy-meta,cooling_profile,Cooling at the rack,air_economizer,,team_estimate,high,site_profiles.csv (meta_edi_2025_elec),
+us-ne-sarpy-meta,loop_air,air loop temperatures and heat,"32/24 C, 133 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-ne-sarpy-meta,baseline_rejection,Today's heat rejection,adiabatic,,sourced_site,medium,https://flatwaterfreepress.org/data-centers-can-guzzle-serious-water-as-some-nebraskans-worry-tech-giants-seek-solutions/,
-us-ne-sarpy-meta,pue_reported,PUE used for comparison,1.08,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ne-sarpy-meta,pue_reported,PUE used for comparison,1.08,,team_estimate,high,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-ne-sarpy-meta,coordinates,Location,"41.11, -96.05",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-ne-sarpy-meta,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-ne-sarpy-meta,p_elec_usd_mwh,Electricity price (retail industrial),76.6,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -414,7 +414,7 @@ us-ne-sarpy-meta,geo_storage_score,Geology score for ATES/BTES,3.0,1 to 5,team_e
 us-nj-secaucus-equinix,it_mw,IT load,60.0,MW,team_estimate,low,team_assumption,
 us-nj-secaucus-equinix,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
 us-nj-secaucus-equinix,loop_air,air loop temperatures and heat,"26/18 C, 60 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-nj-secaucus-equinix,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-nj-secaucus-equinix,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://static.datacentermap.com/company/equinix/datacenter2886/NY-ibx_ny4_en.pdf,
 us-nj-secaucus-equinix,pue_reported,PUE used for comparison,1.45,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-nj-secaucus-equinix,coordinates,Location,"40.78, -74.07",deg,derived,campus_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-nj-secaucus-equinix,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
@@ -486,7 +486,7 @@ us-nv-reno-switch,geo_storage_score,Geology score for ATES/BTES,3.0,1 to 5,team_
 us-ny-nyc-60-hudson,it_mw,IT load,20.0,MW,team_estimate,low,team_assumption,Carrier hotel in an old office building.
 us-ny-nyc-60-hudson,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
 us-ny-nyc-60-hudson,loop_air,air loop temperatures and heat,"13/7 C, 20 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-ny-nyc-60-hudson,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-ny-nyc-60-hudson,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://www.datacenterknowledge.com/energy-power-supply/manhattan-s-iconic-60-hudson-street-gets-a-power-boost,
 us-ny-nyc-60-hudson,pue_reported,PUE used for comparison,1.6,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-ny-nyc-60-hudson,coordinates,Location,"40.717, -74.008",deg,derived,building,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-ny-nyc-60-hudson,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
@@ -507,9 +507,9 @@ us-ny-nyc-60-hudson,d_pp_m,Distance to thermal power plant,3725.0,m,derived,medi
 us-ny-nyc-60-hudson,q_fw_mw,Feedwater heat that plant could take,8.16,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-ny-nyc-60-hudson,d_bio_m,Distance to digester / feedstock,29731.0,m,derived,medium,"American Sugar Refining, Inc. - Yonkers Refinery: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip)",
 us-ny-nyc-60-hudson,geo_storage_score,Geology score for ATES/BTES,5.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-oh-new-albany,it_mw,IT load,100.0,MW,team_estimate,low,team_assumption,"Several hyperscale campuses (Meta, Google, AWS); one representative facility."
-us-oh-new-albany,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
-us-oh-new-albany,loop_air,air loop temperatures and heat,"26/18 C, 100 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-oh-new-albany,it_mw,IT load,804.0,MW,third_party_estimate,low,epoch_google_new_albany;epoch_meta_prometheus,third_party_it_estimate: lower bound: Google New Albany 333 MW plus Meta Prometheus 471 MW (Epoch); AWS and others not counted
+us-oh-new-albany,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (epoch_google_new_albany;epoch_meta_prometheus),
+us-oh-new-albany,loop_air,air loop temperatures and heat,"26/18 C, 804 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-oh-new-albany,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
 us-oh-new-albany,pue_reported,PUE used for comparison,1.25,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-oh-new-albany,coordinates,Location,"40.08, -82.78",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
@@ -531,12 +531,12 @@ us-oh-new-albany,d_pp_m,Distance to thermal power plant,76829.0,m,derived,medium
 us-oh-new-albany,q_fw_mw,Feedwater heat that plant could take,18.99,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-oh-new-albany,d_bio_m,Distance to digester / feedstock,25586.0,m,derived,medium,Abbott Nutrition: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
 us-oh-new-albany,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-ok-pryor-google,it_mw,IT load,300.0,MW,team_estimate,low,google_ocp_2025;team_assumption,TPU share assumed 40%.
-us-ok-pryor-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
-us-ok-pryor-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 120 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-ok-pryor-google,loop_air,air loop temperatures and heat,"26/18 C, 180 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ok-pryor-google,it_mw,IT load,368.0,MW,third_party_estimate,medium,epoch_pryor_north,third_party_it_estimate: Epoch IT power for Pryor North after building 2 (Sep 2026)
+us-ok-pryor-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,medium,site_profiles.csv (epoch_pryor_north),
+us-ok-pryor-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 147 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ok-pryor-google,loop_air,air loop temperatures and heat,"26/18 C, 221 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-ok-pryor-google,baseline_rejection,Today's heat rejection,tower,,sourced_site,high,https://www.readfrontier.org/stories/as-data-centers-boom-in-oklahoma-so-does-water-demand/,
-us-ok-pryor-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ok-pryor-google,pue_reported,PUE used for comparison,1.11,,sourced_site,high,"Google data centers: efficiency, PUE per campus (Q2 2026, trailing twelve months) (2026-Q2)",the model computes its own PUE from the energy balance; this value is only a check
 us-ok-pryor-google,coordinates,Location,"36.24, -95.33",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-ok-pryor-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-ok-pryor-google,p_elec_usd_mwh,Electricity price (retail industrial),58.4,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -580,9 +580,9 @@ us-or-hillsboro,d_pp_m,Distance to thermal power plant,23318.0,m,derived,medium,
 us-or-hillsboro,q_fw_mw,Feedwater heat that plant could take,5.31,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-or-hillsboro,d_bio_m,Distance to digester / feedstock,23548.0,m,derived,medium,Durham AWTF: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
 us-or-hillsboro,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-or-prineville-meta,it_mw,IT load,300.0,MW,team_estimate,low,team_assumption;fb_prineville_2011;meta_edi_2025,"Verified: 100 % outside air with direct evaporative cooling, no chillers; PUE 1.08 is the Meta fleet value 2024 (building 1 reported 1.07)."
+us-or-prineville-meta,it_mw,IT load,183.0,MW,derived,high,meta_edi_2025_elec,"derived_from_reported_energy: Meta-reported 1,728,291 MWh electricity 2024 / 8760 h / Meta fleet PUE 1.08 = average IT load"
 us-or-prineville-meta,cooling_profile,Cooling at the rack,air_economizer,,sourced_site,high,Meta Engineering: Designing a very efficient data center (Prineville),
-us-or-prineville-meta,loop_air,air loop temperatures and heat,"32/24 C, 300 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-or-prineville-meta,loop_air,air loop temperatures and heat,"32/24 C, 183 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-or-prineville-meta,baseline_rejection,Today's heat rejection,adiabatic,,sourced_site,high,https://www.opencompute.org/news/water-efficiency-at-facebooks-prineville-data-center/,
 us-or-prineville-meta,pue_reported,PUE used for comparison,1.07,,sourced_site,high,Meta Engineering: Designing a very efficient data center (Prineville) (2011-04-14),the model computes its own PUE from the energy balance; this value is only a check
 us-or-prineville-meta,coordinates,Location,"44.29, -120.89",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
@@ -604,12 +604,12 @@ us-or-prineville-meta,d_pp_m,Distance to thermal power plant,200102.0,m,derived,
 us-or-prineville-meta,q_fw_mw,Feedwater heat that plant could take,2.19,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-or-prineville-meta,d_bio_m,Distance to digester / feedstock,175909.0,m,derived,medium,Evergreen BioPower LLC: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
 us-or-prineville-meta,geo_storage_score,Geology score for ATES/BTES,3.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-or-the-dalles-google,it_mw,IT load,250.0,MW,team_estimate,low,google_ocp_2025;team_assumption,TPU share assumed 40%.
-us-or-the-dalles-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
-us-or-the-dalles-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 100 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-or-the-dalles-google,loop_air,air loop temperatures and heat,"26/18 C, 150 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-or-the-dalles-google,it_mw,IT load,154.0,MW,third_party_estimate,medium,epoch_dalles,third_party_it_estimate: Epoch IT power after building 2 (Apr 2026); water-implied 77 MW (2023) fits building 1 only
+us-or-the-dalles-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,medium,site_profiles.csv (epoch_dalles),
+us-or-the-dalles-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 62 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-or-the-dalles-google,loop_air,air loop temperatures and heat,"26/18 C, 92 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-or-the-dalles-google,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://blog.google/innovation-and-ai/infrastructure-and-cloud/global-network/the-dalles-data-center-20-years/,
-us-or-the-dalles-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-or-the-dalles-google,pue_reported,PUE used for comparison,1.1,,sourced_site,high,"Google data centers: efficiency, PUE per campus (Q2 2026, trailing twelve months) (2026-Q2)",the model computes its own PUE from the energy balance; this value is only a check
 us-or-the-dalles-google,coordinates,Location,"45.63, -121.2",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-or-the-dalles-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-or-the-dalles-google,p_elec_usd_mwh,Electricity price (retail industrial),80.5,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -629,12 +629,12 @@ us-or-the-dalles-google,d_pp_m,Distance to thermal power plant,41890.0,m,derived
 us-or-the-dalles-google,q_fw_mw,Feedwater heat that plant could take,6.69,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-or-the-dalles-google,d_bio_m,Distance to digester / feedstock,141634.0,m,derived,medium,Darigold Inc: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
 us-or-the-dalles-google,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-sc-berkeley-google,it_mw,IT load,200.0,MW,team_estimate,low,google_ocp_2025;team_assumption,TPU share assumed 40%.
-us-sc-berkeley-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
-us-sc-berkeley-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 80 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-sc-berkeley-google,loop_air,air loop temperatures and heat,"26/18 C, 120 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-sc-berkeley-google,it_mw,IT load,188.0,MW,derived,low,diw_google_2023,derived_from_reported_water: implied by Google-reported 2023 water consumption with the validated tower model; assumes all halls evaporative
+us-sc-berkeley-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (diw_google_2023),
+us-sc-berkeley-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 75 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-sc-berkeley-google,loop_air,air loop temperatures and heat,"26/18 C, 113 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-sc-berkeley-google,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://www.live5news.com/2019/12/12/google-agrees-tougher-conditions-berkeley-co-groundwater-withdrawal-permit/,
-us-sc-berkeley-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-sc-berkeley-google,pue_reported,PUE used for comparison,1.1,,sourced_site,high,"Google data centers: efficiency, PUE per campus (Q2 2026, trailing twelve months) (2026-Q2)",the model computes its own PUE from the energy balance; this value is only a check
 us-sc-berkeley-google,coordinates,Location,"33.06, -80.04",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-sc-berkeley-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-sc-berkeley-google,p_elec_usd_mwh,Electricity price (retail industrial),68.4,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -654,11 +654,11 @@ us-sc-berkeley-google,d_pp_m,Distance to thermal power plant,13675.0,m,derived,m
 us-sc-berkeley-google,q_fw_mw,Feedwater heat that plant could take,29.61,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-sc-berkeley-google,d_bio_m,Distance to digester / feedstock,51661.0,m,derived,medium,Dorchester Biomass: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
 us-sc-berkeley-google,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-tn-memphis-xai,it_mw,IT load,150.0,MW,team_estimate,medium,toms_colossus_2025;klockwood_colossus;semianalysis_cooling,"Colossus 1: H100/H200 in Supermicro nodes, cold plates plus rear door heat exchangers (confirmed). 150 MW grid supply reported, 300 MW total planned; IT share derived. Later phases (GB200) not modelled here."
+us-tn-memphis-xai,it_mw,IT load,340.0,MW,third_party_estimate,medium,epoch_colossus1,third_party_it_estimate: Epoch IT power for Colossus 1; Colossus 2 is a separate site
 us-tn-memphis-xai,cooling_profile,Cooling at the rack,dlc_cold,,sourced_site,high,ServeTheHome: Inside the 100K GPU xAI Colossus cluster,
-us-tn-memphis-xai,loop_liquid,liquid loop temperatures and heat,"38/30 C, 112 MW",,literature_typical,low,cooling_profiles.csv (dcd_hot_cold_water;klockwood_colossus;semianalysis_cooling),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-tn-memphis-xai,loop_air,air loop temperatures and heat,"26/18 C, 38 MW",,literature_typical,low,cooling_profiles.csv (dcd_hot_cold_water;klockwood_colossus;semianalysis_cooling),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-tn-memphis-xai,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-tn-memphis-xai,loop_liquid,liquid loop temperatures and heat,"38/30 C, 255 MW",,literature_typical,low,cooling_profiles.csv (dcd_hot_cold_water;klockwood_colossus;semianalysis_cooling),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tn-memphis-xai,loop_air,air loop temperatures and heat,"26/18 C, 85 MW",,literature_typical,low,cooling_profiles.csv (dcd_hot_cold_water;klockwood_colossus;semianalysis_cooling),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tn-memphis-xai,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://epoch.ai/data/ai-data-centers/directory/colossus-1,
 us-tn-memphis-xai,pue_reported,PUE used for comparison,1.3,,team_estimate,medium,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-tn-memphis-xai,coordinates,Location,"35.06, -90.03",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-tn-memphis-xai,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
@@ -707,7 +707,7 @@ us-tx-abilene-stargate,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,
 us-tx-dallas-infomart,it_mw,IT load,40.0,MW,team_estimate,low,team_assumption,Older carrier hotel converted building.
 us-tx-dallas-infomart,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
 us-tx-dallas-infomart,loop_air,air loop temperatures and heat,"13/7 C, 40 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-tx-dallas-infomart,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-tx-dallas-infomart,baseline_rejection,Today's heat rejection,dry,,sourced_site,medium,https://static.datacentermap.com/company/equinix/datacenter1045/TX-ibx_da1_en.pdf,
 us-tx-dallas-infomart,pue_reported,PUE used for comparison,1.5,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-tx-dallas-infomart,coordinates,Location,"32.802, -96.82",deg,derived,campus_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-tx-dallas-infomart,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
@@ -728,12 +728,12 @@ us-tx-dallas-infomart,d_pp_m,Distance to thermal power plant,16723.0,m,derived,m
 us-tx-dallas-infomart,q_fw_mw,Feedwater heat that plant could take,6.61,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-tx-dallas-infomart,d_bio_m,Distance to digester / feedstock,11153.0,m,derived,medium,Frito Lay Inc: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
 us-tx-dallas-infomart,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-tx-midlothian-google,it_mw,IT load,250.0,MW,team_estimate,low,google_ocp_2025;team_assumption,Share of TPU (liquid) versus CPU (air) halls unknown; 40% liquid assumed. PUE 1.1 is a typical Google figure (unverified here).
-us-tx-midlothian-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
-us-tx-midlothian-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 100 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-tx-midlothian-google,loop_air,air loop temperatures and heat,"26/18 C, 150 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-tx-midlothian-google,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
-us-tx-midlothian-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-tx-midlothian-google,it_mw,IT load,103.0,MW,third_party_estimate,medium,epoch_midlothian,third_party_it_estimate: Epoch IT power (Jul 2026)
+us-tx-midlothian-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,medium,site_profiles.csv (epoch_midlothian),
+us-tx-midlothian-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 41 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tx-midlothian-google,loop_air,air loop temperatures and heat,"26/18 C, 62 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tx-midlothian-google,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://epoch.ai/data/ai-data-centers/directory/google-midlothian,
+us-tx-midlothian-google,pue_reported,PUE used for comparison,1.11,,sourced_site,high,"Google data centers: efficiency, PUE per campus (Q2 2026, trailing twelve months) (2026-Q2)",the model computes its own PUE from the energy balance; this value is only a check
 us-tx-midlothian-google,coordinates,Location,"32.48, -96.99",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-tx-midlothian-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-tx-midlothian-google,p_elec_usd_mwh,Electricity price (retail industrial),61.2,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -777,11 +777,11 @@ us-tx-san-antonio-microsoft,d_pp_m,Distance to thermal power plant,35468.0,m,der
 us-tx-san-antonio-microsoft,q_fw_mw,Feedwater heat that plant could take,15.55,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-tx-san-antonio-microsoft,d_bio_m,Distance to digester / feedstock,193602.0,m,derived,medium,Darling Ingredients Inc.: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
 us-tx-san-antonio-microsoft,geo_storage_score,Geology score for ATES/BTES,3.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-ut-eagle-mountain-meta,it_mw,IT load,200.0,MW,team_estimate,low,team_assumption;meta_edi_2025,
-us-ut-eagle-mountain-meta,cooling_profile,Cooling at the rack,air_economizer,,team_estimate,low,site_profiles.csv (team_assumption;meta_edi_2025),
-us-ut-eagle-mountain-meta,loop_air,air loop temperatures and heat,"32/24 C, 200 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-ut-eagle-mountain-meta,baseline_rejection,Today's heat rejection,adiabatic,,team_estimate,low,typical for the cooling profile (no public source),
-us-ut-eagle-mountain-meta,pue_reported,PUE used for comparison,1.08,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ut-eagle-mountain-meta,it_mw,IT load,118.0,MW,derived,high,meta_edi_2025_elec,"derived_from_reported_energy: Meta-reported 1,115,619 MWh electricity 2024 / 8760 h / Meta fleet PUE 1.08 = average IT load"
+us-ut-eagle-mountain-meta,cooling_profile,Cooling at the rack,air_economizer,,team_estimate,high,site_profiles.csv (meta_edi_2025_elec),
+us-ut-eagle-mountain-meta,loop_air,air loop temperatures and heat,"32/24 C, 118 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ut-eagle-mountain-meta,baseline_rejection,Today's heat rejection,dry,,sourced_site,medium,https://epoch.ai/data/ai-data-centers/directory/meta-eagle-mountain,
+us-ut-eagle-mountain-meta,pue_reported,PUE used for comparison,1.08,,team_estimate,high,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-ut-eagle-mountain-meta,coordinates,Location,"40.31, -112.01",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
 us-ut-eagle-mountain-meta,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
 us-ut-eagle-mountain-meta,p_elec_usd_mwh,Electricity price (retail industrial),78.60000000000001,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
@@ -921,10 +921,10 @@ us-wa-quincy,d_pp_m,Distance to thermal power plant,111679.0,m,derived,medium,Co
 us-wa-quincy,q_fw_mw,Feedwater heat that plant could take,176.9,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
 us-wa-quincy,d_bio_m,Distance to digester / feedstock,1898.0,m,derived,low,Lamb Weston Holdings Inc: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
 us-wa-quincy,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
-us-wi-mount-pleasant-microsoft,it_mw,IT load,450.0,MW,team_estimate,medium,msft_fairwater_2025;klockwood_fairwater;lenovo_lp2357;msft_zero_water_2024;dcf_fairwater_2025,"Verified: GB200 NVL72, closed-loop chip cooling, heat-exchanger fins with 172 fans plus economizing chillers; water only on the hottest days. 450 MW IT is an outside inference."
+us-wi-mount-pleasant-microsoft,it_mw,IT load,369.0,MW,third_party_estimate,medium,epoch_fairwater_wi,"third_party_it_estimate: Epoch: building 1 operational Apr 2026; 2,263 MW projected for 2028"
 us-wi-mount-pleasant-microsoft,cooling_profile,Cooling at the rack,dlc_warm,,sourced_site,high,"Microsoft: Sustainable by design, next-generation datacenters consume zero water for cooling",
-us-wi-mount-pleasant-microsoft,loop_liquid,liquid loop temperatures and heat,"42/32 C, 405 MW",,literature_typical,medium,cooling_profiles.csv (lenovo_lp2357;compass_rubin_2026;dcd_hot_cold_water;gpusmith_wclass_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
-us-wi-mount-pleasant-microsoft,loop_air,air loop temperatures and heat,"26/18 C, 45 MW",,literature_typical,medium,cooling_profiles.csv (lenovo_lp2357;compass_rubin_2026;dcd_hot_cold_water;gpusmith_wclass_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-wi-mount-pleasant-microsoft,loop_liquid,liquid loop temperatures and heat,"42/32 C, 332 MW",,literature_typical,medium,cooling_profiles.csv (lenovo_lp2357;compass_rubin_2026;dcd_hot_cold_water;gpusmith_wclass_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-wi-mount-pleasant-microsoft,loop_air,air loop temperatures and heat,"26/18 C, 37 MW",,literature_typical,medium,cooling_profiles.csv (lenovo_lp2357;compass_rubin_2026;dcd_hot_cold_water;gpusmith_wclass_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
 us-wi-mount-pleasant-microsoft,baseline_rejection,Today's heat rejection,dry,,sourced_site,high,https://www.datacenterfrontier.com/hyperscale/article/55317925/inside-microsofts-global-ai-infrastructure-the-fairwater-blueprint-for-distributed-supercomputing,
 us-wi-mount-pleasant-microsoft,pue_reported,PUE used for comparison,1.2,,team_estimate,medium,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
 us-wi-mount-pleasant-microsoft,coordinates,Location,"42.7, -87.93",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
