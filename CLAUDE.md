@@ -29,16 +29,19 @@ Local context: Israel has low heating demand, high cooling demand, water scarcit
 
 ## Current state (2026-11-26)
 
-Early stage. `main` holds this file, a short README and the frontend in `frontend/`. `main` is the default branch.
+On `main` (PRs #1 to #5 merged):
 
-| Work | Branch | Status |
+| Work | Where | Notes |
 |---|---|---|
-| Data center location database: 59 sites, hourly 2024 weather, electricity prices, carbon intensity, `heatbeat_data` Python access module, GitHub Actions build. Docs in `docs/DATA.md`. | `claude/project-thread-n1j7gu` | In progress, open as PR #1 |
-| Frontend: landing page and world map with search (React, TypeScript, Vite, Leaflet) in `frontend/`. Pins load from `frontend/public/datacenters.json`, still empty. | `main` (merged from `claude/funny-hopper-859d23`) | On main, in progress |
+| Location database: 59 sites, hourly 2024 electricity prices, retail price, grid carbon intensity, `heatbeat_data` access module, GitHub Actions build. Weather is fetched live on first use and cached. | `data_pipeline/`, `heatbeat_data/`, `docs/DATA.md` | Until `data/parquet/` is committed by the build, prices and carbon are missing |
+| Heat source data per site: IT load, chip, cooling type, coolant temperatures | `data_pipeline/*profiles.csv`, `docs/HEAT_PROFILES.md` | Mostly team estimates (low confidence) |
+| Solution catalogue (21 solutions) and first screening | `heatbeat_solutions/`, `docs/SOLUTIONS.md` | |
+| Input overview demo: pick a site, live API calls, every model input labelled real / estimated / synthetic, pipeline checks | `demo/` (`streamlit run demo/app.py`) | `Demo pipeline check` workflow runs the live calls in CI |
+| Frontend: landing page and world map (React, Vite, Leaflet) | `frontend/` | Pins in `frontend/public/datacenters.json` |
 
 Not started yet: the solution models, the ranking logic, and the connection between map, database and models.
 
-Known gaps in the database (see PR #1): PJM prices need a `PJM_API_KEY` secret, non-US retail prices and the Israel tariff mapping are unverified placeholders.
+Known gaps: PJM prices need a `PJM_API_KEY` secret; non-US retail prices and the Israel tariff mapping are unverified placeholders; no water (WUE, water price) or heat demand data yet.
 
 ## Working rules
 
