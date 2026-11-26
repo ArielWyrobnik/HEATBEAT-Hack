@@ -1,0 +1,7 @@
+osm_id,name,lat,lon,kind,query_site,source
+way/898594015,,39.1528675,-76.9187338,food processing,us-va-sterling-digital,"OpenStreetMap contributors via Overpass API (ODbL), queried 2026-11-26"
+node/9258773048,Kensington Market Wholesale,39.0310278,-77.0827358,produce / wholesale food hub,us-va-sterling-digital,"OpenStreetMap contributors via Overpass API (ODbL), queried 2026-11-26"
+node/14136157151,Chef Center,38.8039985,-77.2139655,produce / wholesale food hub,us-va-sterling-digital,"OpenStreetMap contributors via Overpass API (ODbL), queried 2026-11-26"
+node/14236112151,Pho Supplies Inc.,38.8504519,-77.1225473,produce / wholesale food hub,us-va-sterling-digital,"OpenStreetMap contributors via Overpass API (ODbL), queried 2026-11-26"
+way/166549814,Middleburg Steak & Seafood Restaurant,36.4006039,-78.3221595,seafood,us-va-boydton-microsoft,"OpenStreetMap contributors via Overpass API (ODbL), queried 2026-11-26"
+way/314132412,Ameri-Kor Seafood,36.7255513,-78.127864,seafood,us-va-boydton-microsoft,"OpenStreetMap contributors via Overpass API (ODbL), queried 2026-11-26"
