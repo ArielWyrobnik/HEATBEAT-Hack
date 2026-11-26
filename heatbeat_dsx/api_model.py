@@ -49,6 +49,24 @@ IMPLEMENTATION = {
 }
 PRODUCT_TEXT = {"MWh_th": "MWh heat", "MWh_cool": "MWh cooling", "MWh_e": "MWh electricity", "m3": "m3 fresh water",
                 "tCO2": "t CO2 captured"}
+# Investment costs. Sourced values replace the DSX planning numbers; the rest stay DSX planning values
+# and are named in COST_UNVERIFIED (shown as a warning). USD, installed. EUR at 1.0989 USD.
+COSTS = {
+    "hp_capex_usd_kw": 700.0,  # large electric heat pumps 0.4 to 1.0 M USD/MW_th, Danish Energy Agency
+                               # technology data (same value as heatbeat_engineering capex_hp_usd_kw)
+    "district_heating": {"pipe_usd_m": 3150.0},  # DN300 district energy pipe, 960 USD/ft (2025 planning
+                               # price), City of Cambridge MA Low Carbon Energy Supply Strategy, Appendix 5
+    "absorption_cooling": {"capex_usd_kw": 185.0},  # single effect LiBr chiller with cooling tower
+                               # 930 USD/RT at 440 RT (US DOE data, Cornell 2020) = 264 USD/kW_cold x COP 0.7
+    "orc": {"capex_usd_kwe": 3000.0},  # small low temperature ORC 2,000 to 4,500 USD/kW_e, Quoilin et al. 2013
+    "btes_ates": {"capex_usd_kw": 330.0},  # ATES converges to about 300 EUR/kW above 2 MW, 133 systems,
+                               # Herrmann et al. 2025 (EGU25-15656)
+    "desalination": {"capex_usd_kw": 800.0},  # MED 2,000 USD per m3/day (Al-Karaghouli and Kazmerski 2013)
+                               # x 0.4 m3/day per kW_th at 60 kWh_th/m3
+}
+COST_UNVERIFIED = ["fish farm", "district heating plant (excluding pipe and heat pump)", "biogas", "DAC",
+                   "feedwater preheat", "biomass processing", "industrial drying", "snow melt", "greenhouse"]
+
 TORNADO_KEYS = ["p_fuel_usd_kwh", "p_elec_usd_kwh", "q_dc_mw", "t_dc_base_c", "ci_grid_g_kwh", "ci_fuel_g_kwh",
                 "p_co2_usd_ton", "p_dac_credit_usd_ton", "p_water_usd_m3", "p_steam_usd_mwh", "d_dh_m", "d_bio_m",
                 "d_water_m", "d_market_m", "rho_heat_mwh_m", "wsi_index"]
@@ -70,8 +88,9 @@ class DsxModel(ExcelRankingModel):
                     "and the limit; viability 0 to 5 = 0.30 thermodynamics + 0.30 climate fit + 0.25 economics + "
                     "0.15 utilisation; separate eco grade A to F (0.40 CO2, 0.30 water, 0.30 local impact). docs/DSX.md")
 
-    WARNINGS = ["Specific costs per kW and per m of pipe are generic planning values (DSX evaluator), so payback and "
-                "NPV are indicative.",
+    WARNINGS = ["Investment costs are sourced for heat pumps, district heating pipe, absorption chillers, ORC, "
+                "ATES and MED desalination (docs/DSX.md). Still DSX planning values (unverified): "
+                + ", ".join(COST_UNVERIFIED) + ".",
                 f"NPV over {LIFETIME_YR} years at {DISCOUNT_RATE:.0%} (same convention as the engineering model)."]
 
     # site_inputs(), run(), plan() and _t_amb() come from ExcelRankingModel; only the evaluation differs.
@@ -80,7 +99,7 @@ class DsxModel(ExcelRankingModel):
         if mode not in self.info.modes:
             raise ValueError(f"mode must be one of {self.info.modes}")
         s = _site(x)
-        res = evaluate(s, np.asarray(t, float))
+        res = evaluate(s, np.asarray(t, float), COSTS)
         q = float(s["q_dc_mw"])
         it_mw = q / IT_CAPTURE
         it_mwh = it_mw * 8760
@@ -191,7 +210,10 @@ class DsxModel(ExcelRankingModel):
         a, sc, e = o["annual"], o["subscores"], o["eco_subscores"]
         calc = lambda k, lab, v, u=None: CalcTerm(key=k, label=lab, value=clean(v), unit=u)  # noqa: E731
         t = lambda k: self._term(s, prov, k)  # noqa: E731
-        opt = next(x for x in OPTIONS if x["key"] == o["key"])
+        opt = {**next(x for x in OPTIONS if x["key"] == o["key"]), **COSTS.get(o["key"], {})}
+        hp_kw = COSTS.get("hp_capex_usd_kw", C["hp_capex_usd_kw"])
+        plant = (f"peak electric output x {opt['capex_usd_kwe']:g} $/kW_e" if opt.get("capex_usd_kwe")
+                 else f"peak heat x {opt['capex_usd_kw']:g} $/kW")
         w, ew = C["weights"], C["eco_weights"]
         product_formula = {
             "MWh_th": "value = Q_del x heat price (gas boiler heat it replaces); CO2 avoided = Q_del x CI of that heat - W_hp x grid CI",
@@ -231,12 +253,14 @@ class DsxModel(ExcelRankingModel):
                             t("p_co2_usd_ton"), calc("abated", "Net CO2 avoided", a["net_abated_tco2"], "t/yr")],
                      result=a["revenue_usd"], unit="USD/yr revenue"),
             CalcStep(title="Investment, payback and NPV",
-                     formula=f"CAPEX = peak heat x {opt['capex_usd_kw']:g} $/kW + distance x {opt['pipe_usd_m']:g} $/m + heat pump x "
-                             f"{C['hp_capex_usd_kw']:g} $/kW; net = revenue - heat pump power - 2 % CAPEX; payback = CAPEX / net; "
+                     formula=f"CAPEX = {plant} + distance x {opt['pipe_usd_m']:g} $/m + heat pump x "
+                             f"{hp_kw:g} $/kW; net = revenue - heat pump power - 2 % CAPEX; payback = CAPEX / net; "
                              f"NPV = -CAPEX + net x {ANNUITY:.2f} ({LIFETIME_YR} yr at {DISCOUNT_RATE:.0%})",
                      terms=[calc("capex", "CAPEX", a["capex_usd"], "USD"), calc("hp", "Heat pump electricity", a["hp_elec_cost_usd"], "USD/yr"),
                             calc("net", "Net cash flow", a["net_annual_usd"], "USD/yr")],
-                     result=a["payback_yr"], unit="years", note="Specific costs are generic planning values."),
+                     result=a["payback_yr"], unit="years",
+                     note="Cost per kW and per metre: sourced (docs/DSX.md)" if o["key"] in COSTS else
+                          "Cost per kW is a DSX planning value (unverified)."),
             CalcStep(title="Viability score",
                      formula=f"viability = G x ({w['thermo']:.2f} P_thermo + {w['climate']:.2f} P_climate + {w['econ']:.2f} P_econ + "
                              f"{w['util']:.2f} P_util); P_thermo = 5 x free heat share (ORC: 5 x efficiency / 12 %); "
@@ -256,7 +280,7 @@ class DsxModel(ExcelRankingModel):
         from heatbeat_ranking import INPUT_SPEC
 
         def net(site):
-            r = evaluate(site, np.asarray(t, float))
+            r = evaluate(site, np.asarray(t, float), COSTS)
             return next(o for o in r["options"] if o["key"] == option_id)["annual"]["net_annual_usd"]
 
         base = net(s)

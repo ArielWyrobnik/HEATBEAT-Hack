@@ -36,6 +36,20 @@ Ranking is by viability, then eco score. All constants are DSX planning assumpti
 `heatbeat_dsx/engine.py`); specific costs per kW and per metre are generic, so payback and NPV are
 indicative.
 
+## Investment costs
+
+| Item | Value | Source |
+|---|---|---|
+| Heat pump | 700 USD/kW_th | Danish Energy Agency technology data, large electric heat pumps 0.4 to 1.0 M USD/MW (as heatbeat_engineering) |
+| District heating pipe | 3,150 USD/m | DN300, 960 USD/ft 2025 planning price, City of Cambridge MA Low Carbon Energy Supply Strategy, Appendix 5 |
+| Absorption chiller | 185 USD/kW heat in | 930 USD/RT at 440 RT single effect with cooling tower (US DOE data, Cornell 2020) = 264 USD/kW_cold x COP 0.7 |
+| ORC | 3,000 USD/kW_e | small low temperature ORC 2,000 to 4,500 USD/kW_e, Quoilin et al. 2013 |
+| ATES / BTES | 330 USD/kW | ATES about 300 EUR/kW above 2 MW, 133 systems, Herrmann et al. 2025 |
+| MED desalination | 800 USD/kW_th | 2,000 USD per m3/day (Al-Karaghouli and Kazmerski 2013) at 60 kWh_th/m3 |
+
+Still DSX planning values (unverified, named in the result warnings): fish farm, district heating plant
+part, biogas, DAC, feedwater preheat, biomass processing, industrial drying, snow melt, greenhouse.
+
 ## Calibration against real deployments (v3.4)
 
 The 11 reference pins in the DSX frontend are real heat reuse projects. With each pin's sourced inputs,

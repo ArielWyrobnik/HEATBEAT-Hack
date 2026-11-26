@@ -94,3 +94,14 @@ def test_api_model_contract():
         assert sum(rt.mwh_yr for lp in o.heat_loops for rt in lp.routes) == pytest.approx(r.baseline.it_energy_mwh_yr)
     assert r.tornado and r.tornado.option_id == feas[0].option_id
     assert math.isclose(r.baseline.it_load_mw, x["q_dc_mw"] / 0.9, rel_tol=1e-3)
+
+
+def test_sourced_costs_replace_planning_values():
+    from heatbeat_dsx.api_model import COSTS
+    x = site(is_greenfield=1, cooling_type="liquid", t_dc_base_c=90, has_existing_dh=1, d_dh_m=500, rho_heat_mwh_m=3)
+    base = {o["key"]: o for o in evaluate(x, T)["options"]}
+    src = {o["key"]: o for o in evaluate(x, T, COSTS)["options"]}
+    orc = src["orc"]["annual"]
+    assert orc["capex_plant_usd"] == pytest.approx(orc["peak_del_mw"] * 1000 * 3000, rel=1e-3)
+    assert src["district_heating"]["annual"]["capex_pipe_usd"] == pytest.approx(500 * 3150, abs=1)
+    assert base["fish_farm_ras"]["annual"]["capex_plant_usd"] == src["fish_farm_ras"]["annual"]["capex_plant_usd"]

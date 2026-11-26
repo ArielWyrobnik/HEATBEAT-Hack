@@ -259,7 +259,7 @@ def _r(x, d=2):
     return None if x is None or not math.isfinite(x) else round(float(x), d)
 
 
-def evaluate_option(o: dict, s: dict, tamb: np.ndarray, tdc: np.ndarray, h: dict) -> dict:
+def evaluate_option(o: dict, s: dict, tamb: np.ndarray, tdc: np.ndarray, h: dict, hp_capex: float | None = None) -> dict:
     fails = o["gate"](s, h)
     gate = 0 if fails else 1
     q = float(s["q_dc_mw"])
@@ -326,8 +326,12 @@ def evaluate_option(o: dict, s: dict, tamb: np.ndarray, tdc: np.ndarray, h: dict
     peak_src_kw = q * cap * 1000
     peak_hp_kw = float(qdel.max()) * 1000 if W > 0 else 0.0
     dist = float(s[o["dist_key"]]) if o["dist_key"] else 0.0
-    capex_plant, capex_pipe = peak_src_kw * o["capex_usd_kw"], dist * o["pipe_usd_m"]
-    capex_hp = peak_hp_kw * C["hp_capex_usd_kw"] if W > 0 else 0.0
+    if o.get("capex_usd_kwe") is not None:  # power cycle priced per kW of electric output
+        capex_plant = float(qdel.max()) * 1000 * o["capex_usd_kwe"]
+    else:
+        capex_plant = peak_src_kw * o["capex_usd_kw"]
+    capex_pipe = dist * o["pipe_usd_m"]
+    capex_hp = peak_hp_kw * (hp_capex or C["hp_capex_usd_kw"]) if W > 0 else 0.0
     capex = capex_plant + capex_pipe + capex_hp
     net_annual = value + carbon_rev - hp_cost - C["opex_frac"] * capex
     payback = capex / net_annual if net_annual > 0 else math.inf
@@ -371,9 +375,11 @@ def evaluate_option(o: dict, s: dict, tamb: np.ndarray, tdc: np.ndarray, h: dict
     }
 
 
-def evaluate(site: dict, t_amb: np.ndarray) -> dict:
+def evaluate(site: dict, t_amb: np.ndarray, costs: dict | None = None) -> dict:
     """Run all 13 pathways for one site. `site` holds the 31 inputs (heat basis prices, see module
-    doc) plus optional baseline_evaporative and p_dac_credit_usd_ton; `t_amb` is 8760 hourly C."""
+    doc) plus optional baseline_evaporative and p_dac_credit_usd_ton; `t_amb` is 8760 hourly C.
+    `costs` replaces the DSX planning costs: {option_key: {capex_usd_kw | capex_usd_kwe | pipe_usd_m},
+    "hp_capex_usd_kw": value} (see api_model.COSTS for the sourced values)."""
     tamb = np.asarray(t_amb, dtype=float)
     if tamb.shape != (HOURS,):
         raise ValueError(f"need {HOURS} hourly temperatures, got {tamb.shape}")
@@ -385,7 +391,9 @@ def evaluate(site: dict, t_amb: np.ndarray) -> dict:
         s[k] = int(bool(int(float(s[k]))))
     tdc = coolant(s, tamb)
     h = climate_stats(tamb, tdc)
-    res = [evaluate_option(o, s, tamb, tdc, h) for o in OPTIONS]
+    costs = costs or {}
+    opts = [{**o, **costs.get(o["key"], {})} for o in OPTIONS]
+    res = [evaluate_option(o, s, tamb, tdc, h, costs.get("hp_capex_usd_kw")) for o in opts]
     res.sort(key=lambda x: (-x["viability"], -x["eco_score"], x["id"]))
     for i, x in enumerate(res):
         x["rank"] = i + 1
