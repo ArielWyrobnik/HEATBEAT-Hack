@@ -43,7 +43,7 @@ function before(a?: number | null, b?: number | null, d = 2) {
 
 const COST_LABEL: Record<string, string> = { plant: 'Plant', heat_pump: 'Heat pump', pipeline: 'Pipeline' };
 
-function OptionKpis({ o }: { o: OptionResult }) {
+function OptionKpis({ o, placeholderCosts }: { o: OptionResult; placeholderCosts: boolean }) {
   const k = o.kpis;
   const costs = Object.entries(o.capex_breakdown ?? {});
   return (
@@ -53,7 +53,7 @@ function OptionKpis({ o }: { o: OptionResult }) {
         {o.implementation && <p><b>How it is built:</b> {o.implementation}</p>}
         {costs.length > 0 && (
           <p className="costs"><b>Investment:</b> {costs.map(([c, v]) => `${COST_LABEL[c] ?? c.replace(/_/g, ' ')} ${usd(v)}`).join(' + ')}
-            {' '}= {usd(k.capex_usd)} <small>(placeholder costs)</small></p>
+            {' '}= {usd(k.capex_usd)}{placeholderCosts && <small> (placeholder costs)</small>}</p>
         )}
       </div>
     )}
@@ -62,7 +62,7 @@ function OptionKpis({ o }: { o: OptionResult }) {
       <Kpi label="CO2 avoided" v={`${compact(k.co2_avoided_t_yr)} t/yr`} />
       <Kpi label="Water saved" v={`${compact(k.water_saved_m3_yr)} m3/yr`} />
       <Kpi label="Net value" v={`${usd(k.net_value_usd_yr)}/yr`} />
-      <Kpi label="CAPEX" v={usd(k.capex_usd)} sub="placeholder" />
+      <Kpi label="CAPEX" v={usd(k.capex_usd)} sub={placeholderCosts ? 'placeholder' : undefined} />
       <Kpi label="Payback" v={k.payback_yr == null ? 'never' : `${num(k.payback_yr, 1)} yr`} />
       <Kpi label="PUE" v={before(k.pue_baseline, k.pue_with, 3)} />
       <Kpi label="WUE L/kWh" v={before(k.wue_baseline_l_kwh, k.wue_with_l_kwh)} />
@@ -79,7 +79,9 @@ export function Results({ r }: { r: ModelResult }) {
   const [open, setOpen] = useState<string | null>(feasible[0]?.option_id ?? null);
   useEffect(() => setOpen(feasible[0]?.option_id ?? null), [r]); // eslint-disable-line react-hooks/exhaustive-deps
   const b = r.baseline;
-  const maxScore = 5;
+  // score scale differs per model (0 to 5, or NPV in million USD that can be negative)
+  const maxScore = Math.max(1e-9, ...feasible.map((o) => Math.abs(o.score ?? 0)));
+  const placeholderCosts = r.model === 'excel_ranking';
   const best = feasible[0];
   return (
     <>
@@ -97,7 +99,7 @@ export function Results({ r }: { r: ModelResult }) {
         <Kpi label="Power bill" v={`${usd(b.electricity_cost_usd_yr)}/yr`} />
       </div>
 
-      <h4>Ranking ({feasible.length} feasible of {r.options.length})</h4>
+      <h4>Ranking ({feasible.length} feasible of {r.options.length}) <small className="scale">score: {r.score_scale}</small></h4>
       {feasible.length === 0 && <p className="muted">No option passes the knock-out gates at this site.</p>}
       <ol className="options">
         {feasible.map((o) => (
@@ -109,12 +111,12 @@ export function Results({ r }: { r: ModelResult }) {
                 {o.product && <small>{o.product}</small>}
               </span>
               <span className="opt-score">
-                <span className="bar"><i style={{ width: `${((o.score ?? 0) / maxScore) * 100}%` }} /></span>
+                <span className="bar"><i className={(o.score ?? 0) < 0 ? 'neg' : ''} style={{ width: `${(Math.abs(o.score ?? 0) / maxScore) * 100}%` }} /></span>
                 {num(o.score, 2)}
               </span>
               {o.eco_grade && <span className={`grade grade-${o.eco_grade[0]}`}>{o.eco_grade}</span>}
             </button>
-            {open === o.option_id && <OptionKpis o={o} />}
+            {open === o.option_id && <OptionKpis o={o} placeholderCosts={placeholderCosts} />}
           </li>
         ))}
       </ol>
@@ -126,7 +128,7 @@ export function Results({ r }: { r: ModelResult }) {
       )}
 
       {r.tornado && best && <Tornado data={r.tornado} optionName={r.options.find((o) => o.option_id === r.tornado!.option_id)?.name ?? best.name} />}
-      <p className="muted small">Model {r.model}, mode {r.mode}. Score {r.score_scale}, eco grade A to F.</p>
+      <p className="muted small">Model {r.model}, mode {r.mode}. Score: {r.score_scale}.</p>
     </>
   );
 }

@@ -15,6 +15,7 @@ from heatbeat_api.schemas import ModelResult  # noqa: E402
 
 c = TestClient(app)
 SITE = "us-va-ashburn-equinix"
+RK = {"model": "excel_ranking"}  # tests of the Excel ranking adapter itself
 
 
 def test_health_and_models():
@@ -37,21 +38,21 @@ def test_sites_for_map():
 
 
 def test_inputs_have_flags_and_sources():
-    j = c.get(f"/api/sites/{SITE}/inputs").json()
+    j = c.get(f"/api/sites/{SITE}/inputs", params=RK).json()
     keys = {i["key"]: i for i in j["inputs"]}
     assert {"q_dc_mw", "p_elec_usd_kwh", "wsi_index", "ci_grid_g_kwh"} <= set(keys)
     assert all(i["flag"] in ("real", "estimated", "synthetic", "user") for i in j["inputs"])
     assert keys["p_elec_usd_kwh"]["flag"] == "real" and keys["p_elec_usd_kwh"]["unit"] == "USD/kWh"
     assert keys["q_dc_mw"]["flag"] == "estimated"  # team estimate, must never show as real
     assert sum(j["flag_counts"].values()) == len(j["inputs"])
-    g = c.get(f"/api/sites/{SITE}/inputs", params={"is_greenfield": 1}).json()
+    g = c.get(f"/api/sites/{SITE}/inputs", params={**RK, "is_greenfield": 1}).json()
     gf = next(i for i in g["inputs"] if i["key"] == "is_greenfield")
     assert gf["value"] == 1 and gf["flag"] == "user"
 
 
 @pytest.mark.parametrize("mode", ["corrected", "excel"])
 def test_ranking_schema(mode):
-    r = c.get(f"/api/sites/{SITE}/ranking", params={"mode": mode})
+    r = c.get(f"/api/sites/{SITE}/ranking", params={**RK, "mode": mode})
     assert r.status_code == 200
     res = ModelResult.model_validate(r.json())
     assert res.mode == mode and len(res.options) == 13
@@ -69,7 +70,7 @@ def test_ranking_schema(mode):
 
 
 def test_corrected_kpis_and_energy_balance():
-    res = ModelResult.model_validate(c.get(f"/api/sites/{SITE}/ranking").json())
+    res = ModelResult.model_validate(c.get(f"/api/sites/{SITE}/ranking", params=RK).json())
     best = res.options[0]
     k = best.kpis
     assert k.co2_avoided_t_yr is not None and k.net_value_usd_yr is not None and k.pue_with <= k.pue_baseline
@@ -89,8 +90,8 @@ def test_bad_requests():
 
 
 def test_evaluate_overrides_change_result():
-    base = c.get(f"/api/sites/{SITE}/ranking").json()
-    r = c.post("/api/evaluate", json={"site_id": SITE, "overrides": {"d_bio_m": 2000}, "tornado": False})
+    base = c.get(f"/api/sites/{SITE}/ranking", params=RK).json()
+    r = c.post("/api/evaluate", json={**RK, "site_id": SITE, "overrides": {"d_bio_m": 2000}, "tornado": False})
     assert r.status_code == 200
     j = r.json()
     assert j["tornado"] is None and j["inputs_used"]["d_bio_m"] == 2000
@@ -108,7 +109,7 @@ def test_cooling_profiles():
 
 def test_plan_future_data_center():
     """Any point, size in MW, cooling: ranking with cost and savings (offline: nearest site weather)."""
-    body = {"lat": 41.6, "lon": -93.6, "it_mw": 1000, "cooling_profile": "dlc_hot"}
+    body = {**RK, "lat": 41.6, "lon": -93.6, "it_mw": 1000, "cooling_profile": "dlc_hot"}
     r = c.post("/api/plan", json=body)
     assert r.status_code == 200, r.text
     res = ModelResult.model_validate(r.json())
@@ -139,12 +140,32 @@ def test_flag_mapping():
 
 
 def test_all_us_sites_rank():
-    """Every US site with stored weather returns a valid result (what the map needs)."""
+    """Every US site with stored weather returns a valid result with the default model (what the map shows)."""
     for s in c.get("/api/sites", params={"country": "US"}).json():
         if not s["weather_stored"]:
             continue
         r = c.get(f"/api/sites/{s['site_id']}/ranking")
         assert r.status_code == 200, (s["site_id"], r.text[:200])
+
+
+@pytest.mark.parametrize("model", sorted(MODELS))
+def test_every_model_fulfils_the_contract(model):
+    """Any registered model (Excel ranking, engineering heat chain, ...) gives what the frontend reads."""
+    info = MODELS[model].info
+    for mode in info.modes:
+        r = c.get(f"/api/sites/{SITE}/ranking", params={"model": model, "mode": mode})
+        assert r.status_code == 200, (model, mode, r.text[:300])
+        res = ModelResult.model_validate(r.json())
+        assert res.model == model and res.options and res.baseline.it_energy_mwh_yr
+        ranks = [o.rank for o in res.options if o.rank is not None]
+        assert ranks == sorted(ranks)
+    inp = c.get(f"/api/sites/{SITE}/inputs", params={"model": model}).json()
+    assert inp["inputs"] and all(i["flag"] in ("real", "estimated", "synthetic", "user") for i in inp["inputs"])
+    if hasattr(MODELS[model], "plan"):
+        r = c.post("/api/plan", json={"model": model, "lat": 41.6, "lon": -93.6, "it_mw": 300,
+                                      "cooling_profile": "dlc_warm", "tornado": False})
+        assert r.status_code == 200, (model, r.text[:300])
+        assert ModelResult.model_validate(r.json()).baseline.it_load_mw == pytest.approx(300, rel=0.01)
 
 
 def test_adapter_is_a_site_model():
