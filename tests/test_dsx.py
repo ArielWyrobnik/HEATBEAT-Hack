@@ -111,3 +111,10 @@ def test_chilled_water_return_is_not_the_heat_temperature():
     from heatbeat_dsx.api_model import _site
     assert _site({**us_defaults(), "cooling_type": "air", "t_dc_base_c": 13})["t_dc_base_c"] == 32
     assert _site({**us_defaults(), "cooling_type": "liquid", "t_dc_base_c": 42})["t_dc_base_c"] == 42
+
+
+def test_farmland_counts_for_fish_farm_and_digester_zoning():
+    rural = {o["key"]: o for o in evaluate(site(ind_zoning=0, agri_land_m2=30000, d_bio_m=5000), T)["options"]}
+    urban = {o["key"]: o for o in evaluate(site(ind_zoning=0, agri_land_m2=0, d_bio_m=5000), T)["options"]}
+    assert not any("agricultural land" in m for m in rural["biogas"]["ko_failures"])
+    assert any("agricultural land" in m for m in urban["biogas"]["ko_failures"])

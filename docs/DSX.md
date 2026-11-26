@@ -59,6 +59,13 @@ the model should put the real pathway near the top. Two changes, both physical r
    instead of a flat 70 % all year: a seasonal store takes summer heat and returns it in winter.
 2. BTES / ATES needs a heat user to discharge to (existing heat network, or one within 3 km).
 
+3. Fish farm and digester zoning accept industrial zoning **or** at least 2 ha of farmland within 1 km.
+   The database `ind_zoning` is an OSM proxy that only sees industrial land use, so rural campuses on
+   farmland (Iowa, Nebraska, Virginia) were treated as urban and lost every option.
+
+Database sites also get two input corrections in the model: air sites on a chilled water plant use the
+32 C exhaust air (team cooling profile) instead of the 13 C chilled water return as heat temperature.
+
 Plus one data fix: High Tech Campus Eindhoven is an office and lab campus, so no industrial zoning
 (same rule as Amsterdam Science Park and Saint-Denis).
 

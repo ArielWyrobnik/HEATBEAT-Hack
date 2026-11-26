@@ -15,6 +15,9 @@ v3.4 calibration against real deployments (frontend reference pins, docs/DSX.md)
   10 C to full at 20 C) instead of a flat 70 % all year, since a seasonal store takes summer heat and
   gives it back in winter.
 * BTES / ATES needs a heat user to discharge to (existing heat network or one within 3 km).
+* Fish farm and digester zoning: industrial zoning OR at least 2 ha of farmland within 1 km. The
+  database ind_zoning is an OSM proxy that only sees industrial land use, so rural sites on farmland
+  were wrongly treated as urban.
 
 Every constant below is a planning assumption of the DSX evaluator (not a site fact).
 """
@@ -82,7 +85,8 @@ def g_fish(s, h):
     _chk(s["d_water_m"] <= 3000, f"water intake {_km(s['d_water_m'])} km away (limit 3 km)", f)
     _chk(s["wsi_index"] < 4.0, f"water stress {s['wsi_index']:g} (must be under 4.0)", f)
     _chk(s["q_dc_mw"] >= 0.5, f"heat source {s['q_dc_mw']:g} MW (needs 0.5 MW)", f)
-    _chk(s["ind_zoning"] == 1, "needs industrial or rural zoning; fish farms are not permitted in urban or commercial zones", f)
+    _chk(s["ind_zoning"] == 1 or s["agri_land_m2"] >= 20000,
+         "needs industrial or agricultural land: no industrial zoning and under 2 ha of farmland within 1 km", f)
     return f
 
 
@@ -104,7 +108,8 @@ def g_biogas(s, h):
     _chk(h["lt25"] >= 2500, f"only {_n0(h['lt25'])} h below 25 C (needs 2,500 h)", f)
     _chk(s["d_bio_m"] <= 25000, f"feedstock {_km(s['d_bio_m'])} km away (limit 25 km)", f)
     _chk(s["slope_deg"] <= 10, f"slope {s['slope_deg']:g} deg (limit 10 deg)", f)
-    _chk(s["ind_zoning"] == 1, "needs industrial or agricultural zoning; digesters are not permitted in urban or commercial zones", f)
+    _chk(s["ind_zoning"] == 1 or s["agri_land_m2"] >= 20000,
+         "needs industrial or agricultural land: no industrial zoning and under 2 ha of farmland within 1 km", f)
     return f
 
 
