@@ -236,13 +236,14 @@ class ExcelRankingModel:
             x[k] = tx[k]
             prov[k] = {"status": "assumption", "source": f"from nearest database site {template_site_id} "
                                                          f"({template_km:.0f} km): {tprov[k].get('source')}"}
+        planned_it_mw = req.it_mw if req.it_mw is not None else round(max(0.1, min(10000.0, (req.budget_usd or 0.0) / 35_000_000.0)), 2)
         user = {"is_greenfield": int(req.is_greenfield), "cooling_type": c.cooling_type,
-                "q_dc_mw": round(req.it_mw * CORRECTED["it_capture_factor"]["value"], 2)}
+                "q_dc_mw": round(planned_it_mw * CORRECTED["it_capture_factor"]["value"], 2)}
         if c.heat_temp_c is not None:
             user["t_dc_base_c"] = c.heat_temp_c
         for k, v in user.items():
             x[k] = v
-            prov[k] = {"status": "user", "source": f"planned data center ({c.label}, {req.it_mw:g} MW IT)"}
+            prov[k] = {"status": "user", "source": f"planned data center ({c.label}, {planned_it_mw:g} MW IT)"}
         if req.pue is not None:
             x["pue"] = req.pue
             prov["pue"] = {"status": "user", "source": "design PUE set in the UI"}

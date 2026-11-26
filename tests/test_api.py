@@ -205,3 +205,37 @@ def test_leaderboard_ranks_sites_by_best_change():
     assert best.option_id == top["option_id"]
     assert abs(best.kpis.cash_value_usd_yr - top["cash_value_usd_yr"]) < 1
     assert sum(o.is_today for o in res.options) <= 1
+
+
+def test_plan_defaults_and_budget_mode():
+    d = c.get("/api/plan/defaults", params={"lat": 41.6, "lon": -93.6})
+    assert d.status_code == 200
+    dj = d.json()
+    keys = {i["key"]: i["value"] for i in dj["inputs"]}
+    assert keys["liquid_heat_share"] == pytest.approx(0.95)
+    assert keys["t_liquid_supply_c"] == pytest.approx(45.0)
+    assert keys["t_liquid_return_c"] == pytest.approx(55.0)
+    assert keys["compute_capex_usd_mw"] == pytest.approx(25_000_000.0)
+
+    # Default cooling_profile is Vera Rubin (dlc_hot) and budget_usd solves IT MW + rack count
+    r = c.post("/api/plan", json={"lat": 41.6, "lon": -93.6, "budget_usd": 500_000_000, "tornado": False})
+    assert r.status_code == 200, r.text
+    res = ModelResult.model_validate(r.json())
+    assert res.baseline.cooling_profile == "dlc_hot"
+    assert res.budget_summary is not None
+    assert res.budget_summary.budget_usd == pytest.approx(500_000_000)
+    assert 10.0 <= res.budget_summary.solved_it_mw <= 16.0
+    assert res.budget_summary.vera_rubin_racks > 0
+    assert res.budget_summary.total_build_capex_usd <= 500_000_000 * 1.01
+    feas = [o for o in res.options if o.feasible]
+    assert feas and "budget_fit" in feas[0].details
+
+    # Retrofit omits default facility shell cost so more compute fits in the same budget
+    retro = c.post("/api/plan", json={"lat": 41.6, "lon": -93.6, "budget_usd": 500_000_000,
+                                      "is_greenfield": 0, "tornado": False})
+    assert retro.status_code == 200
+    assert retro.json()["budget_summary"]["solved_it_mw"] > res.budget_summary.solved_it_mw
+
+    # Validation: missing both it_mw and budget_usd, or tiny budget
+    assert c.post("/api/plan", json={"lat": 41.6, "lon": -93.6}).status_code == 422
+    assert c.post("/api/plan", json={"lat": 41.6, "lon": -93.6, "budget_usd": 500_000}).status_code == 422

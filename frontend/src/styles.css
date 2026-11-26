@@ -418,6 +418,41 @@ button.link { background: none; border: 0; color: #6bb8ff; cursor: pointer; font
 .plan-alternatives { display: grid; gap: 4px; color: var(--muted); font-size: 12px; }
 .plan-alternatives select { width: 100%; padding: 8px; background: var(--surface); color: var(--text); border: 1px solid var(--border); font: inherit; }
 
+.plan-chip-banner {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px;
+  padding: 7px 10px; border: 1px solid #35501a; background: rgba(118, 185, 0, 0.08); font-size: 12px;
+}
+.plan-chip-banner b { color: var(--green-bright); }
+.plan-chip-banner span { color: var(--muted); }
+
+.plan-custom { border: 1px solid var(--border); padding: 8px 10px; background: var(--bg); }
+.plan-custom summary { display: flex; justify-content: space-between; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: #cfcfcf; }
+.plan-custom-body { margin-top: 10px; display: grid; gap: 10px; }
+.plan-param-group h5 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--green); }
+.plan-param-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.plan-param-grid label { display: grid; gap: 3px; font-size: 11px; color: var(--muted); }
+.plan-param-grid input { padding: 5px 7px; font-size: 12px; }
+
+.plan-budget-card { padding: 10px 12px; border: 1px solid #35501a; background: rgba(118, 185, 0, 0.08); margin-bottom: 12px; }
+.plan-budget-hero { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin: 4px 0 6px; }
+.plan-budget-hero strong { font-size: 18px; color: var(--green-bright); font-variant-numeric: tabular-nums; }
+.plan-budget-hero span { font-size: 12px; color: var(--text); }
+.plan-budget-split { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--muted); }
+.plan-budget-split b { color: var(--text); }
+
+.plan-proposals { display: grid; gap: 8px; }
+.plan-proposals > h4 { margin: 0 0 2px; }
+.plan-proposal { border: 1px solid var(--border); background: var(--surface); }
+.plan-proposal.open { border-color: #35501a; }
+.plan-proposal-badge {
+  display: inline-block; width: fit-content; margin-bottom: 3px; padding: 1px 6px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--green-bright); border: 1px solid #35501a; background: rgba(118, 185, 0, 0.1);
+}
+.plan-all { margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
+.plan-all summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+.plan-all-body { margin-top: 8px; display: grid; gap: 8px; }
+
 .heat-order { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; color: var(--muted); font-size: 12px; }
 .heat-order select { max-width: 100%; padding: 6px 8px; border: 1px solid var(--border); color: var(--text); background: var(--surface); font: inherit; }
 .heat-flow { margin: 0; padding: 12px; border: 1px solid var(--border); background: var(--bg); font-size: 12px; }

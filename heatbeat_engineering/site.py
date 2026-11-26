@@ -202,12 +202,45 @@ def load_site(site_id: str, live: bool = True, weather: pd.DataFrame | None = No
 
 
 def apply_overrides(case: "SiteCase", overrides: dict | None) -> None:
-    """UI overrides; the cooling profile first, so a heat rejection override given with it wins."""
+    """UI overrides; the cooling profile first, loop tweaks combined, so a heat rejection override given with it wins."""
     o = dict(overrides or {})
     if "cooling_profile" in o:
         set_input(case, "cooling_profile", o.pop("cooling_profile"))
+    loop_keys = ("liquid_heat_share", "t_liquid_supply_c", "t_liquid_return_c", "t_air_supply_c", "t_air_return_c")
+    if any(k in o for k in loop_keys):
+        _update_loops(
+            case,
+            liquid_share=float(o.pop("liquid_heat_share")) if "liquid_heat_share" in o else None,
+            t_liq_sup=float(o.pop("t_liquid_supply_c")) if "t_liquid_supply_c" in o else None,
+            t_liq_ret=float(o.pop("t_liquid_return_c")) if "t_liquid_return_c" in o else None,
+            t_air_sup=float(o.pop("t_air_supply_c")) if "t_air_supply_c" in o else None,
+            t_air_ret=float(o.pop("t_air_return_c")) if "t_air_return_c" in o else None,
+        )
     for k, v in o.items():
         set_input(case, k, v)
+
+
+def _update_loops(case: SiteCase, *, liquid_share: float | None = None, t_liq_sup: float | None = None,
+                  t_liq_ret: float | None = None, t_air_sup: float | None = None, t_air_ret: float | None = None) -> None:
+    liq = next((l for l in case.loops if l.name == "liquid"), None)
+    air = next((l for l in case.loops if l.name == "air"), None)
+    cur_share = (liq.q_mw / case.it_mw) if (liq and case.it_mw > 0) else 0.0
+    share = float(np.clip(cur_share if liquid_share is None else liquid_share, 0.0, 1.0))
+    lsup = t_liq_sup if t_liq_sup is not None else (liq.t_supply_c if liq else 45.0)
+    lret = t_liq_ret if t_liq_ret is not None else (liq.t_return_c if liq else 55.0)
+    asup = t_air_sup if t_air_sup is not None else (air.t_supply_c if air else 18.0)
+    aret = t_air_ret if t_air_ret is not None else (air.t_return_c if air else 26.0)
+    if lret <= lsup:
+        raise ValueError("t_liquid_return_c must be greater than t_liquid_supply_c")
+    if aret <= asup:
+        raise ValueError("t_air_return_c must be greater than t_air_supply_c")
+    loops = []
+    if share > 0:
+        loops.append(Loop("liquid", case.it_mw * share, float(lsup), float(lret)))
+    if share < 1:
+        loops.append(Loop("air", case.it_mw * (1.0 - share), float(asup), float(aret)))
+    case.loops = loops
+    case.prov["loops"] = {"status": "user", "source": "cooling loop settings customized in the UI"}
 
 
 def set_input(case: SiteCase, key: str, value) -> None:
@@ -220,6 +253,21 @@ def set_input(case: SiteCase, key: str, value) -> None:
         case.prov["loops"] = {"status": "user", "source": f"cooling profile {prof} set in the UI"}
         if case.prov.get("baseline_rejection", {}).get("status") not in ("data", "user"):
             case.baseline_rejection = BASELINE_REJECTION.get(prof, "tower")
+        return
+    if key == "liquid_heat_share":
+        _update_loops(case, liquid_share=float(value))
+        return
+    if key == "t_liquid_supply_c":
+        _update_loops(case, t_liq_sup=float(value))
+        return
+    if key == "t_liquid_return_c":
+        _update_loops(case, t_liq_ret=float(value))
+        return
+    if key == "t_air_supply_c":
+        _update_loops(case, t_air_sup=float(value))
+        return
+    if key == "t_air_return_c":
+        _update_loops(case, t_air_ret=float(value))
         return
     if key == "baseline_rejection":
         from .heat_rejection import TECHS

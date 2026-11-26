@@ -201,6 +201,27 @@ export interface Tornado {
   bars: TornadoBar[];
 }
 
+export interface BudgetSummary {
+  budget_usd: number;
+  solved_it_mw: number;
+  vera_rubin_racks: number;
+  rack_kw: number;
+  compute_capex_usd: number;
+  facility_capex_usd: number;
+  cooling_reuse_capex_usd: number;
+  total_build_capex_usd: number;
+  compute_usd_per_mw: number;
+  facility_usd_per_mw: number;
+}
+
+export interface PlanDefaults {
+  lat: number;
+  lon: number;
+  template_site_id: string;
+  template_km: number;
+  inputs: InputValue[];
+}
+
 export interface ModelResult {
   site_id: string;
   model: string;
@@ -218,6 +239,7 @@ export interface ModelResult {
   inputs: InputValue[];
   cooling_vendors?: Vendor[];
   planned_site?: PlanRequest | null;
+  budget_summary?: BudgetSummary | null;
 }
 
 export interface CoolingProfile {
@@ -229,12 +251,13 @@ export interface CoolingProfile {
   description?: string | null;
 }
 
-/** A future data center: any point on the map plus size and cooling. */
+/** A future data center: any point on the map plus size (or budget) and customizable parameters. */
 export interface PlanRequest {
   lat: number;
   lon: number;
-  it_mw: number;
-  cooling_profile: string;
+  it_mw?: number | null;
+  budget_usd?: number | null;
+  cooling_profile?: string;
   name?: string | null;
   pue?: number | null;
   is_greenfield: number;

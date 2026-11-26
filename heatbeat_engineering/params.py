@@ -188,6 +188,13 @@ PARAMS: dict[str, Param] = {
     "capex_md_usd_m3d": P(2500.0, 1800, 3500, "USD per m3/day", "assumption", "MD pilot scale. UNVERIFIED"),
     "capex_orc_usd_kwe": P(3000.0, 2000, 4500, "USD/kW_e", "literature", "Small low temperature ORC 2000 to 4500 USD/kW_e, Quoilin 2013"),
     "opex_share": P(0.02, 0.01, 0.04, "of CAPEX per yr", "assumption", "Fixed O&M"),
+    # ---- AI factory budget sizing (Vera Rubin NVL144 class) ---------------------------------
+    "compute_capex_usd_mw": P(25_000_000.0, 15_000_000.0, 35_000_000.0, "USD/MW IT", "assumption",
+                              "NVIDIA Vera Rubin NVL144 rack hardware (~150 kW/rack, ~$3.75M/rack); team planning estimate, UNVERIFIED"),
+    "facility_capex_usd_mw": P(10_000_000.0, 6_000_000.0, 15_000_000.0, "USD/MW IT", "assumption",
+                               "Data center shell, substation, UPS and MEP excluding cooling/heat reuse plant (greenfield); team estimate, UNVERIFIED"),
+    "vera_rubin_rack_kw": P(150.0, 120.0, 180.0, "kW/rack", "literature",
+                            "NVIDIA Vera Rubin NVL144 rack thermal design power (~150 kW/rack, cooling_profiles.csv)"),
 }
 
 

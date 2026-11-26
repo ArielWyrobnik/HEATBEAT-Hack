@@ -1,4 +1,4 @@
-import type { CoolingProfile, LeaderboardRow, ModelInfo, ModelResult, PlanRequest, SiteInputs, SiteSummary } from './types/api';
+import type { CoolingProfile, LeaderboardRow, ModelInfo, ModelResult, PlanDefaults, PlanRequest, SiteInputs, SiteSummary } from './types/api';
 
 export interface EvaluateRequest {
   site_id: string;
@@ -39,6 +39,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 export const api = {
   config: () => get<{ feedback_url: string | null; sites_scope?: string; n_sites_all?: number; n_sites_verified?: number }>('/config'),
   coolingProfiles: () => get<CoolingProfile[]>('/cooling-profiles'),
+  planDefaults: (lat: number, lon: number) => get<PlanDefaults>('/plan/defaults', { lat, lon }),
   plan: (req: PlanRequest) => post<ModelResult>('/plan', req),
   evaluate: (req: EvaluateRequest) => post<ModelResult>('/evaluate', req),
   /** scope: 'verified' (sites with documented cooling) or 'all'; omitted = server default (HEATBEAT_SITES) */

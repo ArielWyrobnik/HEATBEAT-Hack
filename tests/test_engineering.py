@@ -106,6 +106,19 @@ def test_heat_pump_below_carnot_and_falls_with_lift():
     assert c1 < float(hp.carnot_cop(45, 70))
 
 
+def test_loop_overrides_work_regardless_of_key_order():
+    from heatbeat_engineering.site import apply_overrides
+
+    s = synthetic_site()
+    apply_overrides(s, {"t_liquid_supply_c": 56.0, "t_liquid_return_c": 66.0, "liquid_heat_share": 0.8})
+    liq = next(l for l in s.loops if l.name == "liquid")
+    air = next(l for l in s.loops if l.name == "air")
+    assert liq.q_mw == pytest.approx(80.0)
+    assert air.q_mw == pytest.approx(20.0)
+    assert liq.t_supply_c == pytest.approx(56.0)
+    assert liq.t_return_c == pytest.approx(66.0)
+
+
 def test_orc_is_honestly_poor_at_55c():
     eta = orc_efficiency(55, np.full(10, 15.0), P)
     carnot = 1 - (15 + P["orc_cond_above_air_k"] + 273.15) / (55 - P["hx_approach_k"] + 273.15)

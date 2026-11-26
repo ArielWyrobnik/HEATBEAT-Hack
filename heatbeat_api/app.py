@@ -18,8 +18,8 @@ from fastapi import APIRouter, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .models import clean, cooling_profiles, default_model, load_models
-from .schemas import (CoolingProfile, EvaluateRequest, LeaderboardRow, ModelInfo, ModelResult, PlanRequest,
-                      SiteInputs, SiteSummary, Vendor)
+from .schemas import (CoolingProfile, EvaluateRequest, LeaderboardRow, ModelInfo, ModelResult, PlanDefaults,
+                      PlanRequest, SiteInputs, SiteSummary, Vendor)
 
 # HEATBEAT_LIVE=0 never fetches weather from the internet (CI, offline demo); default 1.
 LIVE = os.getenv("HEATBEAT_LIVE", "1") != "0"
@@ -264,6 +264,17 @@ def _point_weather(lat: float, lon: float) -> pd.DataFrame | None:
         except Exception:  # noqa: BLE001
             continue
     return None
+
+
+@api.get("/plan/defaults", response_model=PlanDefaults)
+def plan_defaults(lat: float = Query(..., ge=-90, le=90), lon: float = Query(..., ge=-180, le=180),
+                  model: str | None = None) -> PlanDefaults:
+    """Regional default inputs for any map point so the planning UI can pre-fill customizable parameters."""
+    m = _model(model)
+    if not hasattr(m, "plan_defaults"):
+        raise HTTPException(501, f"model {m.info.name!r} does not expose plan defaults")
+    with _lock:
+        return m.plan_defaults(lat, lon)
 
 
 @api.post("/plan", response_model=ModelResult)

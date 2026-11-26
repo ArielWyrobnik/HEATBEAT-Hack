@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # How trustworthy a number is. Shown next to every value in the UI.
 #   real       measured or looked up for this site (database, GIS, published table)
@@ -226,6 +226,29 @@ class Tornado(BaseModel):
     bars: list[TornadoBar]
 
 
+class BudgetSummary(BaseModel):
+    """Compute + infrastructure sizing solved from a total build budget (USD)."""
+    budget_usd: float
+    solved_it_mw: float
+    vera_rubin_racks: int
+    rack_kw: float
+    compute_capex_usd: float
+    facility_capex_usd: float
+    cooling_reuse_capex_usd: float
+    total_build_capex_usd: float
+    compute_usd_per_mw: float
+    facility_usd_per_mw: float
+
+
+class PlanDefaults(BaseModel):
+    """Pre-filled regional estimates for a planned point before running the full simulation."""
+    lat: float
+    lon: float
+    template_site_id: str
+    template_km: float
+    inputs: list[InputValue] = Field(default_factory=list)
+
+
 class ModelResult(BaseModel):
     """Everything the frontend shows for one site."""
     site_id: str
@@ -245,6 +268,8 @@ class ModelResult(BaseModel):
                                           description="Planned sites: who supplies the chosen IT cooling")
     planned_site: "PlanRequest | dict[str, Any] | None" = Field(
         None, description="Set when the result is for a planned data center (the request, or a model's own summary)")
+    budget_summary: BudgetSummary | None = Field(
+        None, description="Filled when PlanRequest specifies budget_usd instead of it_mw")
 
 
 class ModelInfo(BaseModel):
@@ -283,8 +308,9 @@ class PlanRequest(BaseModel):
     """
     lat: float = Field(ge=-90, le=90)
     lon: float = Field(ge=-180, le=180)
-    it_mw: float = Field(gt=0, le=10000, description="IT load in MW (1 GW = 1000 MW)")
-    cooling_profile: str = Field("dlc_warm", description="cooling_profile_id, see GET /api/cooling-profiles")
+    it_mw: float | None = Field(None, gt=0, le=10000, description="IT load in MW (1 GW = 1000 MW)")
+    budget_usd: float | None = Field(None, gt=0, le=1e12, description="Total build budget in USD (sizes IT MW + cooling/reuse)")
+    cooling_profile: str = Field("dlc_hot", description="cooling_profile_id; defaults to dlc_hot (Vera Rubin NVL144 class)")
     name: str | None = None
     pue: float | None = Field(None, ge=1.0, le=3.0, description="Design PUE; default typical for the cooling profile")
     is_greenfield: int = Field(1, ge=0, le=1, description="1 = solution designed in from the start")
@@ -292,6 +318,12 @@ class PlanRequest(BaseModel):
     mode: str | None = None
     overrides: dict[str, Any] = Field(default_factory=dict)
     tornado: bool = True
+
+    @model_validator(mode="after")
+    def _require_size_or_budget(self):
+        if self.it_mw is None and self.budget_usd is None:
+            raise ValueError("Provide either it_mw or budget_usd")
+        return self
 
 
 ModelResult.model_rebuild()

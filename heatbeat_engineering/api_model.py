@@ -8,14 +8,14 @@ from __future__ import annotations
 
 import math
 
-from heatbeat_api.schemas import (Baseline, EnergyFlow, HeatLoop, InputValue, Kpis, ModelInfo, ModelResult, OptionResult,
-                                  SetupFact, Tornado, TornadoBar)
+from heatbeat_api.schemas import (Baseline, BudgetSummary, EnergyFlow, HeatLoop, InputValue, Kpis, ModelInfo,
+                                  ModelResult, OptionResult, PlanDefaults, SetupFact, Tornado, TornadoBar)
 
 from . import calc_trace
 from .chains import DH_SIZED_PLANS, best_per_use, evaluate_site
 from .params import PARAMS, defaults
 from .sensitivity import tornado as tornado_fn
-from .site import load_location, load_site
+from .site import load_location, load_site, set_input
 from .verdict import verdict as verdict_fn
 
 UNITS = {
@@ -34,6 +34,8 @@ LABELS = {
     "q_fw_mw": "Power plant feedwater heat", "d_bio_m": "Distance to digester feedstock",
     "geo_storage_score": "Geological storage score", "p_wholesale_usd_mwh": "Wholesale power price",
     "is_greenfield": "Greenfield site", "it_mw": "IT load",
+    "liquid_heat_share": "Liquid cooling heat share", "t_liquid_supply_c": "Liquid supply temperature",
+    "t_liquid_return_c": "Liquid return temperature",
 }
 FLAG = {"data": "real", "estimate": "estimated", "assumption": "estimated", "synthetic": "synthetic", "user": "user"}
 
@@ -81,6 +83,18 @@ class HeatChainModel:
             out.append(InputValue(key=k, label=LABELS.get(k, k), value=_c(v), unit=UNITS.get(k),
                                   flag=FLAG.get(p.get("status"), "estimated"), status=str(p.get("status", "assumption")),
                                   source=p.get("source")))
+        liq = next((l for l in s.loops if l.name == "liquid"), None)
+        liq_share = round((liq.q_mw / s.it_mw), 4) if (liq and s.it_mw > 0) else 0.0
+        loop_prov = s.prov.get("loops", {})
+        loop_flag = FLAG.get(loop_prov.get("status"), "estimated")
+        for k, val, unit in (
+            ("liquid_heat_share", liq_share, "-"),
+            ("t_liquid_supply_c", liq.t_supply_c if liq else 45.0, "C"),
+            ("t_liquid_return_c", liq.t_return_c if liq else 55.0, "C"),
+        ):
+            out.append(InputValue(key=k, label=LABELS.get(k, k), value=_c(val), unit=unit,
+                                  flag=loop_flag, status=str(loop_prov.get("status", "estimate")),
+                                  source=loop_prov.get("source")))
         P = {**defaults(), **par_o}
         for k, p in PARAMS.items():
             out.append(InputValue(key=k, label=k, value=P[k], unit=p.unit,
@@ -89,20 +103,130 @@ class HeatChainModel:
                                   sens_low=p.low, sens_high=p.high))
         return out
 
+    def plan_defaults(self, lat: float, lon: float) -> PlanDefaults:
+        """Return pre-filled regional estimates and Vera Rubin defaults for a planned point (no simulation)."""
+        s = load_location(lat, lon, 100.0, "dlc_hot", True, weather=None, live=False)
+        return PlanDefaults(
+            lat=lat,
+            lon=lon,
+            template_site_id=str(s.x.get("template_site_id") or ""),
+            template_km=round(float(s.x.get("template_distance_m", 0.0)) / 1000.0, 1),
+            inputs=self._inputs_list(s, {}),
+        )
+
     def run(self, site_id, mode="best", is_greenfield=None, overrides=None, weather=None, tornado=True):
         site_o, par_o = _split(overrides)
         s = load_site(site_id, weather=weather, is_greenfield=is_greenfield, overrides=site_o)
         return self._result(s, mode, par_o, tornado)
 
     def plan(self, req, weather=None, template_site_id=None, template_km=None):
-        """Planned data center: any point + size. `req` is heatbeat_api.schemas.PlanRequest."""
+        """Planned data center: any point + size (or total budget). `req` is heatbeat_api.schemas.PlanRequest."""
         site_o, par_o = _split(getattr(req, "overrides", None))
-        s = load_location(req.lat, req.lon, req.it_mw, getattr(req, "cooling_profile", None) or "dlc_warm",
-                          bool(getattr(req, "is_greenfield", 1) if getattr(req, "is_greenfield", 1) is not None else 1),
+        is_gf = bool(getattr(req, "is_greenfield", 1) if getattr(req, "is_greenfield", 1) is not None else 1)
+        prof = getattr(req, "cooling_profile", None) or "dlc_hot"
+        budget_usd = getattr(req, "budget_usd", None)
+        mode = getattr(req, "mode", None) or "best"
+        tornado = getattr(req, "tornado", True)
+
+        if budget_usd is None:
+            s = load_location(req.lat, req.lon, req.it_mw, prof, is_gf,
+                              weather=weather, live=weather is None, overrides=site_o)
+            if getattr(req, "name", None):
+                s.name = req.name
+            return self._result(s, mode, par_o, tornado, planned=True)
+
+        P0 = defaults()
+        P = {**P0, **par_o}
+        compute_usd_mw = P["compute_capex_usd_mw"]
+        facility_usd_mw = par_o["facility_capex_usd_mw"] if "facility_capex_usd_mw" in par_o else (
+            P0["facility_capex_usd_mw"] if is_gf else 0.0
+        )
+        rack_kw = max(P["vera_rubin_rack_kw"], 1.0)
+        base_per_mw = compute_usd_mw + facility_usd_mw
+        if base_per_mw <= 0:
+            raise ValueError("compute_capex_usd_mw + facility_capex_usd_mw must be positive")
+        if budget_usd < 0.1 * base_per_mw:
+            raise ValueError(
+                f"Budget ${budget_usd:,.0f} is too small for minimum 0.1 MW Vera Rubin deployment "
+                f"(~${0.1 * base_per_mw:,.0f} compute + facility)."
+            )
+
+        it_guess = max(0.1, min(10000.0, budget_usd / (base_per_mw + 150_000.0)))
+        s = load_location(req.lat, req.lon, it_guess, prof, is_gf,
                           weather=weather, live=weather is None, overrides=site_o)
         if getattr(req, "name", None):
             s.name = req.name
-        return self._result(s, getattr(req, "mode", None) or "best", par_o, getattr(req, "tornado", True), planned=True)
+
+        # Solve IT MW iteratively accounting for fixed vs. MW-scaled cooling/heat-reuse plant CAPEX.
+        def _solve_next_mw(it_cur: float) -> tuple[float, dict | None]:
+            df, _, results = evaluate_site(s, P)
+            if not len(df):
+                return it_cur, None
+            anchor_cid = next((cid for cid in df["chain_id"] if results[cid]["capex_usd"] <= budget_usd * 0.6),
+                              df["chain_id"].iloc[0])
+            r_anchor = results[anchor_cid]
+            var_capex = sum(r_anchor["capex"].get(k, 0.0) for k in ("heat_rejection", "heat_pump", "heat_exchangers"))
+            fixed_capex = max(0.0, r_anchor["capex_usd"] - var_capex)
+            var_per_mw = var_capex / max(it_cur, 1e-6)
+            nxt = (budget_usd - fixed_capex) / (base_per_mw + var_per_mw)
+            clamped = max(0.1, min(10000.0, nxt))
+            return math.floor(clamped * 100) / 100, r_anchor
+
+        it_solved, _ = _solve_next_mw(it_guess)
+        set_input(s, "it_mw", it_solved)
+        it_refined, r_check = _solve_next_mw(it_solved)
+        if abs(it_refined - it_solved) > max(0.05, 0.005 * it_solved):
+            it_solved = it_refined
+            set_input(s, "it_mw", it_solved)
+
+        s.prov["it_mw"] = {"status": "user", "source": f"solved from ${budget_usd:,.0f} build budget"}
+        res = self._result(s, mode, par_o, tornado, planned=True)
+
+        anchor_opt = None
+        for o in res.options:
+            if not o.feasible:
+                continue
+            plant_capex = float(sum(o.details.get("capex_breakdown_usd", {}).values()))
+            var_capex = float(sum(o.details.get("capex_breakdown_usd", {}).get(k, 0.0)
+                                  for k in ("heat_rejection", "heat_pump", "heat_exchangers")))
+            fixed_capex = max(0.0, plant_capex - var_capex)
+            var_per_mw = var_capex / max(it_solved, 1e-6)
+            opt_max_mw = max(0.0, (budget_usd - fixed_capex) / (base_per_mw + var_per_mw))
+            total_cost = it_solved * base_per_mw + plant_capex
+            o.details["budget_fit"] = {
+                "budget_usd": budget_usd,
+                "compute_capex_usd": round(it_solved * compute_usd_mw),
+                "facility_capex_usd": round(it_solved * facility_usd_mw),
+                "cooling_reuse_capex_usd": round(plant_capex),
+                "total_build_capex_usd": round(total_cost),
+                "fits_budget": total_cost <= budget_usd * 1.01,
+                "max_it_mw_for_budget": round(opt_max_mw, 2),
+                "max_vera_rubin_racks": int(opt_max_mw * 1000 // rack_kw),
+            }
+            if anchor_opt is None and o.details["budget_fit"]["fits_budget"]:
+                anchor_opt = o
+        if anchor_opt is None:
+            anchor_opt = next((o for o in res.options if o.feasible), None)
+
+        anchor_plant = float(sum(anchor_opt.details.get("capex_breakdown_usd", {}).values())) if anchor_opt else 0.0
+        res.budget_summary = BudgetSummary(
+            budget_usd=float(budget_usd),
+            solved_it_mw=float(it_solved),
+            vera_rubin_racks=int(it_solved * 1000 // rack_kw),
+            rack_kw=float(rack_kw),
+            compute_capex_usd=float(round(it_solved * compute_usd_mw)),
+            facility_capex_usd=float(round(it_solved * facility_usd_mw)),
+            cooling_reuse_capex_usd=float(round(anchor_plant)),
+            total_build_capex_usd=float(round(it_solved * base_per_mw + anchor_plant)),
+            compute_usd_per_mw=float(compute_usd_mw),
+            facility_usd_per_mw=float(facility_usd_mw),
+        )
+        res.warnings.insert(
+            0,
+            f"Budget sizing assumes ${compute_usd_mw / 1e6:.1f}M/MW for Vera Rubin ({rack_kw:.0f} kW/rack) hardware "
+            f"and ${facility_usd_mw / 1e6:.1f}M/MW for facility shell & power (editable under parameters).",
+        )
+        return res
 
     def _result(self, s, mode, par_o, tornado, planned=False):
         if mode not in self.info.modes:
