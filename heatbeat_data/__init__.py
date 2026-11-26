@@ -192,3 +192,9 @@ from .heat_profiles import cooling_profiles, heat_profile, heat_sources, site_he
 
 __all__ += ["cooling_profiles", "heat_profile", "heat_sources", "site_heat_profiles"]
 Site.heat_profile = lambda self: heat_profile(self.site_id)
+
+# Ecology and geology scores per site (Excel inputs eco_sens_index, geo_storage_score, mit_tier).
+from .site_ecology_data import ecology, excel_ecology_inputs, site_ecology  # noqa: E402
+
+__all__ += ["ecology", "excel_ecology_inputs", "site_ecology"]
+Site.ecology = lambda self: ecology(self.site_id)

@@ -1,7 +1,7 @@
 """Turn raw per-site ecology and geology features into the Excel model scores.
 
 Input:  data_pipeline/ecology/raw_site_features.csv  (written by fetch_features.py in GitHub Actions)
-Output: data_pipeline/site_ecology.csv                (one row per site_id, read by heatbeat_data.ecology)
+Output: data_pipeline/site_ecology.csv                (one row per site_id, read by heatbeat_data.site_ecology_data)
 
 Scores (rules documented in docs/ECOLOGY.md):
     eco_sens_index     1..5  local ecosystem sensitivity     (Excel 1_Site_Inputs_Schema, Input 30)
@@ -38,6 +38,10 @@ def _num(v) -> float:
         return f if not math.isnan(f) else float("nan")
     except (TypeError, ValueError):
         return float("nan")
+
+
+def _str(v) -> str:
+    return "" if v is None or (isinstance(v, float) and math.isnan(v)) else str(v)
 
 
 def eco_points(r: pd.Series) -> tuple[int, list[str]]:
@@ -80,10 +84,12 @@ LITH_CLASSES = [
     ("carbonate", 2, r"\b(limestone|dolomite|dolostone|carbonate|chalk|marl|karst)\b"),
     ("volcanic", 3, r"\b(basalt|andesite|rhyolite|tuff|volcanic|lava|ash)\b"),
     ("crystalline", 5, r"\b(granite|granodiorite|gneiss|schist|quartzite|diorite|gabbro|metamorphic|plutonic|"
-                       r"igneous|amphibolite|phyllite|slate|tonalite|migmatite|greenstone|metavolcanic)\b"),
-    ("clastic_rock", 4, r"\b(sandstone|siltstone|shale|mudstone|claystone|conglomerate|arkose|greywacke|graywacke)\b"),
-    ("unconsolidated", 3, r"\b(alluvium|alluvial|sand|gravel|clay|silt|till|glacial|loess|unconsolidated|"
-                          r"sediment|colluvium|terrace|outwash|fill|surficial|deltaic|eolian)\b"),
+                       r"igneous|amphibolite|phyllite|slate|tonalite|migmatite|greenstone|metavolcanic|hornfels|granitoid|"
+                       r"granitic|metagabbro|metasedimentary|porphyry)\b"),
+    ("clastic_rock", 4, r"\b(sandstones?|siltstones?|shales?|mudstones?|claystones?|conglomerates?|arkose|greywacke|graywacke|"
+                        r"argillite|siliciclastic|clastic)\b"),
+    ("unconsolidated", 3, r"\b(alluvi\w*|sands?|sandy|gravels?|clays?|silts?|till|glacial|loess|unconsolidated|"
+                          r"sediments?|diamicton|colluvium|terrace|outwash|fill|surficial|deltaic|eolian)\b"),
 ]
 
 # USGS Principal Aquifers ROCK_TYPE (aquifers_us, 2003). Codes and meaning per the dataset metadata.
@@ -113,7 +119,11 @@ def lith_class(text: str) -> tuple[str | None, int | None]:
 
 def geo_score(r: pd.Series) -> tuple[int | None, list[str]]:
     why: list[str] = []
-    cls, s = lith_class(f"{r.get('macro_lith', '')} {r.get('macro_name', '')}")
+    cls, s = lith_class(f"{_str(r.get('macro_lith'))} {_str(r.get('macro_name'))}")
+    if s is None:  # most detailed unit too generic (e.g. "sedimentary"): try coarser map scales
+        cls, s = lith_class(f"{_str(r.get('macro_descrip'))} {_str(r.get('macro_lith_all'))}")
+        if s is not None:
+            why.append("lithology from coarser map scale")
     if s is None:
         return None, ["no lithology returned"]
     why.append(f"surface unit {cls} ({s})")
@@ -159,11 +169,14 @@ def build(raw: pd.DataFrame) -> pd.DataFrame:
         geo, gwhy = geo_score(r)
         tier, twhy = mit_tier(eco)
         us = r.get("country_iso2") == "US"
-        missing = [c for c in str(r.get("sources_failed") or "").split(";") if c]
+        missing = [c for c in _str(r.get("sources_failed")).split(";") if c and c != "macrostrat"]
         if us:
             conf_eco = "high" if not missing else "medium"
         else:
             conf_eco = "low" if missing else "medium"
+        # A 1 km test on a city centroid is weak: city-level coordinates lower eco confidence one step
+        if r.get("coord_precision") == "city_approx":
+            conf_eco = {"high": "medium", "medium": "low"}.get(conf_eco, conf_eco)
         geo_src = "macrostrat" + (";usgs_principal_aquifers" if us else "")
         conf_geo = "low" if geo is None else ("medium" if us and not math.isnan(_num(r.get("aquifer_rock_type"))) else "low")
         if geo is None:
@@ -184,6 +197,7 @@ def build(raw: pd.DataFrame) -> pd.DataFrame:
             "mit_tier": tier,
             "mit_tier_basis": twhy,
             "mit_tier_is_assumed": 1,
+            "coord_precision": r.get("coord_precision"),
             "coast_km": r.get("coast_km"),
             "prot_n_1km": r.get("prot_n_1km"),
             "prot_n_5km": r.get("prot_n_5km"),
@@ -195,6 +209,7 @@ def build(raw: pd.DataFrame) -> pd.DataFrame:
             "aquifer_name": r.get("aquifer_name"),
             "aquifer_rock_type": r.get("aquifer_rock_type"),
             "macro_lith": r.get("macro_lith"),
+            "macro_name": r.get("macro_name"),
             "sources_failed": r.get("sources_failed"),
             "fetched_utc": r.get("fetched_utc"),
         })
@@ -203,6 +218,8 @@ def build(raw: pd.DataFrame) -> pd.DataFrame:
 
 def main() -> None:
     raw = pd.read_csv(RAW)
+    sites = pd.read_csv(DIR.parent / "sites.csv")[["site_id", "coord_precision"]]
+    raw = raw.drop(columns=["coord_precision"], errors="ignore").merge(sites, on="site_id", how="left")
     out = build(raw)
     out.to_csv(OUT, index=False)
     print(out[["site_id", "eco_sens_index", "geo_storage_score", "mit_tier", "eco_confidence", "geo_confidence"]]

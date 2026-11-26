@@ -44,7 +44,9 @@ NWI = "https://fwspublicservices.wim.usgs.gov/wetlandsmapservice/rest/services/W
 CRITHAB = "https://services.arcgis.com/QVENGdaPbd4LUkLV/arcgis/rest/services/USFWS_Critical_Habitat/FeatureServer/0"
 AQUIFERS = "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Aquifers_Feature_Layer_view/FeatureServer"
 MACROSTRAT = "https://macrostrat.org/api/v2/geologic_units/map"
-OVERPASS = "https://overpass-api.de/api/interpreter"
+# Mirrors: on GitHub runners overpass-api.de sometimes fails with "Network is unreachable" (IPv6 route)
+OVERPASS_MIRRORS = ("https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
+                    "https://overpass.private.coffee/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter")
 COAST = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_coastline.geojson"
 
 VEGETATED_WETLANDS = ("Freshwater Emergent Wetland", "Freshwater Forested/Shrub Wetland", "Estuarine and Marine Wetland")
@@ -192,8 +194,9 @@ def macrostrat(lat: float, lon: float) -> dict:
     units = j.get("success", {}).get("data", [])
     if not units:
         return {"macro_lith": None}
-    u = sorted(units, key=lambda x: SCALE_ORDER.get(x.get("scale"), 9))[0]
-    return {"macro_lith": u.get("lith"), "macro_name": u.get("name") or u.get("strat_name"),
+    units = sorted(units, key=lambda x: SCALE_ORDER.get(x.get("scale"), 9))
+    u = units[0]
+    return {"macro_lith": u.get("lith"), "macro_lith_all": " | ".join(x.get("lith") or "" for x in units), "macro_name": u.get("name") or u.get("strat_name"),
             "macro_age": u.get("b_int_name"), "macro_scale": u.get("scale"),
             "macro_descrip": (u.get("descrip") or "")[:300]}
 
@@ -206,7 +209,15 @@ def osm(lat: float, lon: float) -> dict:
     q = (f"[out:json][timeout:90];({prot(5000)})->.p5;({prot(1000)})->.p1;"
          f"nwr(around:1000,{lat},{lon})[natural=wetland]->.w;"
          ".p5 out tags; .p1 out ids; .w out ids;")
-    j = get_json(OVERPASS, {"data": q}, post=True, timeout=120)
+    j, last = None, None
+    for url in OVERPASS_MIRRORS:
+        try:
+            j = get_json(url, {"data": q}, post=True, timeout=120, retries=2)
+            break
+        except Exception as e:  # noqa: BLE001
+            last = e
+    if j is None:
+        raise RuntimeError(f"all Overpass mirrors failed: {last}")
     els = j.get("elements", [])
     # Output order is p5 (with tags), then p1 and w (ids only, no tags)
     p5 = [e for e in els if e.get("tags")]
