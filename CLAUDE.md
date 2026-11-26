@@ -34,6 +34,7 @@ Early stage. `main` holds this file, a short README and the frontend in `fronten
 | Work | Branch | Status |
 |---|---|---|
 | Data center location database: 59 sites, hourly 2024 weather, electricity prices, carbon intensity, `heatbeat_data` Python access module, GitHub Actions build. Docs in `docs/DATA.md`. | `claude/project-thread-n1j7gu` | In progress, open as PR #1 |
+| Site GIS inputs for the Excel model (d_coast_m, d_water_m, dz_m, slope_deg, flat/agri land, campus area, DH distance and heat density, industrial zoning) for all 59 sites from open datasets. Docs in `docs/GIS.md`. | `claude/project-thread-qpb4d7` | In progress, PR open |
 | Frontend: landing page and world map with search (React, TypeScript, Vite, Leaflet) in `frontend/`. Pins load from `frontend/public/datacenters.json`, still empty. | `main` (merged from `claude/funny-hopper-859d23`) | On main, in progress |
 
 Not started yet: the solution models, the ranking logic, and the connection between map, database and models.

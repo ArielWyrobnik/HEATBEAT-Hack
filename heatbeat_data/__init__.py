@@ -192,3 +192,8 @@ from .heat_profiles import cooling_profiles, heat_profile, heat_sources, site_he
 
 __all__ += ["cooling_profiles", "heat_profile", "heat_sources", "site_heat_profiles"]
 Site.heat_profile = lambda self: heat_profile(self.site_id)
+
+from .site_gis import GIS_KEYS, gis_inputs, site_gis, site_gis_row  # noqa: E402
+
+__all__ += ["GIS_KEYS", "gis_inputs", "site_gis", "site_gis_row"]
+Site.gis = lambda self: site_gis_row(self.site_id)
