@@ -192,3 +192,9 @@ from .heat_profiles import cooling_profiles, heat_profile, heat_sources, site_he
 
 __all__ += ["cooling_profiles", "heat_profile", "heat_sources", "site_heat_profiles"]
 Site.heat_profile = lambda self: heat_profile(self.site_id)
+
+# Neighbouring industry per US site (power plants, CO2, biomass, cold chain). Reads a CSV, no DB needed.
+from .site_industry import excel_inputs, site_industry  # noqa: E402
+
+__all__ += ["excel_inputs", "site_industry"]
+Site.industry = lambda self: site_industry(self.site_id)

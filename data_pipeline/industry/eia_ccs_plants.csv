@@ -1,0 +1,6 @@
+plant_id_eia,name,state,lat,lon,kind,source
+3470,W A Parish,TX,29.4828,-95.6311,power plant with carbon capture (EIA-860),EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet)
+10684,Argus Cogen Plant,CA,35.765,-117.3833,power plant with carbon capture (EIA-860),EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet)
+50395,Georgia-Pacific Corp - Nekoosa Mill,WI,44.3142,-89.8964,power plant with carbon capture (EIA-860),EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet)
+55309,Air Products Port Arthur,TX,29.866497,-93.96515,power plant with carbon capture (EIA-860),EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet)
+58378,W.A. Parish Carbon Capture Plant,TX,29.475278,-95.634167,power plant with carbon capture (EIA-860),EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet)
