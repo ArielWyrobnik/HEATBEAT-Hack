@@ -586,3 +586,8 @@ body.panel-full { overflow: hidden; }
 .nv-chips a:hover { color: #76b900; }
 .nv-chips small { display: block; color: var(--muted); font-size: 11px; }
 .nv-common a { color: inherit; }
+
+/* score bar stays neutral until the details are opened */
+.stack-bar.plain i { background: #a1a1aa; }
+.breakdown-bar { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 12px; }
+.breakdown-bar .stack-bar { width: 100%; height: 10px; }

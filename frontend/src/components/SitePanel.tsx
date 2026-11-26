@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom';
 import CalcModal from './CalcModal';
 import Tornado from './Tornado';
 import { OptionEcosystem, ReferenceBanner, TopStack } from './Ecosystem';
-import { ScoreBreakdown, ScoreLegend, StackedScore, hasSubscores } from './ScoreBreakdown';
+import { ScoreBreakdown, StackedScore, hasSubscores } from './ScoreBreakdown';
 
 export const MODE_LABEL: Record<string, string> = { as_built: 'As built' };
 
@@ -126,7 +126,6 @@ export function Results({ r }: { r: ModelResult }) {
       </div>
 
       <h4>Ranking ({feasible.length} feasible of {r.options.length}) <small className="scale">score: {r.score_scale}</small></h4>
-      {feasible.length > 0 && hasSubscores(feasible[0].details) && <ScoreLegend />}
       {feasible.length === 0 && <p className="muted">No option passes the knock-out gates at this site.</p>}
       <ol className="options">
         {feasible.map((o) => (
@@ -139,7 +138,7 @@ export function Results({ r }: { r: ModelResult }) {
               </span>
               <span className="opt-score">
                 {hasSubscores(o.details)
-                  ? <StackedScore details={o.details} total={o.score} />
+                  ? <StackedScore plain details={o.details} total={o.score} />
                   : <span className="bar"><i className={(o.score ?? 0) < 0 ? 'neg' : ''} style={{ width: `${(Math.abs(o.score ?? 0) / maxScore) * 100}%` }} /></span>}
                 {num(o.score, 2)}
               </span>
@@ -223,7 +222,6 @@ export function FullResults({ r }: { r: ModelResult }) {
       <div className="full-cols">
         <section className="full-rank">
           <h4>Ranking ({feasible.length} feasible of {r.options.length}) <small className="scale">score: {r.score_scale}</small></h4>
-          {feasible.length > 0 && hasSubscores(feasible[0].details) && <ScoreLegend />}
           {feasible.length === 0 && <p className="muted">No option passes the knock-out gates at this site.</p>}
           <div className="table-scroll">
             <table className="rank-table">
@@ -240,7 +238,7 @@ export function FullResults({ r }: { r: ModelResult }) {
                     <td className="opt-name">{x.name}{x.product && <small>{x.product}</small>}</td>
                     <td className="rank-score">
                       {hasSubscores(x.details)
-                        ? <StackedScore details={x.details} total={x.score} />
+                        ? <StackedScore plain details={x.details} total={x.score} />
                         : <span className="bar"><i className={(x.score ?? 0) < 0 ? 'neg' : ''} style={{ width: `${(Math.abs(x.score ?? 0) / maxScore) * 100}%` }} /></span>}
                       {num(x.score, 2)}
                     </td>

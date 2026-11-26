@@ -28,8 +28,19 @@ export function hasSubscores(d: Record<string, unknown> | undefined): boolean {
   return !!d && sub(d, 'p_thermo') != null;
 }
 
-/** Compact stacked bar for the ranking list: each coloured piece = weight × sub-score, full bar = 5. */
-export function StackedScore({ details, total }: { details: Record<string, unknown>; total: number | null | undefined }) {
+/**
+ * Score bar. In the ranking list it is plain (one neutral fill = score / 5); the coloured pieces
+ * (each = weight × sub-score) only appear once the score details are opened.
+ */
+export function StackedScore({ details, total, plain = false }: { details: Record<string, unknown>; total: number | null | undefined; plain?: boolean }) {
+  if (plain) {
+    return (
+      <span className="stack-bar plain" title="Open the option and click Show score details to see how the score is built">
+        <i style={{ width: `${(Math.max(0, total ?? 0) / 5) * 100}%` }} />
+        <span className="sr-only">{total}</span>
+      </span>
+    );
+  }
   return (
     <span className="stack-bar" title={VIABILITY_PARTS.map((p) => `${p.label}: ${(sub(details, p.key) ?? 0).toFixed(2)} × ${p.w.toFixed(2)}`).join('\n')}>
       {VIABILITY_PARTS.map((p) => {
@@ -106,8 +117,13 @@ export function ScoreBreakdown({ details, score, ecoScore, feasible, pies = true
 function ScoreDetails({ details, score, ecoScore, feasible, pies }: { details: Record<string, unknown>; score: number | null | undefined; ecoScore?: unknown; feasible: boolean; pies: boolean }) {
   return (
     <div className="breakdowns">
+      <div className="breakdown-bar">
+        <StackedScore details={details} total={score} />
+        <ScoreLegend />
+      </div>
       {pies && <ScorePies details={details} score={score} ecoScore={ecoScore} />}
-      <Breakdown title={`Viability ${score ?? 0} of 5`} parts={VIABILITY_PARTS} details={details} total={score} gate={feasible} />
+      <Breakdown title={`Viability ${score ?? 0} of 5`}
+        parts={VIABILITY_PARTS} details={details} total={score} gate={feasible} />
       <Breakdown title={`Eco score ${typeof ecoScore === 'number' ? ecoScore.toFixed(2) : ''} of 5 (A ≥ 4.2, B ≥ 3.4, C ≥ 2.6, D ≥ 1.8)`} parts={ECO_PARTS} details={details} total={ecoScore as number} />
     </div>
   );
