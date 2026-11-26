@@ -5,7 +5,7 @@
  * Typed facade: ./types.ts. Used by ./adapter.ts to plug the evaluator into Heat Beat as a model.
  */
 export const ENGINE = (() => {
-  const VERSION = "3.3.0";
+  const VERSION = "3.4.0";
   const HOURS = 8760;
   const C = {
     carnot_eta: 0.50, approach_k: 5.0, cop_cap: 8.0, air_offset_c: 12.0,
@@ -117,7 +117,8 @@ export const ENGINE = (() => {
     absorption: (s, h) => { const f = []; chk(h.max_tdc >= 65, `coolant peaks at ${h.max_tdc.toFixed(1)} C; absorption chillers need 65 C`, f); chk(h.gt24 >= 1500, `only ${n0(h.gt24)} h above 24 C (needs 1,500 h of cooling demand)`, f); chk(s.wsi_index < 3.8, `water stress ${s.wsi_index} (must be under 3.8)`, f); return f; },
     orc: (s, h) => { const f = []; chk(h.min_tdc >= 80, `coolant drops to ${h.min_tdc.toFixed(1)} C; ORC power needs 80 C all year`, f); chk(h.lt30 >= 5000, `only ${n0(h.lt30)} h below 30 C (needs 5,000 h for condenser cooling)`, f); return f; },
     dac: (s, h) => { const f = []; chk(s.d_co2_m <= 50000, `CO2 storage or user ${km(s.d_co2_m)} km away (limit 50 km)`, f); chk(h.gt35 < 1500, `${n0(h.gt35)} h above 35 C (limit under 1,500 h)`, f); return f; },
-    btes: (s, h) => { const f = []; gf(s, f); chk(s.geo_storage_score >= 3, `ground storage score ${s.geo_storage_score} of 5 (needs 3)`, f); chk(h.lt15 >= 2500, `only ${n0(h.lt15)} h below 15 C (needs 2,500 h)`, f); chk(h.gt20 >= 1000, `only ${n0(h.gt20)} h above 20 C (needs 1,000 h to charge the store)`, f); return f; },
+    btes: (s, h) => { const f = []; gf(s, f); chk(s.geo_storage_score >= 3, `ground storage score ${s.geo_storage_score} of 5 (needs 3)`, f); chk(h.lt15 >= 2500, `only ${n0(h.lt15)} h below 15 C (needs 2,500 h)`, f); chk(h.gt20 >= 1000, `only ${n0(h.gt20)} h above 20 C (needs 1,000 h to charge the store)`, f);
+      chk(s.has_existing_dh === 1 || s.d_dh_m <= 3000, `no heat user to discharge the store to: heat network ${km(s.d_dh_m)} km away (limit 3 km)`, f); return f; },
     feedwater: (s, h) => { const f = []; gf(s, f); chk(s.d_pp_m <= 1500, `power plant ${km(s.d_pp_m)} km away (limit 1.5 km)`, f); chk(s.q_fw_mw >= 2.0, `feedwater heat demand ${s.q_fw_mw} MW (needs 2 MW)`, f); return f; },
     desal: (s, h) => { const f = []; gf(s, f); chk(s.d_coast_m <= 5000, `coast ${km(s.d_coast_m)} km away (limit 5 km)`, f); chk(s.dz_m <= 50, `site ${s.dz_m} m above the sea (limit 50 m pumping head)`, f); chk(s.wsi_index >= 2.0, `water stress ${s.wsi_index}; under 2.0 there is no need for desalinated water`, f); return f; },
     biomass: (s, h) => { const f = []; gf(s, f); chk(s.d_bio_m <= 25000, `feedstock ${km(s.d_bio_m)} km away (limit 25 km)`, f); chk(s.ind_zoning === 1, "needs industrial zoning", f); chk(s.slope_deg <= 10, `slope ${s.slope_deg} deg (limit 10 deg)`, f); return f; },
@@ -135,7 +136,7 @@ export const ENGINE = (() => {
     O(4, "absorption_cooling", "Absorption Cooling", "both", 85, ["cooling", 24, 10], "cooling", 450, 0, null, 1, false, 0.8, 0.4, () => 1, G.absorption),
     O(5, "orc", "Organic Rankine Cycle", "both", 100, ["constant", 0.9], "power", 2500, 0, null, 1, false, 0.5, 0.3, () => 1, G.orc),
     O(6, "dac", "Carbon Capture / DAC", "both", 90, ["constant", 0.85], "co2", 1500, 400, "d_co2_m", 50000, false, 0.2, 0.2, () => 1, G.dac),
-    O(7, "btes_ates", "BTES / ATES Storage", "greenfield", 55, ["constant", 0.7], "stored_heat", 600, 0, null, 1, false, 0.3, 0.6, () => 1, G.btes),
+    O(7, "btes_ates", "BTES / ATES Storage", "greenfield", 55, ["cooling", 10, 10], "stored_heat", 600, 0, null, 1, false, 0.3, 0.6, () => 1, G.btes),
     O(8, "feedwater_preheat", "Boiler Feedwater Preheat", "greenfield", 55, ["constant", 0.85], "steam", 200, 800, "d_pp_m", 1500, false, 0.2, 0.3, s => Math.min(1, s.q_fw_mw / s.q_dc_mw), G.feedwater),
     O(9, "desalination", "Desalination (MED/MD)", "greenfield", 70, ["constant", 0.9], "water", 1200, 900, "d_coast_m", 5000, false, -1.0, 1.0, () => 1, G.desal),
     O(10, "biomass_processing", "Biomass Processing", "greenfield", 65, ["constant", 0.7], "heat", 500, 0, "d_bio_m", 25000, true, 0.3, 0.5, () => 0.6, G.biomass),

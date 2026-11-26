@@ -228,6 +228,7 @@ export const REFERENCE_SITES: ReferenceSite[] = [
     it_mw: EST(1.8, 'NorthC factsheet: 2.4 MW installed power; IT = 2.4 / PUE 1.25 (inferred)'), pue: EST(1.25, 'Grundfos case study: under 20 % for cooling and security (inferred)'),
     facts: {
       is_greenfield: EST(1, 'ATES (WKO) built with the data center (Grundfos case study), so evaluated as designed-in'),
+      ind_zoning: EST(0, 'High Tech Campus Eindhoven is an office and lab campus (not industrial), same rule as AM3 and PA10'), flat_land_m2: EST(0, 'Built-up campus, no free flat land (estimate)'),
       geo_storage_score: EST(4, 'Sand aquifers with active ATES use; hand estimate (team database data_pipeline/reference_sites.py)'),
       has_existing_dh: REAL(1, 'Heat goes to the High Tech Campus heat ring (Grundfos case study)'), d_dh_m: EST(0, 'On the campus ring; hand estimate'),
       t_dc_base_c: EST(30, 'Estimate'),
