@@ -56,6 +56,17 @@ def test_site_ranking_includes_the_most_heat_intensive_options():
     assert set(most_heat) <= {o.option_id for o in result.options}
 
 
+def test_district_heating_labels_screening_distance_and_user_override():
+    pytest.importorskip("pyarrow")
+    from heatbeat_engineering.site import load_site, set_input
+
+    site = load_site("us-ok-pryor-google", live=False)
+    assert site.prov["d_dh_m"]["status"] == "estimate"
+    assert "60 km modeled network, 7.2 km line lower bound" in build_plans(site, P)["dh_60km"].label
+    set_input(site, "d_dh_m", 4200)
+    assert "60 km modeled network, 4.2 km specified line" in build_plans(site, P)["dh_60km"].label
+
+
 def test_heat_pump_below_carnot_and_falls_with_lift():
     c1, c2 = float(hp.cop(45, 70, P)), float(hp.cop(45, 90, P))
     assert c1 > c2 > 1

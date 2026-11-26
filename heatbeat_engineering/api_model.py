@@ -299,13 +299,19 @@ def implementation(r: dict, s, P: dict) -> str:
     for u in r["uses"]:
         x = d.get(u, {})
         if u.startswith("dh_"):
+            distance_note = ""
+            if s.prov.get("d_dh_m", {}).get("lower_bound"):
+                distance_note = (
+                    " The GIS search found no qualifying heat-demand area or mapped network within its search limits. "
+                    "The model uses the distance lower bound to price this screening scenario."
+                )
             parts.append(f"District heating: DN{x.get('dn_mm')} twin transmission line {s.x['d_dh_m'] / 1000:.1f} km "
                          f"(U' {x.get('pipe_u_w_mk')} W/mK, {x.get('pipe_loss_mw', 0) * 1000:.0f} kW loss, pumps "
                          f"{x.get('pump_design_kw')} kW), {P['dh_supply_c']:.0f}/{P['dh_return_c']:.0f} C, community "
                          f"network demand {x.get('community_demand_mwh', 0):,} MWh/yr, peak {x.get('peak_mw')} MW, "
                          f"{x.get('served_share', 0) * 100:.0f} % served. Heat sold at "
                          f"{s.x['p_heat_usd_mwh'] * P['dh_heat_price_share']:.0f} USD/MWh "
-                         f"({P['dh_heat_price_share'] * 100:.0f} % of local gas heat cost).")
+                         f"({P['dh_heat_price_share'] * 100:.0f} % of local gas heat cost)." + distance_note)
         elif u.startswith("biogas"):
             parts.append(f"Digester heating: {x.get('volume_m3', 0):,} m3 digester (D {x.get('diameter_m')} m), "
                          f"{x.get('delivered_mwh', 0):,} MWh/yr heat ({x.get('feed_mwh', 0):,} feed, {x.get('wall_mwh', 0):,} walls), "

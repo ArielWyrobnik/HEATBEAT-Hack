@@ -125,6 +125,10 @@ def load_site(site_id: str, live: bool = True, weather: pd.DataFrame | None = No
     wat, gis, ind = (_row(hd.site_water()), _row(hd.site_gis()), _row(hd.site_industry()))
     wat, gis, ind = wat(site_id), gis(site_id), ind(site_id)
     eco = hd.excel_ecology_inputs(site_id) if hasattr(hd, "excel_ecology_inputs") else {}
+    dh_lower_bound = _num(gis.get("d_dh_m_is_lower_bound"), 0) == 1
+    dh_source = "site_gis.csv (estimated distance to a mapped network or dense heat demand)"
+    if dh_lower_bound:
+        dh_source = f"site_gis.csv: {gis['d_dh_m_source']}"
 
     x = {
         "p_elec_usd_mwh": put("p_elec_usd_mwh", site.grid.get("retail_industrial_usd_mwh"), 80.0, "data",
@@ -143,7 +147,7 @@ def load_site(site_id: str, live: bool = True, weather: pd.DataFrame | None = No
         "p_water_usd_m3": put("p_water_usd_m3", wat.get("p_water_effective_usd_m3"), 3.0, "data",
                               "water + sewer tariff (site_water.csv)"),
         "wsi": put("wsi", wat.get("wsi_index"), 2.0, "data", "WRI Aqueduct 4.0 baseline water stress 0 to 5"),
-        "d_dh_m": put("d_dh_m", gis.get("d_dh_m"), 5000.0, "data", "site_gis.csv (distance to dense heat demand)"),
+        "d_dh_m": put("d_dh_m", gis.get("d_dh_m"), 5000.0, "estimate", dh_source),
         "rho_heat_mwh_m": put("rho_heat_mwh_m", gis.get("rho_heat_mwh_m"), 1.0, "estimate",
                               "site_gis.csv linear heat density (low confidence)"),
         "d_coast_m": put("d_coast_m", gis.get("d_coast_m"), 1e6, "data", "site_gis.csv"),
@@ -153,6 +157,8 @@ def load_site(site_id: str, live: bool = True, weather: pd.DataFrame | None = No
         "geo_storage_score": put("geo_storage_score", eco.get("geo_storage_score"), 3.0, "estimate",
                                  "site_ecology.csv (team thresholds)"),
     }
+    if dh_lower_bound and prov["d_dh_m"]["status"] != "assumption":
+        prov["d_dh_m"]["lower_bound"] = True
     pr = site.prices["price_usd_mwh"] if len(site.prices) else pd.Series(dtype=float)
     x["p_wholesale_usd_mwh"] = put("p_wholesale_usd_mwh", pr.mean() if len(pr) else None, 0.6 * x["p_elec_usd_mwh"],
                                    "data" if len(pr) and not site.prices["is_synthetic"].astype(bool).all() else "synthetic",
@@ -363,8 +369,12 @@ def load_location(lat: float, lon: float, it_mw: float, cooling_profile: str = "
     case.prov["loops"] = {"status": "estimate", "source": f"cooling profile {cooling_profile} (cooling_profiles.csv)"}
     case.prov["it_mw"] = {"status": "user", "source": "planned size"}
     for k in ("d_dh_m", "d_pp_m", "d_bio_m", "d_coast_m"):
+        if k == "d_dh_m" and case.prov[k].get("lower_bound"):
+            source = f"{tpl} GIS lower bound + {dist / 1000:.1f} km offset (screening estimate)"
+        else:
+            source = f"{tpl} value + {dist / 1000:.1f} km offset (upper bound)"
         case.x[k] = case.x[k] + dist
-        case.prov[k] = {"status": "estimate", "source": f"{tpl} value + {dist / 1000:.1f} km offset (upper bound)"}
+        case.prov[k] = {"status": "estimate", "source": source}
     for k in ("p_elec_usd_mwh", "ci_grid_kg_mwh", "p_heat_usd_mwh", "p_gas_usd_mwh", "p_water_usd_m3", "wsi",
               "rho_heat_mwh_m", "q_fw_mw", "geo_storage_score", "rin_usd_mmbtu", "lcfs_usd_t", "p_co2_usd_t",
               "p_wholesale_usd_mwh"):

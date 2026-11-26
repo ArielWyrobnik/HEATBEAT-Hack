@@ -28,7 +28,15 @@ def demand_profile(site, P: dict, network_km: float) -> np.ndarray:
 
 def plan(site, P: dict, network_km: float | None = None) -> SinkPlan:
     km = network_km if network_km is not None else P["dh_network_km"]
-    label = f"District heating ({km:.0f} km network, {site.x['d_dh_m'] / 1000:.1f} km line)"
+    distance = site.x["d_dh_m"] / 1000
+    distance_prov = site.prov.get("d_dh_m", {})
+    if distance_prov.get("lower_bound"):
+        line = f"{distance:.1f} km line lower bound"
+    elif distance_prov.get("status") == "user":
+        line = f"{distance:.1f} km specified line"
+    else:
+        line = f"{distance:.1f} km estimated line"
+    label = f"District heating ({km:.0f} km modeled network, {line})"
     L = max(site.x["d_dh_m"], 300.0)
     if L > P["dh_max_transmission_km"] * 1000:
         return ko_plan("district_heating", label, f"community {L / 1000:.0f} km away (> {P['dh_max_transmission_km']:.0f} km)")
