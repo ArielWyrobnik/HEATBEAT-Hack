@@ -36,7 +36,9 @@ Early stage. `main` holds this file, a short README and the frontend in `fronten
 | Data center location database: 59 sites, hourly 2024 weather, electricity prices, carbon intensity, `heatbeat_data` Python access module, GitHub Actions build. Docs in `docs/DATA.md`. | `claude/project-thread-n1j7gu` | In progress, open as PR #1 |
 | Frontend: landing page and world map with search (React, TypeScript, Vite, Leaflet) in `frontend/`. Pins load from `frontend/public/datacenters.json`, still empty. | `main` (merged from `claude/funny-hopper-859d23`) | On main, in progress |
 
-Not started yet: the solution models, the ranking logic, and the connection between map, database and models.
+Ranking engine `heatbeat_ranking/` (port of the team Excel "Hack data.xlsx", 13 options, modes `excel` and `corrected`, docs in `docs/RANKING.md`, review in `heatbeat_ranking/AUDIT.md`): branch `claude/project-thread-v4cogf`. Data threads hand missing site inputs over as `data_pipeline/site_ranking_inputs_<topic>.csv`.
+
+Not started yet: the connection between map, database and ranking engine.
 
 Known gaps in the database (see PR #1): PJM prices need a `PJM_API_KEY` secret, non-US retail prices and the Israel tariff mapping are unverified placeholders.
 
