@@ -1,0 +1,11 @@
+# Only needed to rebuild data_pipeline/site_gis.csv (python -m data_pipeline.fetch_gis).
+# Reading the result through heatbeat_data needs only pandas.
+pandas>=2.1
+pyarrow>=14
+requests>=2.31
+numpy>=1.26
+scipy>=1.11
+shapely>=2.0
+pyproj>=3.6
+rasterio>=1.3
+pillow>=10
