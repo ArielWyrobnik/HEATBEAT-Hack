@@ -1,0 +1,11 @@
+cooling_profile_id,heat_rejection,dry_max_db_c,evap_assist_above_db_c,wue_l_kwh_low,wue_l_kwh,wue_l_kwh_high,confidence,source_ids,notes
+air_chilled_legacy,cooling_tower,,,1.6,2.1,2.6,low,lbnl_dceur_2024;alston_2026;evap_physics,"Water-cooled chillers on open cooling towers all year. LBNL: highest WUE of all systems. Physics: 1.48 L evaporated per kWh heat, times heat rejected per kWh IT, times COC/(COC-1)."
+air_chilled_elevated,cooling_tower,,,1.4,1.8,2.3,low,lbnl_dceur_2024;evap_physics,"Elevated chilled water: more waterside economizer hours, but the tower still evaporates. Team assumption: no dry coolers."
+air_economizer,adiabatic_air,,24,0.05,0.3,0.7,low,msft_wue_fy25;lbnl_dceur_2024;evap_physics,"Outside air with evaporative assist only on hot hours (above 24 C dry bulb, ASHRAE recommended upper inlet 27 C minus margin). Microsoft fleet WUE 0.27 L/kWh FY25 (Americas 0.34)."
+rear_door,hybrid_dry_tower,10,,0.8,1.4,2.0,low,team_assumption;evap_physics,"18 C facility water: dry coolers only in cold hours (dry bulb at or below supply minus 8 K approach), towers otherwise."
+dlc_cold,hybrid_dry_tower,22,,0.4,1.0,1.6,low,team_assumption;evap_physics,"30 C supply: dry coolers at or below 22 C dry bulb, towers or adiabatic trim above. Air share of heat goes through the room system."
+dlc_warm,hybrid_dry_tower,24,,0.1,0.5,1.0,low,team_assumption;evap_physics,"32 C supply (Blackwell): dry at or below 24 C dry bulb."
+dlc_hot,hybrid_dry_tower,37,,0.0,0.1,0.3,low,nvidia_45c_2026;team_assumption,"45 C supply (Vera Rubin): dry coolers nearly all year, NVIDIA markets it as chiller free in most climates."
+tpu_dlc,hybrid_dry_tower,24,,0.5,1.0,1.8,low,team_assumption;evap_physics,"Google liquid-cooled halls with the remaining air share on towers; Google uses evaporative cooling widely."
+immersion_1p,hybrid_dry_tower,27,,0.0,0.3,0.8,low,team_assumption,"35 C supply assumed. No source collected."
+closed_loop_dry,dry_cooler,99,,0.0,0.0,0.05,medium,msft_zero_water_2024,"Closed-loop chip cooling with chillers and dry coolers, no evaporation (Microsoft zero-water design). Site override only."

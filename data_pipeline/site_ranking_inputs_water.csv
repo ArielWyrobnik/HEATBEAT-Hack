@@ -1,0 +1,41 @@
+site_id,key,value,status,source,note
+us-az-chandler,p_water_usd_m3,0.72,data,chandler_2026,City of Chandler; range 0.72 to 1.01 USD/m3; sewer 1.33 USD/m3 extra on discharged water
+us-az-mesa,p_water_usd_m3,1.0,assumption,team_assumption;chandler_2026;phoenix_sewer_2025;mlgw_survey_2026,City of Mesa (rate book sections not readable); range 0.72 to 1.5 USD/m3; sewer 1.2 USD/m3 extra on discharged water
+us-ca-la-one-wilshire,p_water_usd_m3,3.72,data,ladwp_2026,"LADWP (water); City of LA Sanitation (sewer, not found); range 3.72 to 5.13 USD/m3; sewer 2.3 USD/m3 extra on discharged water"
+us-ca-santa-clara,p_water_usd_m3,3.49,data,santa_clara_2025,City of Santa Clara Water & Sewer Utilities; range 3.49 to 3.49 USD/m3; sewer 2.0 USD/m3 extra on discharged water
+us-fl-miami-equinix,p_water_usd_m3,2.5,data,miami_dade_2025,Miami-Dade Water and Sewer Department; range 1.45 to 3.56 USD/m3; sewer 2.88 USD/m3 extra on discharged water
+us-ga-atlanta-qts,p_water_usd_m3,2.18,data,atlanta_dwm;mlgw_survey_2026,Atlanta Department of Watershed Management; range 2.18 to 2.64 USD/m3; sewer 5.54 USD/m3 extra on discharged water
+us-ga-douglas-google,p_water_usd_m3,2.0,assumption,team_assumption;atlanta_dwm,Douglasville-Douglas County WSA (not researched); range 1.5 to 2.6 USD/m3; sewer 2.5 USD/m3 extra on discharged water
+us-ia-altoona-meta,p_water_usd_m3,1.93,data,ames_survey_2024,City of Altoona; range 1.93 to 1.93 USD/m3; sewer 2.59 USD/m3 extra on discharged water
+us-ia-council-bluffs-google,p_water_usd_m3,0.83,data,ames_survey_2024,Council Bluffs Water Works / City of Council Bluffs; range 0.72 to 1.43 USD/m3; sewer 1.61 USD/m3 extra on discharged water
+us-ia-west-des-moines-microsoft,p_water_usd_m3,1.73,data,ames_survey_2024,West Des Moines Water Works / City of West Des Moines; range 1.73 to 1.73 USD/m3; sewer 1.67 USD/m3 extra on discharged water
+us-il-chicago-cermak,p_water_usd_m3,1.29,data,chicago_2025;mlgw_survey_2026,City of Chicago; range 1.29 to 1.36 USD/m3; sewer 1.29 USD/m3 extra on discharged water
+us-il-elk-grove,p_water_usd_m3,1.8,assumption,team_assumption;chicago_2025,Village of Elk Grove Village (not researched); range 1.3 to 3.0 USD/m3; sewer 1.0 USD/m3 extra on discharged water
+us-la-richland-meta,p_water_usd_m3,1.0,assumption,team_assumption,Richland Parish (not researched); range 0.6 to 1.8 USD/m3; sewer 1.2 USD/m3 extra on discharged water
+us-ma-boston-one-summer,p_water_usd_m3,3.36,data,bwsc_2026,Boston Water and Sewer Commission; range 3.32 to 3.37 USD/m3; sewer 4.42 USD/m3 extra on discharged water
+us-nc-lenoir-google,p_water_usd_m3,2.0,assumption,team_assumption;unc_efc_nc_2021,City of Lenoir (not researched); range 1.3 to 2.8 USD/m3; sewer 2.5 USD/m3 extra on discharged water
+us-nc-maiden-apple,p_water_usd_m3,2.0,assumption,team_assumption;unc_efc_nc_2021,Town of Maiden (not researched); range 1.3 to 2.8 USD/m3; sewer 2.5 USD/m3 extra on discharged water
+us-ne-sarpy-meta,p_water_usd_m3,0.79,data,mud_w3_2026;mud_sewer_2026,Metropolitan Utilities District (water); sewer municipality not found; range 0.69 to 1.2 USD/m3; sewer 1.4 USD/m3 extra on discharged water
+us-nj-secaucus-equinix,p_water_usd_m3,2.5,assumption,team_assumption;nyc_fy2027,Secaucus MUA / Veolia NJ (not researched); range 1.8 to 3.5 USD/m3; sewer 2.5 USD/m3 extra on discharged water
+us-nv-las-vegas-switch,p_water_usd_m3,1.26,data,lvvwd_2025,"Las Vegas Valley Water District + SNWA (water); Clark County WRD (sewer, not found); range 0.9 to 1.79 USD/m3; sewer 0.8 USD/m3 extra on discharged water"
+us-nv-reno-switch,p_water_usd_m3,0.65,data,tmwa_2026,Truckee Meadows Water Authority (water); sewer provider not found; range 0.47 to 1.08 USD/m3; sewer 1.2 USD/m3 extra on discharged water
+us-ny-nyc-60-hudson,p_water_usd_m3,1.89,data,nyc_fy2027,NYC Water Board / DEP; range 1.89 to 1.89 USD/m3; sewer 3.01 USD/m3 extra on discharged water
+us-oh-new-albany,p_water_usd_m3,1.67,data,columbus_2026,City of Columbus (contract / suburban rates); range 1.67 to 2.53 USD/m3; sewer 2.36 USD/m3 extra on discharged water
+us-ok-pryor-google,p_water_usd_m3,1.0,assumption,team_assumption;mlgw_survey_2026,MidAmerica Industrial Park / City of Pryor (not researched); range 0.6 to 1.5 USD/m3; sewer 1.0 USD/m3 extra on discharged water
+us-or-hillsboro,p_water_usd_m3,1.8,assumption,team_assumption,City of Hillsboro / Clean Water Services (not found); range 1.3 to 2.5 USD/m3; sewer 2.5 USD/m3 extra on discharged water
+us-or-prineville-meta,p_water_usd_m3,1.5,assumption,team_assumption,City of Prineville (not researched); range 1.0 to 2.5 USD/m3; sewer 2.0 USD/m3 extra on discharged water
+us-or-the-dalles-google,p_water_usd_m3,1.5,assumption,team_assumption,City of The Dalles (not researched); range 1.0 to 2.5 USD/m3; sewer 2.0 USD/m3 extra on discharged water
+us-sc-berkeley-google,p_water_usd_m3,1.6,assumption,team_assumption;sc_ria_2025,Berkeley County Water & Sanitation (volumetric rates not found); range 1.0 to 2.5 USD/m3; sewer 2.2 USD/m3 extra on discharged water
+us-tn-memphis-xai,p_water_usd_m3,0.47,data,mlgw_w7_2022,"Memphis Light, Gas and Water (water); City of Memphis (sewer, not found); range 0.45 to 0.58 USD/m3; sewer 1.0 USD/m3 extra on discharged water"
+us-tx-abilene-stargate,p_water_usd_m3,1.3,assumption,team_assumption;dallas_2026;fortworth_2026,City of Abilene (not researched); range 0.9 to 2.0 USD/m3; sewer 1.3 USD/m3 extra on discharged water
+us-tx-dallas-infomart,p_water_usd_m3,1.55,data,dallas_2026,Dallas Water Utilities; range 1.41 to 2.27 USD/m3; sewer 1.47 USD/m3 extra on discharged water
+us-tx-midlothian-google,p_water_usd_m3,1.3,assumption,team_assumption;fortworth_2026;dallas_2026,City of Midlothian (not researched); range 0.98 to 1.8 USD/m3; sewer 1.5 USD/m3 extra on discharged water
+us-tx-san-antonio-microsoft,p_water_usd_m3,0.55,data,saws_2026,San Antonio Water System (SAWS); range 0.52 to 1.18 USD/m3; sewer 1.15 USD/m3 extra on discharged water
+us-ut-eagle-mountain-meta,p_water_usd_m3,0.45,data,eagle_mountain_2025,Eagle Mountain City; range 0.41 to 0.53 USD/m3; sewer 1.22 USD/m3 extra on discharged water
+us-va-ashburn-equinix,p_water_usd_m3,1.17,data,loudoun_2026,Loudoun Water; range 1.17 to 2.01 USD/m3; sewer 1.74 USD/m3 extra on discharged water
+us-va-boydton-microsoft,p_water_usd_m3,2.0,assumption,team_assumption;loudoun_2026;pww_2026,Mecklenburg County / Town of Boydton (not researched); range 1.2 to 3.0 USD/m3; sewer 2.5 USD/m3 extra on discharged water
+us-va-manassas,p_water_usd_m3,1.28,data,pww_2026,Prince William Water; range 1.28 to 2.51 USD/m3; sewer 2.46 USD/m3 extra on discharged water
+us-va-sterling-digital,p_water_usd_m3,1.17,data,loudoun_2026,Loudoun Water; range 1.17 to 2.01 USD/m3; sewer 1.74 USD/m3 extra on discharged water
+us-wa-quincy,p_water_usd_m3,0.35,data,quincy_2026,City of Quincy; range 0.35 to 0.35 USD/m3; sewer 4.06 USD/m3 extra on discharged water
+us-wi-mount-pleasant-microsoft,p_water_usd_m3,0.85,data,racine_water_2020;racine_sewer_2025;msft_zero_water_2024,Racine Water Utility / Racine Wastewater Utility; range 0.85 to 1.1 USD/m3; sewer 1.02 USD/m3 extra on discharged water
+us-wy-cheyenne-microsoft,p_water_usd_m3,1.5,assumption,team_assumption,Cheyenne Board of Public Utilities (not researched); range 1.0 to 2.2 USD/m3; sewer 1.5 USD/m3 extra on discharged water

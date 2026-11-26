@@ -195,3 +195,9 @@ __all__ += ["cooling_profiles", "heat_profile", "heat_sources", "site_heat_profi
 from .market import excel_inputs, market_for, market_prices, site_market  # noqa: E402
 __all__ += ["excel_inputs", "market_for", "market_prices", "site_market"]
 Site.heat_profile = lambda self: heat_profile(self.site_id)
+
+# Water per site (tariff, Aqueduct water stress, baseline WUE). Reads CSVs, no DB needed. US sites only.
+from .water import aqueduct, hourly_wue, site_water, site_water_row, water_sources, water_tariffs, wue_profiles  # noqa: E402
+
+__all__ += ["aqueduct", "hourly_wue", "site_water", "site_water_row", "water_sources", "water_tariffs", "wue_profiles"]
+Site.water = lambda self: site_water_row(self.site_id, self.weather)
