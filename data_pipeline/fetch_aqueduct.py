@@ -81,6 +81,12 @@ def main() -> None:
         out = out.merge(_join(gdb, fut[0], pts, lambda c: c.lower().startswith(("bau30_ws_x", "bau50_ws_x"))),
                         on="site_id", how="left")
     out.insert(1, "aqueduct_version", "4.0")
+    # WRI publishes raw ratio 9999 where withdrawals far exceed supply; keep the score, blank the raw value
+    for c in [c for c in out.columns if c.endswith(("_raw", "_ws_x_r"))]:
+        out[c + "_capped"] = (out[c] >= 9999).astype(int)
+        out.loc[out[c] >= 9999, c] = float("nan")
+    out["bws_note"] = out["bws_raw_capped"].map(
+        {1: "raw ratio published as 9999 (withdrawals far above available supply); score 5 as published by WRI", 0: ""})
     out.to_csv(OUT, index=False, float_format="%.4f")
     print(out.to_string(), flush=True)
     print(f"\nwrote {OUT}")

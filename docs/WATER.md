@@ -12,7 +12,7 @@ US only for now. Israel and the other countries are not covered yet.
 |---|---|
 | `data_pipeline/site_water.csv` | One row per US `site_id`: utility, water and sewer tariff (mid, low, high, USD/m3), basis, flags, sources |
 | `data_pipeline/wue_profiles.csv` | Per cooling profile: how heat is rejected (tower, dry, adiabatic) and an annual WUE range |
-| `data_pipeline/aqueduct_sites.csv` | WRI Aqueduct 4.0 water stress per site. **Not in the repo yet**, see below |
+| `data_pipeline/aqueduct_sites.csv` | WRI Aqueduct 4.0 water stress per site (all 59 sites), baseline plus 2030 and 2050 business as usual |
 | `data_pipeline/fetch_aqueduct.py` | Writes `aqueduct_sites.csv` (needs internet and geopandas, run once) |
 | `data_pipeline/site_ranking_inputs_water.csv` | Long format hand-over for the ranking engine (`site_id,key,value,status,source,note`) |
 | `data_pipeline/water_sources.csv` | Citations |
@@ -128,9 +128,9 @@ Things a model should know:
 of total withdrawals to available renewable supply mapped to a 0 to 5 scale. Source: Kuzma et al.
 2023, WRI, CC BY 4.0, https://www.wri.org/data/aqueduct-global-maps-40-data.
 
-Status: `fetch_aqueduct.py` looks up the polygon that contains each site in the official Aqueduct
-geodatabase. The download host (files.wri.org) is blocked in our cloud environment, so the script
-has to run once on a laptop:
+`fetch_aqueduct.py` looks up the polygon (basin x province x aquifer) that contains each site in
+the official Aqueduct 4.0 geodatabase. It was run on 2026-11-26 on a laptop (files.wri.org is
+blocked in our cloud environment) and its output is committed. To refresh:
 
 ```
 pip install geopandas pyogrio
@@ -138,9 +138,24 @@ python -m data_pipeline.fetch_aqueduct
 python -c "import heatbeat_data.water as w; w.write_ranking_inputs()"
 ```
 
-Until then `wsi_index` is empty (NaN) and the ranking CSV carries no `wsi_index` rows. We did not
-put in guessed scores on purpose: the ranking engine uses thresholds at 2, 3.8 and 4, so a guessed
-value would decide gates.
+Columns in `site_water()`: `wsi_index` (baseline), `wsi_index_2030_bau` and `wsi_index_2050_bau`
+(Aqueduct future water stress, business as usual), `bws_label`, `bws_note`.
+
+US results: extremely high (5.0) in Chandler, Mesa, Los Angeles, Quincy and Cheyenne; high (3 to 4)
+in San Antonio, Miami, Maiden, Manassas, Chicago, Elk Grove, Mount Pleasant, Eagle Mountain, Reno and
+Abilene; low (below 1) in Ashburn, Sterling, NYC, the Iowa and Oregon sites, Memphis and Pryor.
+
+Things to know about the data:
+
+- **9999 raw values.** Aqueduct publishes a raw withdrawal to supply ratio of 9999 where withdrawals
+  are far above the available renewable supply (Quincy baseline, Secaucus 2030/2050, also Dubai and
+  Be'er Sheva). The score is still 5 as WRI publishes it. We set the raw value to empty and flag it
+  in `bws_raw_capped` (and `bau30_ws_x_r_capped`, `bau50_ws_x_r_capped`).
+- **Basin scale.** The index describes the hydrological sub-basin, not the utility's source.
+  Las Vegas scores low (0.67) although it lives on the Colorado River, and the Chicago and Mount
+  Pleasant sites score high (3.4 to 3.5) although they draw from Lake Michigan. Quincy and Cheyenne
+  score 5 because of heavy irrigation withdrawals in their basins. Use the index as a regional
+  pressure signal and keep the utility's own supply situation in mind.
 
 ## Baseline WUE model
 
@@ -171,7 +186,6 @@ roughly 3.2 million m3 per year, about 5 million USD at Loudoun Water prices.
 
 ## Known gaps
 
-- Aqueduct values: run `fetch_aqueduct.py` once (see above).
 - 16 water and 22 sewer tariffs are estimates (listed above, flagged in the CSV).
 - Some tariffs are older than 2026 (Racine 2020, MLGW 2022, Iowa survey 2024, Atlanta sewer table).
 - Hourly WUE needs the site's weather, which `get_site()` fetches live from Open-Meteo.
