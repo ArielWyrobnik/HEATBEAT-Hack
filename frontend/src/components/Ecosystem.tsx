@@ -61,7 +61,8 @@ export function TopStack({ r }: { r: ModelResult }) {
   if (!top.length) return null;
   return (
     <section className="stack">
-      <h4>Execution stack for the top {top.length}</h4>
+      <h4>NVIDIA-partner companies for the top {top.length}</h4>
+      <p className="muted small">Companies NVIDIA has invested in or named as partners in its Vera Rubin DSX AI factory design, matched to each recommended option. Click a name for the source of the NVIDIA link.</p>
       <div className="stack-grid">
         {top.map((o) => {
           const e = ECOSYSTEM[o.option_id];
@@ -71,12 +72,27 @@ export function TopStack({ r }: { r: ModelResult }) {
               <b>{o.name}</b>
               {e && <>
                 <p><StatusBadge s={e.proof.status} /> {e.proof.status === 'none' ? e.proof.title : `${e.proof.title}, ${e.proof.place}`}</p>
-                <p className="muted small">{e.builders.map((b) => COMPANIES[b.company]?.name).filter(Boolean).join(' · ')}</p>
+                <ul className="nv-chips">
+                  {e.builders.map((b) => {
+                    const c = COMPANIES[b.company];
+                    return c ? (
+                      <li key={b.company} title={`${b.role}. ${c.tieText}.`}>
+                        <a href={c.source.url} target="_blank" rel="noreferrer">{c.name}</a>
+                        <span className={`tie tie-${c.tie}`}>{TIE_LABEL[c.tie]}</span>
+                        <small>{b.role}</small>
+                      </li>
+                    ) : null;
+                  })}
+                </ul>
               </>}
             </div>
           );
         })}
       </div>
+      <p className="muted small nv-common">For every option: {COMMON_BUILDERS.map((b, i) => {
+        const c = COMPANIES[b.company];
+        return c ? <span key={b.company}>{i > 0 ? ' · ' : ''}<a href={c.source.url} target="_blank" rel="noreferrer" title={`${b.role}. ${c.tieText}.`}>{c.name}</a></span> : null;
+      })}</p>
     </section>
   );
 }

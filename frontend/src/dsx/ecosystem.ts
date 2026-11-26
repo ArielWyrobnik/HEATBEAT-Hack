@@ -52,7 +52,7 @@ export const COMPANIES: Record<string, Company> = {
     source: { label: 'Nvidia joins $2bn funding round for Nscale', url: 'https://www.techcentral.ie/nvidia-joins-2bn-funding-round-for-ai-data-centre-start-up' } },
   crusoe: { id: 'crusoe', name: 'Crusoe', tie: 'investment', tieText: 'NVIDIA in Series D and Series F',
     source: { label: 'Crusoe $3.9B Series F with Nvidia', url: 'https://www.channelinsider.com/ai/news-crusoe-3-9-billion-series-f-nvidia-ai-infrastructure/' } },
-  firmus: { id: 'firmus', name: 'Firmus Technologies', tie: 'investment', tieText: 'NVIDIA investor; builds on Vera Rubin DSX',
+  firmus: { id: 'firmus', name: 'Firmus Technologies', tie: 'investment', tieText: 'NVIDIA joined its funding round',
     source: { label: 'Firmus wins USD 505 million (NVIDIA participating)', url: 'https://itbrief.com.au/story/firmus-wins-usd-505-million-ai-infrastructure-boost' } },
   applied_digital: { id: 'applied_digital', name: 'Applied Digital', tie: 'investment', tieText: 'NVIDIA joined $160M round',
     source: { label: 'Nvidia joins $160M funding round for Applied Digital', url: 'https://www.nasdaq.com/articles/nvidia-nvda-joins-160m-funding-round-applied-digital-ai-push' } },
@@ -67,6 +67,8 @@ export const COMPANIES: Record<string, Company> = {
   jacobs: { id: 'jacobs', name: 'Jacobs', tie: 'dsx', tieText: 'DSX blueprint contributor (design integrator)', source: DSX_SRC },
   siemens_energy: { id: 'siemens_energy', name: 'Siemens Energy', tie: 'dsx', tieText: 'DSX energy partner', source: DSX_ENERGY_SRC },
   ge_vernova: { id: 'ge_vernova', name: 'GE Vernova', tie: 'dsx', tieText: 'DSX energy partner', source: DSX_ENERGY_SRC },
+  caterpillar: { id: 'caterpillar', name: 'Caterpillar', tie: 'dsx', tieText: 'Named in the DSX release (gigawatt AI factory site with Nscale)', source: DSX_SRC },
+  phaidra: { id: 'phaidra', name: 'Phaidra', tie: 'dsx', tieText: 'DSX contributor (Max-Q cooling AI agent)', source: DSX_SRC },
   zutacore: { id: 'zutacore', name: 'ZutaCore', tie: 'ecosystem', tieText: 'NVIDIA cooling partner (two-phase DLC)',
     source: { label: 'ZutaCore partners and ecosystem', url: 'https://zutacore.com/partners-and-ecosystem' } },
 };
@@ -83,6 +85,7 @@ export const COMMON_BUILDERS: Builder[] = [
   { company: 'jacobs', role: 'Design integration of heat recovery into an AI factory' },
   { company: 'zutacore', role: 'Two-phase direct liquid cooling that returns hotter coolant' },
   { company: 'brookfield', role: 'Capital for AI infrastructure including energy assets' },
+  { company: 'phaidra', role: 'AI control of the cooling plant, so heat export and cooling run together' },
 ];
 
 export const ECOSYSTEM: Record<string, PathwayEcosystem> = {
@@ -114,7 +117,8 @@ export const ECOSYSTEM: Record<string, PathwayEcosystem> = {
     proof: { status: 'partial', siteId: 'ref-syracuse', title: 'Syracuse University Green Data Center', place: 'Syracuse, New York, USA',
       summary: 'Absorption chillers cool the data center, but they run on microturbine exhaust, not on server heat. Same equipment, different heat source.',
       sources: [{ label: 'NYSERDA case study: microturbines with absorption chillers', url: 'https://www.nyserda.ny.gov/-/media/Project/Nyserda/Files/Publications/Case-Studies/On-Site-Power-Application/CHP-sugreendatacenter-cs.pdf' }] },
-    builders: [{ company: 'trane', role: 'Chillers and heat-driven cooling plant' }, { company: 'vertiv', role: 'Thermal management and heat reuse integration' }],
+    builders: [{ company: 'trane', role: 'Chillers and heat-driven cooling plant' }, { company: 'vertiv', role: 'Thermal management and heat reuse integration' },
+      { company: 'caterpillar', role: 'Gas gensets with exhaust heat recovery, the kind of drive the Syracuse absorption chillers use' }],
   },
   orc: {
     proof: { status: 'none', title: 'Lab and vendor experiments only', place: '',
@@ -156,7 +160,7 @@ export const ECOSYSTEM: Record<string, PathwayEcosystem> = {
     proof: { status: 'pilot', title: 'Endeavour + Trevi Systems (announced)', place: 'USA',
       summary: 'Partnership to drive forward-osmosis desalination with 60–80 C data center heat. Trevi had not yet deployed at a data center when announced.',
       sources: [{ label: 'DCD: Endeavour partners with Trevi', url: 'https://datacenterdynamics.com/en/news/endeavour-partners-with-us-desalination-firm-trevi-to-turn-data-center-waste-heat-into-clean-water' }] },
-    builders: [{ company: 'zutacore', role: '70 C two-phase cooling reaches MED/MD temperatures' }, { company: 'jacobs', role: 'Water and desalination engineering' }],
+    builders: [{ company: 'zutacore', role: 'Two-phase cooling returns coolant near 70 C, which cuts the heat-pump lift to the 70 C MED/MD plant' }, { company: 'jacobs', role: 'Water and desalination engineering' }],
   },
   biomass_processing: {
     proof: { status: 'operating', siteId: 'ref-falun', title: 'EcoDataCenter Falun → Falu Energi & Vatten pellet plant', place: 'Falun, Sweden',
@@ -171,7 +175,7 @@ export const ECOSYSTEM: Record<string, PathwayEcosystem> = {
     proof: { status: 'operating', siteId: 'ref-falun', title: 'EcoDataCenter Falun: sawdust drying', place: 'Falun, Sweden',
       summary: 'Pellet production dries sawdust on belts with warm air; data center heat replaces propane in that step.',
       sources: [{ label: 'DCD: Sharing warmth the Nordic way', url: 'https://www.datacenterdynamics.com/en/analysis/sharing-warmth-nordic-way/' }] },
-    builders: [{ company: 'zutacore', role: '70 C cooling reaches the 75 C drying sink without a heat pump' }, { company: 'siemens', role: 'Dryer automation' }],
+    builders: [{ company: 'zutacore', role: 'Two-phase cooling returns coolant near 70 C, which cuts the heat-pump lift to the 75 C dryer' }, { company: 'siemens', role: 'Dryer automation' }],
   },
   snow_melt: {
     proof: { status: 'operating', title: 'Epic Systems campus (3.5 MW data center)', place: 'Verona, Wisconsin, USA',
