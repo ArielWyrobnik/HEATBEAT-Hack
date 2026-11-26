@@ -159,7 +159,8 @@ function TemperatureChart() {
   const x = (t: number) => labelW + ((t - T0) / (T1 - T0)) * plotW;
   const ticks = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120];
 
-  const fit = (w: Window) => (source >= w.idealLo ? 'direct' : source >= w.min ? 'partial' : 'boost');
+  const fit = (w: Window) =>
+    source > w.idealHi ? 'above' : source >= w.idealLo ? 'ideal' : source >= w.min ? 'partial' : 'boost';
   const counts = WINDOWS.reduce((a, w) => ({ ...a, [fit(w)]: (a[fit(w)] ?? 0) + 1 }), {} as Record<string, number>);
 
   return (
@@ -173,7 +174,8 @@ function TemperatureChart() {
         ))}
       </div>
       <p className="tchart-readout">
-        At <b>{source} C</b>: <b>{counts.direct ?? 0}</b> solutions reach their ideal range,{' '}
+        At <b>{source} C</b>: <b>{counts.ideal ?? 0}</b> solutions are inside their ideal range,{' '}
+        <b>{counts.above ?? 0}</b> get hotter water than ideal (usable by mixing it down),{' '}
         <b>{counts.partial ?? 0}</b> work below their ideal range, <b>{counts.boost ?? 0}</b> need a heat pump.
       </p>
       <div className="tchart-scroll" ref={box}>
