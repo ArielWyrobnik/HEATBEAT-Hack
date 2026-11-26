@@ -145,12 +145,16 @@ def site_inputs(site_id: str, is_greenfield: int | None = None) -> tuple[dict, d
             put("baseline_cooling_evaporative", False, "assumption", "dlc_hot runs chiller free on dry coolers")
             put("wue_l_kwh", 0.2, "assumption", "dry cooler baseline")
     # market prices (PR 12, heatbeat_data.market): used when that module is on the branch
-    excel_market = getattr(hd, "excel_inputs", None)
-    if excel_market is not None:
+    # ecology and geology (PR 17, heatbeat_data.excel_ecology_inputs): mit_tier stays an assumption
+    for fn_name, src in (("excel_inputs", "heatbeat_data.excel_inputs (market_prices.csv, state level)"),
+                         ("excel_ecology_inputs", "heatbeat_data.excel_ecology_inputs (site_ecology.csv)")):
+        fn = getattr(hd, fn_name, None)
+        if fn is None:
+            continue
         try:
-            for k, v in (excel_market(site_id) or {}).items():
-                if k in INPUT_SPEC:
-                    put(k, v, "data", "heatbeat_data.excel_inputs (market_prices.csv, state level)")
+            for k, v in (fn(site_id) or {}).items():
+                if k in INPUT_SPEC and v is not None:
+                    put(k, v, "assumption" if k == "mit_tier" else "data", src)
         except KeyError:
             pass
     ov = load_overrides()
