@@ -13,6 +13,10 @@ boiler. With DC heat that biogas is upgraded and sold as RNG: gas value + D3 RIN
 Logistics: either a heat line to the feedstock site (d_bio_m) or the feedstock is trucked to a
 digester next to the data center; the cheaper of the two is taken.
 Feedstock quantity per site is NOT in the data: a reference plant (bio_feed_t_day) is used, flagged.
+
+CAPEX: heat exchanger, heat line (if used), an upgrading unit that turns the freed biogas into RNG
+(sized for the freed raw biogas flow, plus its electricity), and a new digester when feedstock is
+trucked to the data center (the heat line case heats the existing digester of the baseline).
 """
 from __future__ import annotations
 
@@ -47,12 +51,14 @@ def plan(site, P: dict, mode: str = "meso") -> SinkPlan:
     if kind.startswith("forestry"):
         return ko_plan(name, label, f"nearest feedstock is {kind}, not digestible (lignin): no anaerobic digestion")
     dem, det = heat_demand(site, P, t_dig)
+    vol_m3 = P["bio_feed_t_day"] * P["bio_hrt_days"]
     t_supply = t_dig + 7.0  # heating water to the digester coils
     pp = pipe(max(d, 100.0), float(dem.max()), t_supply, t_dig - 3, float(np.clip(site.t_mean, 5, 20)), P)
     a = annuity(P)
     pipe_cost_yr = pp["capex_usd"] * a  # heat line option
     truck_cost_yr = P["bio_feed_t_day"] * 365 * d / 1000 * P["bio_truck_usd_t_km"]
-    use_pipe = pipe_cost_yr + pp["loss_mw"] * H * site.x["p_heat_usd_mwh"] * 0.3 < truck_cost_yr
+    truck_total_yr = truck_cost_yr + P["capex_digester_usd_m3"] * vol_m3 * P["capex_factor"] * a
+    use_pipe = pipe_cost_yr + pp["loss_mw"] * H * site.x["p_heat_usd_mwh"] * 0.3 < truck_total_yr
     loss = pp["loss_mw"] if use_pipe else 0.0
     aux = pp["pump_design_mw"] * (dem / dem.max()) ** 3 if use_pipe else 0.0
     ch4_nm3_day = P["bio_feed_t_day"] * P["bio_biogas_nm3_t"] * P["bio_ch4_share"]
@@ -68,11 +74,21 @@ def plan(site, P: dict, mode: str = "meso") -> SinkPlan:
         saved_biogas = e / P["bio_boiler_eff"]
         served = e / max(float(dem.sum()), 1e-9)
         extra = gain_mwh * served
-        capex = (pp["capex_usd"] if use_pipe else 0.0) + P["capex_hx_usd_kw"] * dem.max() * 1000 * P["capex_factor"]
-        opex = 0.0 if use_pipe else truck_cost_yr * served
-        return {"revenue_usd": (saved_biogas + extra) * v_rng - opex, "co2_avoided_t": (saved_biogas + extra) * ef,
+        rng_mwh = saved_biogas + extra
+        # freed biogas must be upgraded to RNG before it can be sold: unit sized for the freed raw biogas flow
+        raw_nm3 = rng_mwh * 1000 / P["bio_ch4_kwh_nm3"] / P["bio_ch4_share"]
+        upgrade_capex = P["bio_upgrade_capex_usd_nm3h"] * raw_nm3 / H * P["capex_factor"]
+        upgrade_elec_usd = raw_nm3 * P["bio_upgrade_kwh_nm3"] / 1000 * site.x["p_elec_usd_mwh"]
+        # trucking feedstock means a new digester next to the data center
+        digester_capex = 0.0 if use_pipe else P["capex_digester_usd_m3"] * vol_m3 * P["capex_factor"]
+        capex = ((pp["capex_usd"] if use_pipe else 0.0) + P["capex_hx_usd_kw"] * dem.max() * 1000 * P["capex_factor"]
+                 + upgrade_capex + digester_capex)
+        opex = (0.0 if use_pipe else truck_cost_yr * served) + upgrade_elec_usd
+        return {"revenue_usd": rng_mwh * v_rng - opex, "co2_avoided_t": rng_mwh * ef,
                 "capex_usd": capex,
                 "detail": {**det, "logistics": "heat line" if use_pipe else "truck feedstock to DC",
+                           "upgrade_capex_usd": round(upgrade_capex), "digester_capex_usd": round(digester_capex),
+                           "upgrade_nm3_h": round(raw_nm3 / H, 1),
                            "rng_value_usd_mwh": round(v_rng, 1), "rng_freed_mwh": round(saved_biogas + extra),
                            "plant_ch4_mwh": round(base_ch4_mwh), "heat_share_of_ch4": round(dem.sum() / base_ch4_mwh, 3),
                            "feedstock": site.x.get("bio_name")}}

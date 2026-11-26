@@ -119,3 +119,34 @@ def test_calculation_trace_restates_the_results():
         assert steps["PUE with this solution"].result == pytest.approx(o.kpis.pue_with)
         assert abs(steps["Energy balance check"].result) < 1e-3
         assert o.calculation_inputs and all(i.source for i in o.calculation_inputs if i.flag == "real")
+
+
+def test_storage_that_shifts_nothing_is_ko():
+    # a small community next to a big source never has unmet demand: storage chains must not appear
+    site = synthetic_site(it_mw=200.0, rho_heat_mwh_m=0.5)
+    df, _, results = evaluate_site(site)
+    dh = df[df["uses"].str.contains("dh_")]
+    assert len(dh) > 0
+    assert (dh["storage"] == "").all()
+
+
+def test_biogas_capex_counts_upgrading_and_new_digester():
+    P = defaults()
+    near = synthetic_site(d_bio_m=500.0)
+    far = synthetic_site(d_bio_m=40000.0)
+    for s in (near, far):
+        pl = build_plans(s, P)["biogas_meso"]
+        out = pl.settle(pl.demand_mw)
+        d = out["detail"]
+        assert d["upgrade_capex_usd"] > 0
+        if d["logistics"] == "truck feedstock to DC":
+            assert d["digester_capex_usd"] > 0
+        else:
+            assert d["digester_capex_usd"] == 0
+        assert out["capex_usd"] > d["upgrade_capex_usd"]
+
+
+def test_net_value_splits_into_cash_and_water_value():
+    df, _, results = evaluate_site(synthetic_site())
+    for r in results.values():
+        assert r["cash_value_usd_yr"] + r["water_value_usd_yr"] == pytest.approx(r["net_value_usd_yr"])

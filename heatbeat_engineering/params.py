@@ -94,6 +94,8 @@ PARAMS: dict[str, Param] = {
     # ---- storage ----------------------------------------------------------------------------
     "ates_recovery": P(0.75, 0.60, 0.90, "-", "literature", "ATES heat recovery 60 to 90 %, Fleuchaus et al. 2018, RSER 94, 861-876"),
     "btes_recovery": P(0.55, 0.40, 0.70, "-", "literature", "BTES heat recovery 40 to 70 % (Drake Landing about 50 %), Fleuchaus 2018"),
+    "storage_min_shift_share": P(0.01, 0.005, 0.05, "of annual demand", "assumption",
+                                 "Storage must shift at least this share of the community demand, else it is not built (KO)"),
     "storage_min_geo_score": P(3.0, 2.0, 4.0, "score", "assumption", "geo_storage_score needed for ATES/BTES"),
     # ---- sorption chilling ------------------------------------------------------------------
     "ads_cop": P(0.55, 0.45, 0.65, "-", "literature",
@@ -117,6 +119,15 @@ PARAMS: dict[str, Param] = {
     "bio_boiler_eff": P(0.85, 0.80, 0.90, "-", "assumption", "Baseline: digester heated by a biogas boiler"),
     "bio_truck_usd_t_km": P(0.20, 0.10, 0.35, "USD/t km", "assumption", "Bulk feedstock trucking, round trip included"),
     "bio_max_km": P(50.0, 30.0, 80.0, "km", "assumption", "Heat line or feedstock trucking beyond this is not feasible (KO)"),
+    "bio_upgrade_capex_usd_nm3h": P(4000.0, 2500.0, 6000.0, "USD per Nm3/h raw biogas", "assumption",
+                                    "Biogas upgrading to RNG (membrane or water scrubber) incl. grid injection, sized for the "
+                                    "freed biogas flow. Small plants 2500 to 6000 USD per Nm3/h (order of magnitude from IEA "
+                                    "Bioenergy Task 37 upgrading reports). UNVERIFIED, check"),
+    "bio_upgrade_kwh_nm3": P(0.25, 0.15, 0.35, "kWh_e/Nm3 raw biogas", "assumption",
+                             "Electricity of the upgrading unit (membrane / water scrubber 0.2 to 0.3, IEA Bioenergy Task 37). UNVERIFIED"),
+    "capex_digester_usd_m3": P(600.0, 400.0, 1000.0, "USD/m3 digester volume", "assumption",
+                               "New digester incl. feeding and gas storage, only when feedstock is trucked to a digester at the "
+                               "data center (the heat line case heats the existing plant). UNVERIFIED"),
     "bio_ch4_kwh_nm3": P(9.97, 9.97, 9.97, "kWh/Nm3", "physics", "Methane LHV"),
     "rng_ci_g_mj": P(20.0, -50.0, 40.0, "g CO2e/MJ", "assumption",
                      "Carbon intensity of the RNG pathway for LCFS (food waste about 0 to 40; dairy manure negative)"),
@@ -143,6 +154,8 @@ PARAMS: dict[str, Param] = {
     "orc_carnot_fraction": P(0.40, 0.30, 0.50, "-", "literature",
                              "Low temperature ORC reach 30 to 50 % of Carnot, Quoilin et al. 2013, RSER 22, 168-186"),
     "orc_cond_above_air_k": P(10.0, 7.0, 15.0, "K", "assumption", "Air cooled ORC condenser"),
+    "orc_min_source_c": P(45.0, 40.0, 55.0, "C", "assumption",
+                          "Below this loop temperature no ORC is offered (a few cold hours do not justify a turbine)"),
     "orc_min_dt_k": P(20.0, 15.0, 25.0, "K", "assumption", "Below this source minus condenser difference no ORC is built"),
     # ---- economics --------------------------------------------------------------------------
     "discount_rate": P(0.07, 0.05, 0.10, "-", "assumption", "Real discount rate"),

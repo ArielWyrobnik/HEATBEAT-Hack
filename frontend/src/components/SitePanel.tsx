@@ -79,7 +79,9 @@ function OptionKpis({ o, placeholderCosts, onCalc }: { o: OptionResult; placehol
       <Kpi label="Heat delivered" v={`${compact(k.heat_delivered_mwh_yr ?? k.heat_recovered_mwh_yr)} MWh/yr`} />
       <Kpi label="CO2 avoided" v={`${compact(k.co2_avoided_t_yr)} t/yr`} />
       <Kpi label="Water saved" v={`${compact(k.water_saved_m3_yr)} m3/yr`} />
-      <Kpi label="Net value" v={`${usd(k.net_value_usd_yr)}/yr`} />
+      {k.cash_value_usd_yr != null && <Kpi label="Cash savings" v={`${usd(k.cash_value_usd_yr)}/yr`} sub="bills, revenue, O&M" />}
+      {k.water_value_usd_yr != null && k.water_value_usd_yr !== 0 && <Kpi label="Water value" v={`${usd(k.water_value_usd_yr)}/yr`} sub="scarcity shadow price, not cash" />}
+      <Kpi label="Net value" v={`${usd(k.net_value_usd_yr)}/yr`} sub={k.water_value_usd_yr ? 'cash + water value' : undefined} />
       <Kpi label="CAPEX" v={usd(k.capex_usd)} sub={placeholderCosts ? 'placeholder' : undefined} />
       <Kpi label="Payback" v={k.payback_yr == null ? 'never' : `${num(k.payback_yr, 1)} yr`} />
       <Kpi label="PUE" v={before(k.pue_baseline, k.pue_with, 3)} />
@@ -193,7 +195,9 @@ export function FullResults({ r }: { r: ModelResult }) {
               <Kpi label="Heat delivered" v={`${compact(k.heat_delivered_mwh_yr ?? k.heat_recovered_mwh_yr)} MWh/yr`} />
               <Kpi label="CO2 avoided" v={`${compact(k.co2_avoided_t_yr)} t/yr`} />
               <Kpi label="Water saved" v={`${compact(k.water_saved_m3_yr)} m3/yr`} />
-              <Kpi label="Net value" v={`${usd(k.net_value_usd_yr)}/yr`} />
+              {k.cash_value_usd_yr != null && <Kpi label="Cash savings" v={`${usd(k.cash_value_usd_yr)}/yr`} sub="bills, revenue, O&M" />}
+              {k.water_value_usd_yr != null && k.water_value_usd_yr !== 0 && <Kpi label="Water value" v={`${usd(k.water_value_usd_yr)}/yr`} sub="scarcity shadow price, not cash" />}
+              <Kpi label="Net value" v={`${usd(k.net_value_usd_yr)}/yr`} sub={k.water_value_usd_yr ? 'cash + water value' : undefined} />
               <Kpi label="CAPEX" v={usd(k.capex_usd)} sub={placeholderCosts ? 'placeholder' : undefined} />
               <Kpi label="Payback" v={k.payback_yr == null ? 'never' : `${num(k.payback_yr, 1)} yr`} />
               <Kpi label="PUE" v={before(k.pue_baseline, k.pue_with, 3)} />
@@ -211,7 +215,7 @@ export function FullResults({ r }: { r: ModelResult }) {
               <thead>
                 <tr>
                   <th>#</th><th>Option</th><th>Score</th><th>Eco</th><th>Heat MWh/yr</th><th>CO2 t/yr</th>
-                  <th>Water m3/yr</th><th>Net $/yr</th><th>CAPEX</th><th>Payback</th>
+                  <th>Water m3/yr</th><th>Cash $/yr</th><th>Net $/yr</th><th>CAPEX</th><th>Payback</th>
                 </tr>
               </thead>
               <tbody>
@@ -227,6 +231,7 @@ export function FullResults({ r }: { r: ModelResult }) {
                     <td className="n">{compact(x.kpis.heat_delivered_mwh_yr ?? x.kpis.heat_recovered_mwh_yr)}</td>
                     <td className="n">{compact(x.kpis.co2_avoided_t_yr)}</td>
                     <td className="n">{compact(x.kpis.water_saved_m3_yr)}</td>
+                    <td className="n">{usd(x.kpis.cash_value_usd_yr ?? x.kpis.net_value_usd_yr)}</td>
                     <td className="n">{usd(x.kpis.net_value_usd_yr)}</td>
                     <td className="n">{usd(x.kpis.capex_usd)}</td>
                     <td className="n">{x.kpis.payback_yr == null ? 'never' : `${num(x.kpis.payback_yr, 1)} yr`}</td>
@@ -236,7 +241,7 @@ export function FullResults({ r }: { r: ModelResult }) {
                   <tr key={x.option_id} className="ko-row">
                     <td>KO</td>
                     <td className="opt-name">{x.name}<small>{x.ko_reasons[0] ?? ''}</small></td>
-                    <td colSpan={8} />
+                    <td colSpan={9} />
                   </tr>
                 ))}
               </tbody>

@@ -71,6 +71,8 @@ class Kpis(BaseModel):
     co2_avoided_t_yr: float | None = None
     water_saved_m3_yr: float | None = None
     net_value_usd_yr: float | None = None
+    cash_value_usd_yr: float | None = Field(None, description="Part of net value that is real money (bills, revenue, O&M)")
+    water_value_usd_yr: float | None = Field(None, description="Part of net value from the water scarcity shadow price (not cash)")
     capex_usd: float | None = None
     payback_yr: float | None = Field(None, description="None if the option never pays back")
     pue_baseline: float | None = None

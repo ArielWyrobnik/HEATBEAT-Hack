@@ -132,7 +132,7 @@ class HeatChainModel:
         bl = Baseline(it_load_mw=s.it_mw, it_energy_mwh_yr=base["it_mwh"],
                       facility_energy_mwh_yr=base["it_mwh"] + base["cooling_mwh"] + base["other_mwh"],
                       heat_rejected_mwh_yr=base["heat_rejected_mwh"], pue=base["pue"], wue_l_kwh=base["wue_l_kwh"],
-                      water_use_m3_yr=base["water_m3"], co2_t_yr=base["co2_t"] + base["it_mwh"] * s.x["ci_grid_kg_mwh"] / 1000,
+                      water_use_m3_yr=base["water_m3"], co2_t_yr=base["co2_t"] + (base["it_mwh"] + base["other_mwh"]) * s.x["ci_grid_kg_mwh"] / 1000,
                       electricity_cost_usd_yr=(base["it_mwh"] + base["cooling_mwh"] + base["other_mwh"]) * s.x["p_elec_usd_mwh"],
                       cooling_type=f"{s.cooling_profile} ({s.baseline_rejection})")
         warnings = list(self.WARNINGS)
@@ -158,7 +158,8 @@ class HeatChainModel:
         k = Kpis(heat_recovered_mwh_yr=r["heat_recovered_mwh"], heat_delivered_mwh_yr=r["heat_delivered_mwh"],
                  electricity_used_mwh_yr=r["plant_mwh"], electricity_saved_mwh_yr=r["electricity_saved_mwh_yr"],
                  co2_avoided_t_yr=r["co2_avoided_t_yr"], water_saved_m3_yr=r["water_saved_m3_yr"],
-                 net_value_usd_yr=r["net_value_usd_yr"], capex_usd=r["delta_capex_usd"], payback_yr=_c(r["payback_yr"]),
+                 net_value_usd_yr=r["net_value_usd_yr"], cash_value_usd_yr=r["cash_value_usd_yr"],
+                 water_value_usd_yr=r["water_value_usd_yr"], capex_usd=r["delta_capex_usd"], payback_yr=_c(r["payback_yr"]),
                  pue_baseline=base["pue"], pue_with=r["pue"], wue_baseline_l_kwh=base["wue_l_kwh"],
                  wue_with_l_kwh=r["wue_l_kwh"], ere=r["ere"], cop=_c(r["cop_hp"]))
         prod = []

@@ -157,7 +157,9 @@ def build(r: dict, b: dict, s, P: dict, labels: dict, units: dict) -> list[dict]
         "formula": "Net value = cost_baseline - cost_solution",
         "terms": [calc("cost_base", "Baseline cost", b["net_cost_usd"], "USD/yr"),
                   calc("cost_sol", "Cost with solution", r["net_cost_usd"], "USD/yr")],
-        "result": r["net_value_usd_yr"], "unit": "USD/yr"})
+        "result": r["net_value_usd_yr"], "unit": "USD/yr",
+        "note": f"Real money (bills, revenue, O&M): {r['cash_value_usd_yr']:,.0f} USD/yr. Water value from the scarcity "
+                f"shadow price (not cash): {r['water_value_usd_yr']:,.0f} USD/yr."})
     steps.append({
         "title": "Extra investment (CAPEX)",
         "formula": "dCAPEX = sum of chain items x capex factor - baseline cooling plant",

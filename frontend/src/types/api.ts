@@ -52,6 +52,8 @@ export interface Kpis {
   co2_avoided_t_yr?: number | null;
   water_saved_m3_yr?: number | null;
   net_value_usd_yr?: number | null;
+  cash_value_usd_yr?: number | null;
+  water_value_usd_yr?: number | null;
   capex_usd?: number | null;
   payback_yr?: number | null;
   pue_baseline?: number | null;
