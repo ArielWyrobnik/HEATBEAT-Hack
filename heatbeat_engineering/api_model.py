@@ -422,6 +422,12 @@ def implementation(r: dict, s, P: dict) -> str:
              f"Heat rejection: {TECH_LABEL[r['tech']].lower()} sized for the full load "
              f"({sum(l.q_mw for l in s.loops):,.0f} MW); trim chiller needed in {r['chiller_hours']:,} h/yr"
              + (f", wetted {r['wet_hours']:,} h/yr" if r["wet_hours"] else "") + "."]
+    if r["tech"] == "wind" and "wind_radiator" in r.get("details", {}):
+        w = r["details"]["wind_radiator"]
+        parts.append(f"Wind radiator: {w['face_area_m2']:,} m2 of flat finned panels turned face-on to the wind, ahead of "
+                     f"the dry coolers; {w['passive_share']:.0%} of the heat leaves with no fan power, "
+                     f"{w['hours_fully_passive']:,} h/yr fully passive (2024 hourly wind at 10 m). The dry coolers stay as "
+                     "backup for calm hours. Panel cost, coil and array losses are UNVERIFIED team assumptions.")
     if r["hp_peak_mw"] > 0:
         parts.append(f"Heat pump: {r['hp_peak_mw']:,.1f} MW_th output, seasonal COP {r['cop_hp']:.1f}, "
                      f"{r['hp_work_mwh']:,.0f} MWh_e/yr.")

@@ -232,9 +232,9 @@ export function Details({ o, r, planned = false }: { o: OptionResult; r: ModelRe
   );
 }
 
-export const COOLING_COMPONENTS = ['dry_cooler', 'adiabatic_cooler', 'cooling_tower'];
+export const COOLING_COMPONENTS = ['dry_cooler', 'adiabatic_cooler', 'cooling_tower', 'wind_radiator'];
 export const coolingOnly = (o: OptionResult) =>
-  o.components.length === 1 && COOLING_COMPONENTS.includes(o.components[0]);
+  o.components.length > 0 && o.components.every((c) => COOLING_COMPONENTS.includes(c));
 
 export default function Results({ r }: { r: ModelResult }) {
   const [palette, setPalette] = useState<'cooling' | 'reuse' | null>(null);

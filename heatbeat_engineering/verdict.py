@@ -19,7 +19,8 @@ import pandas as pd
 SMALL_GAIN_SHARE = 0.02  # team threshold, see module docstring
 
 TECH_TEXT = {"dry": "dry coolers (no cooling water)", "adiabatic": "adiabatic / direct evaporative cooling",
-             "tower": "evaporative cooling towers"}
+             "tower": "evaporative cooling towers",
+             "wind": "a passive wind radiator ahead of dry coolers"}
 
 
 def is_today(row, baseline_tech: str) -> bool:

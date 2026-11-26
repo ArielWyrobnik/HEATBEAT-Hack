@@ -1,7 +1,13 @@
 # Wind radiator: passive, fan free heat rejection for a hot closed loop
 
-Status: first feasibility screen (2026-11-26). Not wired into the API or the ranking yet.
-Code: `heatbeat_engineering/wind_radiator.py`. Run: `python -m heatbeat_engineering.wind_radiator`.
+Status: 2026-11-26. In the engineering model as heat rejection technology `wind`, so it is ranked by the API
+(`/api/sites/{id}/ranking`, `POST /api/evaluate`, `POST /api/plan`) next to dry, adiabatic and tower, with NPV,
+tornado and "Show calculation". The Excel ranking (`?model=excel_ranking`) is a port of the team Excel with heat
+reuse options only and is left unchanged.
+
+Code: physics in `heatbeat_engineering/heat_rejection.py` (`wind_passive_mw`, tech `wind`), parameters `wind_*` and
+`capex_wind_usd_m2` in `params.py`, standalone screen `heatbeat_engineering/wind_radiator.py`
+(`python -m heatbeat_engineering.wind_radiator`), tests `tests/test_wind_radiator.py`.
 
 ## Idea
 
@@ -98,10 +104,60 @@ bound about 22 k USD per MW per year. A dry cooler is about 90 k USD/MW installe
 |---|---|---|---|
 | Cheyenne (Microsoft) | 98 % | 11 h | windiest, but today evaporative air economizer, no closed loop |
 | Mount Pleasant (Microsoft) | 98 % | 26 h | closed loop and fan wall documented |
-| Abilene (Stargate) | 94 % | 61 h | closed loop documented, hot summers |
-| Chandler AZ | 71 % | | worst mainland case |
+| Abilene (Stargate) | 95 % | 61 h | closed loop documented, hot summers |
+| Chandler AZ | 75 % | | worst mainland case |
 
 All 40 US sites with weather reach 70 % or more. The full screen prints with the run command above.
+
+## In the ranking (engineering model, 2024 weather, default parameters)
+
+Series logic in the full model: panel first, then the fan dry cooler, then the trim chiller, which only cools what
+the panel and the dry cooler left (the panel also cuts chiller hours on 32 / 42 C loops). On a site that already has
+dry coolers only the panels are new CAPEX (`capex_wind_usd_m2` 1,500 USD/m2, UNVERIFIED); elsewhere panels plus
+backup dry coolers. Energy balance closes for every chain.
+
+| Site (loop) | Electricity saved | Value per year | Panel CAPEX | NPV | Break-even panel cost | Rank |
+|---|---|---|---|---|---|---|
+| Mount Pleasant, today (Blackwell, 32 / 42 C) | 5.5 GWh | 0.03 M USD | 22 M USD | -22 M USD | 277 USD/m2 | 13 of 120 |
+| Mount Pleasant, Rubin 45 / 55 C (hypothetical) | 15.0 GWh | 0.83 M USD | 22 M USD | -13 M USD | 757 USD/m2 | 9 of 168 |
+| Abilene (32 / 42 C) | 29.4 GWh | 0.81 M USD | 49 M USD | -41 M USD | 478 USD/m2 | 8 of 40 |
+| Richland, Meta Hyperion (Rubin 45 / 55 C) | 69.5 GWh | 1.94 M USD | 98 M USD | -77 M USD | 522 USD/m2 | 12 of 80 |
+
+So with the current cost guess the wind radiator ranks below "keep the dry coolers". It wins once a panel costs
+under roughly 300 to 750 USD per m2 of face (a coil without fans, frame and yaw drive): that is the number to get
+from a manufacturer.
+
+## Moving the panels to a windier spot (1 km or more away)
+
+Question: is there a spot within a few km with steadier, stronger wind, and does it outweigh pumping the loop water there?
+
+Pumping a 351 MW loop (45 / 55 C, 8.5 m3/s) through a supply and return line, Darcy friction (Swamee-Jain, steel):
+
+| Design velocity | Pump power per km of distance | Share of heat | Per year | Pipe CAPEX per km |
+|---|---|---|---|---|
+| 1.0 m/s (3 x DN 1900) | 63 kW | 0.02 % | 0.55 GWh | about 19 M USD |
+| 2.0 m/s (2 x DN 1650) | 283 kW | 0.08 % | 2.5 GWh | about 11 M USD |
+
+Pipe CAPEX uses the district heating formula in `params.py` (insulated, UNVERIFIED), an upper bound for an
+uninsulated cooling water line.
+
+Gain at the far spot, modelled as more wind on every hour (`wind_height_factor` as speed-up), Mount Pleasant Rubin case:
+
+| Wind speed-up | Passive share at 40 m2/MW | Electricity saved vs dry cooler | Area for about the same share |
+|---|---|---|---|
+| 1.0 (at the building) | 98.0 % | 13.90 GWh | 40 m2/MW |
+| 1.2 | 98.8 % | 13.93 GWh | about 32 m2/MW |
+| 1.5 | 99.3 % | 13.95 GWh | about 28 m2/MW |
+
+Answer: no, not for energy. The panel already takes 98 % at the building, so a windier spot can only win the last
+0.05 GWh/yr, while 1 km of pipe costs 0.5 to 2.5 GWh/yr in pumping. The only gain is a smaller panel (about 25 %
+less area, roughly 5 M USD at 1.3x wind), less than one km of pipe (10 to 19 M USD). The hours the panel misses are
+regional calm spells (weather systems), which a few km do not change.
+
+The cheap version is height, not distance: wind at 30 m is about 1.2x wind at 10 m (log law, z0 = 0.03 m), so panels
+on the roof or a raised frame next to the building get most of the speed-up with no transfer line.
+Not checked: local spots with real speed-up (lake shore, ridges). Our weather grid (Open-Meteo) cannot resolve 1 km; the
+Global Wind Atlas (250 m) would be the source for that.
 
 ## Takeaway
 

@@ -29,11 +29,12 @@ import numpy as np
 import pandas as pd
 
 from . import biogas, district_heating as dh, heat_pump as hp, industry
-from .heat_rejection import TECHS, capex_usd as rej_capex, reject
+from .heat_rejection import TECHS, capex_usd as rej_capex, reject, wind_panel_capex_usd
 from .params import defaults
 from .sinks import H, SinkPlan, annuity
 
-TECH_LABEL = {"dry": "Dry cooler", "adiabatic": "Adiabatic cooler", "tower": "Cooling tower"}
+TECH_LABEL = {"dry": "Dry cooler", "adiabatic": "Adiabatic cooler", "tower": "Cooling tower",
+              "wind": "Wind radiator (passive) + dry cooler backup"}
 DH_NETWORK_KM = (5.0, 20.0, 60.0)
 DH_PEAK_SHARES = (35, 65)
 DH_FULL_PLANS = tuple(f"dh_{km:.0f}km" for km in DH_NETWORK_KM)
@@ -89,7 +90,12 @@ GROUPS = {
 ORDER = ["adsorption", "biogas", "feedwater", "dh", "desal", "orc"]  # fixed demands first, take-all last
 
 
-def enumerate_chains(plans: dict[str, SinkPlan], max_uses: int = 2):
+def site_techs(site) -> tuple:
+    """Heat rejection technologies a site can use: the wind radiator needs hourly wind data."""
+    return tuple(t for t in TECHS if t != "wind" or getattr(site, "wind", None) is not None)
+
+
+def enumerate_chains(plans: dict[str, SinkPlan], max_uses: int = 2, techs: tuple = TECHS):
     """All feasible (tech, uses, storage) combinations. KO uses are left out."""
     ok = {g: [n for n in names if n in plans and plans[n].ko is None] for g, names in GROUPS.items()}
     groups = [g for g in ORDER if ok[g]]
@@ -100,7 +106,7 @@ def enumerate_chains(plans: dict[str, SinkPlan], max_uses: int = 2):
                 continue  # two take-all uses never share the same heat
             combos += list(itertools.product(*[ok[g] for g in gs]))
     out = []
-    for tech in TECHS:
+    for tech in techs:
         for uses in combos:
             stores = [None]
             if any(u in DH_FULL_PLANS for u in uses):
@@ -120,6 +126,10 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
     heat_to_uses = {l.name: {} for l in loops}
     e_it = site.it_mw * H
     res = {"tech": tech, "uses": uses, "storage": storage, "ko": None}
+    wind = getattr(site, "wind", None)
+    if tech == "wind" and wind is None:
+        res["ko"] = "wind radiator: no hourly wind data for this site"
+        return res
     hp_work = np.zeros(H)
     hp_out_peak = 0.0
     hp_cops = []
@@ -143,8 +153,8 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
         if pl.kind == "cold":  # adsorption chiller
             liq = loops[0]
             air = [l for l in loops if l.name == "air"][0]
-            pre = reject(tech, rem["air"], air.t_supply_c, air.t_return_c, site.t_db, site.t_wb, P, q_design_mw=air.q_mw)
-            rec_ok = reject(tech, 1.0, 27.0, P["ads_max_cond_c"], site.t_db, site.t_wb, P)["t_leave_c"] <= P["ads_max_cond_c"] - 3
+            pre = reject(tech, rem["air"], air.t_supply_c, air.t_return_c, site.t_db, site.t_wb, P, q_design_mw=air.q_mw, wind_ms=wind)
+            rec_ok = reject(tech, 1.0, 27.0, P["ads_max_cond_c"], site.t_db, site.t_wb, P, wind_ms=wind)["t_leave_c"] <= P["ads_max_cond_c"] - 3
             cold = np.where(rec_ok, np.minimum(pre["chiller_load_full_mw"], P["ads_cop"] * rem[liq.name]), 0.0)
             drive = cold / P["ads_cop"]
             rem[liq.name] = rem[liq.name] - drive
@@ -153,7 +163,7 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
             flow("air loop", "adsorption chiller", float(cold.sum()), "cooling")
             flow("adsorption chiller", "adsorber recooler", float((cold + drive).sum()))
             air_offload = cold
-            ads_rej = reject(tech, cold + drive, 27.0, P["ads_max_cond_c"], site.t_db, site.t_wb, P)
+            ads_rej = reject(tech, cold + drive, 27.0, P["ads_max_cond_c"], site.t_db, site.t_wb, P, wind_ms=wind)
             capex["adsorption"] = P["capex_ads_usd_kw"] * float(cold.max()) * 1000 * P["capex_factor"] + \
                 rej_capex(tech, float((cold + drive).max()), P)
             delivered[u] = cold
@@ -254,7 +264,7 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
     for l in loops:
         off = air_offload if l.name == "air" else 0.0
         rej[l.name] = reject(tech, rem[l.name], l.t_supply_c, l.t_return_c, site.t_db, site.t_wb, P,
-                             q_design_mw=l.q_mw, chiller_offload_mw=off)
+                             q_design_mw=l.q_mw, chiller_offload_mw=off, wind_ms=wind)
     for l in loops:
         flow(f"{l.name} loop", TECH_LABEL[tech], float(rej[l.name]["q_rejected_mwh"] - rej[l.name]["chiller_mwh"]))
         flow("grid electricity", TECH_LABEL[tech] + " (chiller)", rej[l.name]["chiller_mwh"], "electricity")
@@ -274,6 +284,13 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
             routes.append({"name": TECH_LABEL[tech], "mwh_yr": remainder, "kind": "cooling"})
         heat_loops.append({"name": l.name, "mwh_yr": l.q_mw * H, "return_c": l.t_return_c, "routes": routes})
     parts = list(rej.values()) + ([ads_rej] if ads_rej else [])
+    if tech == "wind":
+        pas = sum(r.get("passive_mwh", 0.0) for r in parts)
+        res.setdefault("details", {})["wind_radiator"] = {
+            "passive_mwh": round(pas), "passive_share": round(pas / max(sum(r["q_rejected_mwh"] for r in parts), 1e-9), 3),
+            "face_area_m2": round(sum(r.get("wind_area_m2", 0.0) for r in parts)),
+            "hours_fully_passive": int(min((r["passive_mw"] >= np.asarray(r["q_rejected_mw"]) - 1e-9).sum()
+                                           for r in parts if "passive_mw" in r))}
     fan = sum(r["fan_mwh"] for r in parts)
     pump = sum(r["pump_mwh"] for r in parts)
     chill = sum(r["chiller_mwh"] for r in parts)
@@ -310,7 +327,9 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
                   **s.get("detail", {})}
 
     # CAPEX: new rejection plant only if it differs from the existing one (or greenfield)
-    if site.x.get("is_greenfield") or tech != site.baseline_rejection:
+    if tech == "wind" and site.baseline_rejection == "dry" and not site.x.get("is_greenfield"):
+        capex["heat_rejection"] = sum(wind_panel_capex_usd(l.q_mw, P) for l in loops)  # dry cooler exists as backup
+    elif site.x.get("is_greenfield") or tech != site.baseline_rejection:
         capex["heat_rejection"] = sum(rej_capex(tech, l.q_mw, P) for l in loops)
     capex["heat_pump"] = P["capex_hp_usd_kw"] * hp_out_peak * 1000 * P["capex_factor"]
     capex["heat_exchangers"] = P["capex_hx_usd_kw"] * hx_peak * 1000 * P["capex_factor"]
@@ -399,7 +418,8 @@ def chain_label(site, tech, uses, storage, plans, P: dict | None = None) -> str:
 
 
 def components(tech, uses, storage, plans, site, P) -> list[str]:
-    out = [{"dry": "dry_cooler", "adiabatic": "adiabatic_cooler", "tower": "cooling_tower"}[tech]]
+    out = {"dry": ["dry_cooler"], "adiabatic": ["adiabatic_cooler"], "tower": ["cooling_tower"],
+           "wind": ["wind_radiator", "dry_cooler"]}[tech][:]
     t_hot = max(l.t_return_c for l in site.loops)
     for u in uses:
         pl = plans[u]
@@ -425,7 +445,7 @@ def evaluate_site(site, P: dict | None = None, max_uses: int = 2) -> tuple[pd.Da
     base = baseline(site, P, plans)
     add_deltas(base, base, P)
     results = {}
-    for tech, uses, st in enumerate_chains(plans, max_uses):
+    for tech, uses, st in enumerate_chains(plans, max_uses, site_techs(site)):
         r = simulate(site, P, tech, uses, st, plans=plans, baseline=base)
         if r.get("ko"):
             continue

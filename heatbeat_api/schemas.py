@@ -201,7 +201,7 @@ class Baseline(BaseModel):
     electricity_cost_usd_yr: float | None = None
     cooling_type: str | None = None
     cooling_profile: str | None = None
-    heat_rejection: str | None = Field(None, description="dry, adiabatic or tower: what the baseline rejects heat with")
+    heat_rejection: str | None = Field(None, description="dry, adiabatic or tower: what the baseline rejects heat with (the wind radiator is an option, never the baseline)")
     heat_rejection_flag: Flag | None = Field(None, description="real = from a public source for this site")
     heat_rejection_source: str | None = None
     setup_status: str | None = Field(None, description="verified, partial, context or None")

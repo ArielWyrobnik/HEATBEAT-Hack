@@ -49,6 +49,22 @@ PARAMS: dict[str, Param] = {
                       "Cycles of concentration 3 to 6; blowdown = evaporation / (cycles - 1), ASHRAE Handbook ch. 40"),
     "sfp_dry_kw_kw": P(0.030, 0.020, 0.045, "kW_e/kW_th", "assumption",
                        "Dry cooler fan power at design load (EC fans). Manufacturer selections span 0.02 to 0.045"),
+    # ---- wind radiator: passive panel turned face-on to the wind, ahead of a fan dry cooler ----
+    "wind_coil_k": P(4.0, 2.0, 10.0, "-", "assumption",
+                     "Pressure loss coefficient of a shallow, wide fin pitch coil (Delta p / (0.5 rho v^2)). Standard "
+                     "4 to 6 row dry cooler coils sit at 15 to 25; a 1 to 2 row coil with 4 to 5 mm fin pitch at 3 to 8. "
+                     "UNVERIFIED, needs a manufacturer selection"),
+    "wind_ua_ref_kw_km2": P(2.5, 1.5, 4.0, "kW/K per m2 face", "assumption",
+                            "UA per m2 face at 2 m/s face velocity, 2 row finned coil (air side NTU about 1), "
+                            "order of Kays & London compact heat exchanger data. UNVERIFIED"),
+    "wind_ua_exp": P(0.6, 0.5, 0.8, "-", "literature", "Air side h ~ Re^0.5..0.8 on finned tubes (Incropera ch. 7)"),
+    "wind_height_factor": P(1.0, 0.85, 1.15, "-", "assumption",
+                            "Wind at panel centre / wind at 10 m (log law, z0 = 0.03 m: 1.0 at 10 m, about 0.9 at 6 m)"),
+    "wind_yaw_array_factor": P(0.85, 0.6, 1.0, "-", "assumption",
+                               "Combined loss from yaw error, turn lag and wake / blockage between panels in an array. "
+                               "1.0 = single panel always face-on. UNVERIFIED, largest uncertainty"),
+    "wind_area_m2_per_mw": P(40.0, 20.0, 80.0, "m2 face per MW_th", "assumption",
+                             "Design choice: radiator face area per MW of loop heat (docs/WIND_RADIATOR.md area sweep)"),
     "sfp_adiabatic_kw_kw": P(0.025, 0.018, 0.035, "kW_e/kW_th", "assumption", "Adiabatic cooler fan power at design"),
     "sfp_tower_kw_kw": P(0.012, 0.008, 0.018, "kW_e/kW_th", "literature",
                          "ASHRAE 90.1 minimum axial tower efficiency 40.2 gpm/hp at 95/85/75 F, about 0.01 kW_e/kW_th"),
@@ -168,6 +184,9 @@ PARAMS: dict[str, Param] = {
     "water_scarcity_usd_m3_per_wsi": P(0.5, 0.0, 1.5, "USD/m3 per WSI point", "assumption",
                                        "Shadow price added to the tariff: WSI 0 to 5 times this. Makes water stress count"),
     "capex_dry_usd_kw": P(90.0, 60, 130, "USD/kW_th", "assumption", "Dry cooler installed. UNVERIFIED"),
+    "capex_wind_usd_m2": P(1500.0, 800.0, 3000.0, "USD/m2 face", "assumption",
+                           "Wind radiator panel: finned coil, frame, yaw drive and foundation, per m2 face. No product "
+                           "exists to quote; team estimate from dry cooler coil cost without fans. UNVERIFIED"),
     "capex_adiabatic_usd_kw": P(110.0, 80, 160, "USD/kW_th", "assumption", "Adiabatic cooler installed. UNVERIFIED"),
     "capex_tower_usd_kw": P(70.0, 45, 100, "USD/kW_th", "assumption", "Cooling tower + water treatment. UNVERIFIED"),
     "capex_hp_usd_kw": P(700.0, 400, 1000, "USD/kW_th", "literature",

@@ -53,6 +53,7 @@ class SiteCase:
     prov: dict = field(default_factory=dict)
     setup: dict = field(default_factory=dict)  # verified current setup (heatbeat_data.current_setup), field -> fact
     already: list = field(default_factory=list)  # components the site already has (already_implemented)
+    wind: np.ndarray | None = None  # hourly wind speed at 10 m (m/s), 8760 local hours; None = no wind radiator
 
     @property
     def t_mean(self) -> float:
@@ -119,6 +120,10 @@ def load_site(site_id: str, live: bool = True, weather: pd.DataFrame | None = No
     w = weather if weather is not None else site.weather
     t_db = _to_8760(w["t_db_c"], site.tz)
     t_wb = _to_8760(w["t_wb_c"], site.tz)
+    wind = None
+    if "wind_ms" in w and w["wind_ms"].notna().mean() > 0.9:
+        wind = np.clip(_to_8760(w["wind_ms"].astype(float), site.tz), 0, None)
+        prov["wind"] = {"status": "data", "source": "hourly wind speed at 10 m from the site weather (wind radiator)"}
     prov["weather"] = {"status": "data", "source": str(w["source"].iloc[0]) if "source" in w else "heatbeat_data"}
 
     mk = hd.site_market(site_id)
@@ -194,7 +199,7 @@ def load_site(site_id: str, live: bool = True, weather: pd.DataFrame | None = No
         prov["pue_reported"] = {"status": "data", "source": f"{pf['source_title']} ({pf['source_date']})"}
     case = SiteCase(site_id=site_id, name=m["name"], state=m["region"], it_mw=it, loops=loops,
                     cooling_profile=prof, baseline_rejection=rej,
-                    pue_reported=pue, t_db=t_db, t_wb=t_wb, x=x, prov=prov, setup=setup,
+                    pue_reported=pue, t_db=t_db, t_wb=t_wb, x=x, prov=prov, setup=setup, wind=wind,
                     already=hd.already_implemented(site_id) if setup else [])
     prov["it_mw"] = {"status": "estimate", "source": f"site_profiles.csv it_load_mw (confidence {hp.get('confidence')})"}
     apply_overrides(case, overrides)
@@ -271,8 +276,9 @@ def set_input(case: SiteCase, key: str, value) -> None:
         return
     if key == "baseline_rejection":
         from .heat_rejection import TECHS
-        if value not in TECHS:
-            raise ValueError(f"baseline_rejection must be one of {TECHS}")
+        allowed = tuple(t for t in TECHS if t != "wind")  # the wind radiator is an option, never today's setup
+        if value not in allowed:
+            raise ValueError(f"baseline_rejection must be one of {allowed}")
         case.baseline_rejection = str(value)
         case.prov["baseline_rejection"] = {"status": "user", "source": "set in the UI"}
         return
@@ -318,8 +324,9 @@ def intl_heat_price(country: str | None):
 
 
 def synthetic_site(it_mw=100.0, t_mean=15.0, swing=12.0, liquid_share=0.9, t_sup=45.0, t_ret=55.0,
-                   **x_over) -> SiteCase:
-    """A synthetic site for tests and examples (SYNTHETIC, not a real location)."""
+                   wind_ms: float | None = None, **x_over) -> SiteCase:
+    """A synthetic site for tests and examples (SYNTHETIC, not a real location).
+    wind_ms: constant wind speed (m/s) to enable the wind radiator; None = no wind data."""
     h = np.arange(8760)
     t_db = t_mean - swing * np.cos(2 * np.pi * h / 8760) - 4 * np.cos(2 * np.pi * (h % 24 - 4) / 24)
     t_wb = t_db - 4 - 0.15 * np.clip(t_db, 0, None)
@@ -333,7 +340,8 @@ def synthetic_site(it_mw=100.0, t_mean=15.0, swing=12.0, liquid_share=0.9, t_sup
              bio_kind="food processing (synthetic)")
     x.update(x_over)
     return SiteCase("synthetic", "Synthetic site", "XX", it_mw, loops, "dlc_hot", "dry", 1.2, t_db, t_wb, x,
-                    {"all": {"status": "synthetic", "source": "synthetic_site()"}})
+                    {"all": {"status": "synthetic", "source": "synthetic_site()"}},
+                    wind=None if wind_ms is None else np.full(8760, float(wind_ms)))
 
 
 # ---- planned data centers: any location, any size ------------------------------------------------

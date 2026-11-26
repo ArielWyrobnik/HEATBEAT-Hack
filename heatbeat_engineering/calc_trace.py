@@ -23,6 +23,7 @@ _TECH_PREFIX = {
     "dry": ("dry_", "sfp_dry", "capex_dry"),
     "adiabatic": ("adiabatic_", "sfp_adiabatic", "capex_adiabatic"),
     "tower": ("tower_", "sfp_tower", "capex_tower"),
+    "wind": ("wind_", "capex_wind", "dry_", "sfp_dry", "capex_dry"),
 }
 _ALWAYS = ("cp_water", "h_fg", "rho_water", "chiller_", "pump_kw", "hall_fan", "other_overhead", "discount_rate",
            "lifetime_yr", "opex_share", "capex_factor", "water_scarcity", "ng_kg_co2")
@@ -77,7 +78,12 @@ def build(r: dict, b: dict, s, P: dict, labels: dict, units: dict) -> list[dict]
         "terms": [calc("fan_mwh", "Fans", r["fan_mwh"], "MWh/yr"), calc("pump_mwh", "Pumps", r["pump_mwh"], "MWh/yr"),
                   calc("chiller_mwh", "Trim chiller", r["chiller_mwh"], "MWh/yr"),
                   calc("chiller_hours", "Hours the chiller runs", r["chiller_hours"], "h/yr"),
-                  par(f"sfp_{r['tech']}_kw_kw"), par("pump_kw_kw"), par("chiller_carnot_fraction")],
+                  par(f"sfp_{'dry' if r['tech'] == 'wind' else r['tech']}_kw_kw"), par("pump_kw_kw"),
+                  par("chiller_carnot_fraction"),
+                  *([calc("passive_mwh", "Heat rejected by the wind radiator with no fans",
+                          r["details"]["wind_radiator"]["passive_mwh"], "MWh/yr"),
+                     par("wind_area_m2_per_mw"), par("wind_coil_k"), par("wind_ua_ref_kw_km2"),
+                     par("wind_yaw_array_factor")] if r["tech"] == "wind" else [])],
         "result": r["cooling_mwh"], "unit": "MWh/yr",
         "note": f"Baseline ({s.baseline_rejection}): {b['cooling_mwh']:,.0f} MWh/yr. The chiller COP follows the "
                 "hourly lift from the weather (Carnot fraction model)."})

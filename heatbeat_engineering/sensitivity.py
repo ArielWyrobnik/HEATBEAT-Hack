@@ -44,7 +44,9 @@ def tornado(site, tech: str, uses: tuple, storage=None, metric: str = "npv_usd",
     P0 = {**defaults(), **(P or {})}
     base = _run(site, P0, tech, uses, storage, metric)
     rows = []
-    for k in (PARAMS if all_params else CORE):
+    keys = list(PARAMS) if all_params else CORE + ([k for k in PARAMS if k.startswith(("wind_", "capex_wind"))]
+                                                   if tech == "wind" else [])
+    for k in keys:
         p = PARAMS[k]
         if p.low == p.high:
             continue
