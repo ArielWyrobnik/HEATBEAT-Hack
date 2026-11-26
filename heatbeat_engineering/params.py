@@ -154,8 +154,12 @@ PARAMS: dict[str, Param] = {
     "orc_carnot_fraction": P(0.40, 0.30, 0.50, "-", "literature",
                              "Low temperature ORC reach 30 to 50 % of Carnot, Quoilin et al. 2013, RSER 22, 168-186"),
     "orc_cond_above_air_k": P(10.0, 7.0, 15.0, "K", "assumption", "Air cooled ORC condenser"),
-    "orc_min_source_c": P(45.0, 40.0, 55.0, "C", "assumption",
-                          "Below this loop temperature no ORC is offered (a few cold hours do not justify a turbine)"),
+    "orc_min_source_c": P(80.0, 70.0, 90.0, "C", "literature",
+                          "Below this loop temperature no ORC is offered. Vertiv ORC testbed (Tipton, Kremer, Ali, "
+                          "white paper 'Experimental lessons of an Organic Rankine Cycle'): with liquid cooled servers "
+                          "at 58 to 63 C the net power incl. condenser fan and pump was negative in every test; the "
+                          "ORC needs T_hot >= T_amb,max + 40 K (about 84 C for Ashburn). Was 45 C (team assumption) "
+                          "until the validation in docs/VALIDATION.md"),
     "orc_min_dt_k": P(20.0, 15.0, 25.0, "K", "assumption", "Below this source minus condenser difference no ORC is built"),
     # ---- economics --------------------------------------------------------------------------
     "discount_rate": P(0.07, 0.05, 0.10, "-", "assumption", "Real discount rate"),

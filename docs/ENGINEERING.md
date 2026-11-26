@@ -84,7 +84,7 @@ A plain heat exchanger is used when `T_source - 3 K >= T_sink`.
 | Adsorption chiller (in `chains.py`) | Liquid loop drives silica gel adsorption (COP 0.55, drive >= 50 C), cold replaces trim chiller load of the air loop, recooler must stay below 29 C. LiBr needs 75 C: the model shows that a heat pump driven LiBr gives less cold per kWh than an electric chiller. | loop temperatures, climate | drive < 53 C, no air side load |
 | Boiler feedwater (`industry.py`) | Preheats condensate to 50 C, replaces LP extraction steam: +0.15 MWh_e per MWh_th turbine output at the hourly market price. | `d_pp_m`, `q_fw_mw` (EIA-860) | > 15 km |
 | Desalination MED / MD (`industry.py`) | MED effects `n = (T_steam - T_sea - 5)/3 K`, GOR 0.85 n, heat `647 kWh/m3 / GOR`; MD GOR 2. Counterfactual SWRO 3.5 kWh_e/m3. | `d_coast_m`, water tariff | coast > 10 km; < 2 effects |
-| ORC (`industry.py`) | `eta = 0.4 (1 - T_cond/T_hot)`, `T_cond = T_db + 10 K`, only in hours with > 20 K difference. About 3 to 5 % at 55 C, the honest answer. | climate | source < 45 C; never 20 K above condenser |
+| ORC (`industry.py`) | `eta = 0.4 (1 - T_cond/T_hot)`, `T_cond = T_db + 10 K`, only in hours with > 20 K difference. About 3 to 5 % at 55 C, the honest answer. | climate | source < 80 C (Vertiv testbed: net loss at 58 to 63 C, see docs/VALIDATION.md); never 20 K above condenser |
 
 ## 5. Chains, balance, counterfactual: `chains.py`
 
