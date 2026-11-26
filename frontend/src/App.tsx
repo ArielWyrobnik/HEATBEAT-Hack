@@ -8,6 +8,7 @@ import PlanPanel, { type PlanPoint } from './components/PlanPanel';
 import SitePanel from './components/SitePanel';
 import { loadDataCenters } from './data';
 import type { DataCenter } from './types/datacenter';
+import { isWater } from './landCheck';
 
 export default function App() {
   const [dataCenters, setDataCenters] = useState<DataCenter[]>([]);
@@ -15,13 +16,21 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null);
   const [planning, setPlanning] = useState(false);
   const [planPoint, setPlanPoint] = useState<PlanPoint | null>(null);
+  const [landMsg, setLandMsg] = useState<string | null>(null);
 
   useEffect(() => {
     loadDataCenters().then((r) => { setDataCenters(r.dataCenters); setFromApi(r.fromApi); });
   }, []);
 
   const onSelect = useCallback((id: string) => { setSelected(id); setPlanning(false); setPlanPoint(null); }, []);
-  const onMapClick = useCallback((lat: number, lng: number) => { setPlanPoint({ lat, lng }); setSelected(null); }, []);
+  const onMapClick = useCallback((lat: number, lng: number) => {
+    // a data center has to stand on land: reject clicks on sea, lakes and wide rivers
+    isWater(lat, lng).then((wet) => {
+      if (wet) { setLandMsg('That point is on water. Click on land to place the data center.'); return; }
+      setLandMsg(null); setPlanPoint({ lat, lng }); setSelected(null);
+    });
+  }, []);
+  useEffect(() => { if (!landMsg) return; const t = setTimeout(() => setLandMsg(null), 4000); return () => clearTimeout(t); }, [landMsg]);
   const togglePlan = () => {
     if (planning) { setPlanning(false); setPlanPoint(null); } else { setPlanning(true); setSelected(null); }
   };
@@ -36,6 +45,7 @@ export default function App() {
         <MapSection dataCenters={dataCenters} fromApi={fromApi} selectedId={selected} onSelect={onSelect}
           planning={planning} onPlanToggle={togglePlan} planPoint={planPoint} onMapClick={onMapClick}>
           {site && !planning && <SitePanel site={site} onClose={() => setSelected(null)} />}
+          {planning && landMsg && <div className="land-toast" role="status">{landMsg}</div>}
           {planning && planPoint && <PlanPanel point={planPoint} onClose={() => { setPlanning(false); setPlanPoint(null); }} />}
         </MapSection>
         <EcosystemSection />
