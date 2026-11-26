@@ -30,7 +30,7 @@ export const ENGINE = (() => {
   const WHAT_IF_PRESET = "two_phase_dlc";
   const INPUT_SPEC = {
     is_greenfield: ["bin", 0, 1], cooling_type: ["enum", ["liquid", "air"]], t_dc_base_c: ["num", 25, 95],
-    q_dc_mw: ["num", 0.1, 500], slope_deg: ["num", 0, 45], flat_land_m2: ["num", 0, null], d_water_m: ["num", 0, null],
+    q_dc_mw: ["num", 0.1, 5000], slope_deg: ["num", 0, 45], flat_land_m2: ["num", 0, null], d_water_m: ["num", 0, null],
     wsi_index: ["num", 0, 5], has_existing_dh: ["bin", 0, 1], d_dh_m: ["num", 0, null], rho_heat_mwh_m: ["num", 0, null],
     d_coast_m: ["num", 0, null], dz_m: ["num", 0, null], d_bio_m: ["num", 0, null], d_co2_m: ["num", 0, null],
     d_pp_m: ["num", 0, null], q_fw_mw: ["num", 0, null], ind_zoning: ["bin", 0, 1], campus_area_m2: ["num", 0, null],

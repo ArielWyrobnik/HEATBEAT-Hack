@@ -334,9 +334,30 @@ export interface DsxRunArgs {
   planned?: ModelResult['planned_site'];
 }
 
+/**
+ * Backend (team database) inputs differ from the DSX conventions in two places:
+ * - heat price and fuel carbon are per kWh of HEAT from a 0.85 gas boiler (heatbeat_data.market), while
+ *   the DSX engine takes them per kWh of FUEL and divides by its 0.90 boiler: x 0.90 so nothing counts twice;
+ * - air sites on a chilled water plant report the chilled water return (13 C, cold side) as their heat
+ *   temperature; the server heat leaves the room as exhaust air at 32 C (exhaust_air_temp_c of the
+ *   air_chilled_legacy profile, team cooling_profiles.csv, medium confidence).
+ */
+export function fromBackend(used: Record<string, unknown>): { used: Record<string, unknown>; notes: string[] } {
+  const u = { ...used };
+  const notes: string[] = [];
+  for (const k of ['p_fuel_usd_kwh', 'ci_fuel_g_kwh']) if (typeof u[k] === 'number') u[k] = (u[k] as number) * 0.9;
+  if (u.cooling_type === 'air' && typeof u.t_dc_base_c === 'number' && (u.t_dc_base_c as number) < 25) {
+    notes.push(`Waste heat temperature ${u.t_dc_base_c} C is the chilled water return; evaluated at the 32 C exhaust air temperature (team cooling profile).`);
+    u.t_dc_base_c = 32;
+  }
+  return { used: u, notes };
+}
+
 export async function runDsx(a: DsxRunArgs): Promise<ModelResult> {
   const mode = a.mode && DSX_MODEL.modes.includes(a.mode) ? a.mode : DSX_MODEL.default_mode;
-  const { site, notes } = toDsxSite(a.inputsUsed);
+  const conv = a.siteId.startsWith('ref-') ? { used: a.inputsUsed, notes: [] as string[] } : fromBackend(a.inputsUsed);
+  const { site, notes: n0 } = toDsxSite(conv.used);
+  const notes = [...conv.notes, ...n0];
   const evaporative = a.inputsUsed.baseline_cooling_evaporative !== false;
   (site as Record<string, unknown>).baseline_evaporative = evaporative ? 1 : 0;
   const climate = await dailyClimate(a.lat, a.lon, a.weather);
