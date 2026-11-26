@@ -169,6 +169,8 @@ class HeatChainModel:
             prod.append(f"{r['water_produced_m3']:,.0f} m3 water")
         if r["elec_generated_mwh"] > 0:
             prod.append(f"{r['elec_generated_mwh']:,.0f} MWh electricity")
+        if r.get("elec_exported_mwh", 0) > 0:
+            prod.append(f"{r['elec_exported_mwh']:,.0f} MWh extra power plant output")
         flows = [EnergyFlow(**f) for f in r["flows"]]
         extra = {}
         fields = getattr(OptionResult, "model_fields", {})
