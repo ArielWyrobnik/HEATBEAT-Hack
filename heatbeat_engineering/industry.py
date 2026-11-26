@@ -98,6 +98,8 @@ def orc_efficiency(t_source_c: float, t_db, P: dict):
 
 def orc_plan(site, P: dict, t_source_c: float) -> SinkPlan:
     label = "ORC power generation"
+    if t_source_c < P["orc_min_source_c"]:
+        return ko_plan("orc", label, f"source {t_source_c:.0f} C is below {P['orc_min_source_c']:.0f} C, too cold for an ORC")
     eta = orc_efficiency(t_source_c, site.t_db, P)
     if eta.max() <= 0:
         return ko_plan("orc", label, f"source {t_source_c:.0f} C is less than {P['orc_min_dt_k']:.0f} K above the condenser")

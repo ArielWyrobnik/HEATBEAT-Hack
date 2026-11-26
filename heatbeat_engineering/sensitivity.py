@@ -25,7 +25,7 @@ SITE_SWINGS = {
 CORE = ["capex_factor", "discount_rate", "lifetime_yr", "hp_carnot_fraction", "dry_approach_k", "tower_approach_k",
         "adiabatic_eff", "sfp_dry_kw_kw", "tower_cycles", "chiller_carnot_fraction", "water_scarcity_usd_m3_per_wsi",
         "dh_supply_c", "dh_heat_price_share", "dh_u_a_w_mk", "capex_hp_usd_kw", "capex_dist_network_usd_m",
-        "bio_feed_t_day", "bio_wall_u_w_m2k", "ads_cop", "orc_carnot_fraction", "fw_kwh_e_per_kwh_th",
+        "bio_feed_t_day", "bio_wall_u_w_m2k", "bio_upgrade_capex_usd_nm3h", "ads_cop", "orc_carnot_fraction", "fw_kwh_e_per_kwh_th",
         "med_dt_per_effect_k"]
 
 

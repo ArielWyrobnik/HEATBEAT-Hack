@@ -227,7 +227,7 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
         if not direct:
             hp_work += take_out / c
             hp_cops.append((c, float(take_out.sum())))
-        if give.sum() <= 0:
+        if give.sum() < max(P["storage_min_shift_share"] * float(pl.demand_mw.sum()), 1.0):
             res["ko"] = f"{storage}: no unmet demand to shift (source covers the community all year)"
             return res
         store_loss = take_out - give
@@ -318,7 +318,7 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
     e_out = q_rej + useful_heat + orc_in + sum(float(v.sum()) for v in losses.values()) + float(store_loss.sum()) + ads_out
     # adsorption: the cold removed from the air loop leaves through the adsorber recooler (in ads_out)
     res.update({
-        "label": chain_label(site, tech, uses, storage, plans),
+        "label": chain_label(site, tech, uses, storage, plans, P),
         "components": components(tech, uses, storage, plans, site, P),
         "it_mwh": e_it, "cooling_mwh": cooling, "fan_mwh": fan, "pump_mwh": pump, "chiller_mwh": chill,
         "other_mwh": other, "plant_mwh": plant, "hp_work_mwh": float(hp_work.sum()),
@@ -347,6 +347,9 @@ def add_deltas(r: dict, b: dict, P: dict) -> None:
     dcap = r["capex_usd"] - b["capex_usd"]
     a = annuity(P)
     r["net_value_usd_yr"] = benefit
+    # split: the water scarcity charge is a shadow price, not cash
+    r["water_value_usd_yr"] = b["cost"]["water_scarcity_usd"] - r["cost"]["water_scarcity_usd"]
+    r["cash_value_usd_yr"] = benefit - r["water_value_usd_yr"]
     r["delta_capex_usd"] = dcap
     r["npv_usd"] = benefit / a - dcap
     r["payback_yr"] = (dcap / benefit) if benefit > 0 and dcap > 0 else (0.0 if benefit > 0 else None)
@@ -355,12 +358,13 @@ def add_deltas(r: dict, b: dict, P: dict) -> None:
     r["electricity_saved_mwh_yr"] = (b["cooling_mwh"] + b["plant_mwh"]) - (r["cooling_mwh"] + r["plant_mwh"]) + r["elec_generated_mwh"]
 
 
-def chain_label(site, tech, uses, storage, plans) -> str:
+def chain_label(site, tech, uses, storage, plans, P: dict | None = None) -> str:
+    P = P or defaults()
     parts = [TECH_LABEL[tech]]
+    t_hot = max(l.t_return_c for l in site.loops)
     for u in uses:
         pl = plans[u]
-        t_hot = max(l.t_return_c for l in site.loops)
-        if pl.kind == "heat" and not pl.direct_only and hp.needs_hp(t_hot, pl.t_req_c, defaults()):
+        if pl.kind == "heat" and not pl.direct_only and hp.needs_hp(t_hot, pl.t_req_c, P) and "heat pump" not in parts:
             parts.append("heat pump")
         parts.append(pl.label)
     if storage:
@@ -406,6 +410,7 @@ def evaluate_site(site, P: dict | None = None, max_uses: int = 2) -> tuple[pd.Da
         "chain_id": cid, "chain": r["label"], "tech": r["tech"], "uses": "+".join(r["uses"]) or "none",
         "storage": r["storage"] or "", "npv_usd": r["npv_usd"], "net_value_usd_yr": r["net_value_usd_yr"],
         "delta_capex_usd": r["delta_capex_usd"], "payback_yr": r["payback_yr"],
+        "cash_value_usd_yr": r["cash_value_usd_yr"], "water_value_usd_yr": r["water_value_usd_yr"],
         "heat_delivered_mwh": r["heat_delivered_mwh"], "cold_delivered_mwh": r["cold_delivered_mwh"],
         "co2_avoided_t_yr": r["co2_avoided_t_yr"], "water_saved_m3_yr": r["water_saved_m3_yr"],
         "water_produced_m3": r["water_produced_m3"], "pue": r["pue"], "wue_l_kwh": r["wue_l_kwh"], "ere": r["ere"],
