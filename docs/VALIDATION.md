@@ -79,7 +79,7 @@ burns flare gas to power the compute, no model has gas to power) and 11b (no rea
 found). Case 4 is a "correct no": Syracuse drives its absorption chillers with gas microturbine exhaust,
 not with data center heat, and both models reject absorption on data center heat at 13 C.
 
-### (a) Feasibility: 12 of 13 built solutions pass the knock out rules, 3 come out on top
+### (a) Feasibility: 11 of 13 built solutions pass the knock out rules (the ORC KO matches the measured net loss), 3 come out on top
 
 | Ref | Built | Model verdict | Assessment |
 |---|---|---|---|
@@ -87,7 +87,7 @@ not with data center heat, and both models reject absorption on data center heat
 | 2 | District heating, Mantsala | Engineering: feasible, but reuse NPV -6.9 MUSD at the default heat price 50 USD/MWh; break-even 141 USD/MWh. Excel: KO as operating site (heat density 1.5 < 2.5) | partial: physics yes, economics no |
 | 3a | Biogas digester, Arklow | Engineering: rank 1, reuse NPV +2.1 MUSD. Excel: rank 2 | hit |
 | 4 | Absorption on gas CHP, Syracuse | KO in both (no hot enough data center heat) | correct no |
-| 5 | ORC testbed, 58 C | Engineering: feasible, about 0 NPV, 4% mean efficiency. Vertiv measured net NEGATIVE power at 58 to 63 C once fans count. Excel: KO (needs 80 C) | miss in the engineering model, Excel right |
+| 5 | ORC testbed, 58 C | Engineering: KO since `orc_min_source_c` = 80 C (before: feasible, about 0 NPV, 4% mean efficiency). Vertiv measured net NEGATIVE power at 58 to 63 C once fans count. Excel: KO (needs 80 C) | correct no after the fix (was a miss at 45 C) |
 | 6 | DAC pilot, UK | Excel: KO, no CO2 storage distance for UK sites (default 100 km) | miss (data gap) |
 | 7a, 7b | ATES, Amsterdam and Eindhoven | Engineering: ATES chain feasible but last (only modelled as seasonal storage for a district heating network, NPV -32 to -143 MUSD). Excel: KO (needs >= 1000 h above 20 C) | miss (model scope): ATES for cooling is not in either model |
 | 8 | Hot water to the Falun CHP | Engineering feedwater: feasible, rank 2 of 4, NPV negative. Excel: rank 6 (greenfield) | partial |
@@ -122,9 +122,9 @@ not with data center heat, and both models reject absorption on data center heat
    in the database.
 3. Missing options: ATES for cooling (not only seasonal heat storage), gas to power / stranded energy
    (Crusoe), CHP trigeneration (Syracuse).
-4. ORC rule too lax: the engineering model offers an ORC from 45 C. Vertiv found net losses even at 58 to
-   63 C and states the ORC cannot work below ambient max + 40 K (about 84 C in Ashburn). Suggested fix:
-   raise `orc_min_source_c` to about 80 C or count ORC pump and fan losses explicitly (not changed in
-   this PR).
+4. ORC rule was too lax: the engineering model offered an ORC from 45 C. Vertiv found net losses even at
+   58 to 63 C and states the ORC cannot work below ambient max + 40 K (about 84 C in Ashburn). Fixed in a
+   follow-up PR: `orc_min_source_c` is now 80 C, so case 5 is a KO in both models (matching Vertiv). The
+   model's ORC efficiency itself (5.5% at 58 C vs 3 to 3.3% measured) stays as it is.
 5. Data gaps outside the US: UK CO2 storage distance, European heat prices, water stress for the new
    sites (hand estimates).
