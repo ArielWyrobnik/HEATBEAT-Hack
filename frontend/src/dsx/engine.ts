@@ -1,5 +1,10 @@
 // @ts-nocheck
 /**
+ * v3.4 investment costs (sources in docs/DSX.md): heat pump 700 USD/kW_th (Danish Energy Agency), absorption
+ * chiller 185 USD/kW heat in (US DOE, 930 USD/RT), ORC 3,000 USD/kW_e (Quoilin 2013), ATES 330 USD/kW
+ * (Herrmann et al. 2025), MED 800 USD/kW_th (Al-Karaghouli 2013). District heating pipe stays 1,500 USD/m
+ * (European estimate, the reference pins are mostly in Europe); the other plant costs are DSX planning values.
+ *
  * DSX Waste-Heat Recovery Evaluator v3.2.0, the same engine as evaluator.py (verified to give identical
  * results). 8,760-h diurnal physics, 13 knock-out gates, viability 0-5 and a standalone eco grade A-F.
  * Typed facade: ./types.ts. Used by ./adapter.ts to plug the evaluator into Heat Beat as a model.
@@ -9,7 +14,7 @@ export const ENGINE = (() => {
   const HOURS = 8760;
   const C = {
     carnot_eta: 0.50, approach_k: 5.0, cop_cap: 8.0, air_offset_c: 12.0,
-    orc_eta_frac: 0.45, orc_cond_offset_c: 10.0, hp_capex_usd_kw: 600.0, opex_frac: 0.02,
+    orc_eta_frac: 0.45, orc_cond_offset_c: 10.0, hp_capex_usd_kw: 700.0, orc_capex_usd_kwe: 3000.0, opex_frac: 0.02,
     payback_best_yr: 3.0, payback_worst_yr: 15.0, boiler_eff: 0.90, availability: 0.998,
     weights: { thermo: 0.30, climate: 0.30, econ: 0.25, util: 0.15 }, eco_weights: { ghg: 0.40, water: 0.30, local: 0.30 }, absorption_cop: 0.70,
     chiller_cop: 5.0, med_kwh_th_m3: 60.0, ro_kwh_e_m3: 3.5, dac_mwh_th_t: 1.8, btes_round_trip: 0.75,
@@ -133,12 +138,12 @@ export const ENGINE = (() => {
     O(1, "fish_farm_ras", "Fish Farm (RAS)", "both", 28, ["heating", 28, 20, 0.2], "heat", 900, 600, "d_water_m", 3000, true, 0.6, 0.8, areaCap("flat_land_m2", 250), G.fish),
     O(2, "district_heating", "District Heating", "adaptive", 65, ["heating", 15, 20, 0.15], "heat", 250, 1500, "d_dh_m", 3000, false, 0.1, 0.2, s => Math.min(1, s.rho_heat_mwh_m / 3.0), G.dh),
     O(3, "biogas", "Biogas Generator", "both", 38, ["heating", 25, 25, 0.3], "heat", 700, 300, "d_bio_m", 25000, false, 0.3, 0.5, () => 0.3, G.biogas),
-    O(4, "absorption_cooling", "Absorption Cooling", "both", 85, ["cooling", 24, 10], "cooling", 450, 0, null, 1, false, 0.8, 0.4, () => 1, G.absorption),
-    O(5, "orc", "Organic Rankine Cycle", "both", 100, ["constant", 0.9], "power", 2500, 0, null, 1, false, 0.5, 0.3, () => 1, G.orc),
+    O(4, "absorption_cooling", "Absorption Cooling", "both", 85, ["cooling", 24, 10], "cooling", 185, 0, null, 1, false, 0.8, 0.4, () => 1, G.absorption),
+    O(5, "orc", "Organic Rankine Cycle", "both", 100, ["constant", 0.9], "power", 0, 0, null, 1, false, 0.5, 0.3, () => 1, G.orc),
     O(6, "dac", "Carbon Capture / DAC", "both", 90, ["constant", 0.85], "co2", 1500, 400, "d_co2_m", 50000, false, 0.2, 0.2, () => 1, G.dac),
-    O(7, "btes_ates", "BTES / ATES Storage", "greenfield", 55, ["cooling", 10, 10], "stored_heat", 600, 0, null, 1, false, 0.3, 0.6, () => 1, G.btes),
+    O(7, "btes_ates", "BTES / ATES Storage", "greenfield", 55, ["cooling", 10, 10], "stored_heat", 330, 0, null, 1, false, 0.3, 0.6, () => 1, G.btes),
     O(8, "feedwater_preheat", "Boiler Feedwater Preheat", "greenfield", 55, ["constant", 0.85], "steam", 200, 800, "d_pp_m", 1500, false, 0.2, 0.3, s => Math.min(1, s.q_fw_mw / s.q_dc_mw), G.feedwater),
-    O(9, "desalination", "Desalination (MED/MD)", "greenfield", 70, ["constant", 0.9], "water", 1200, 900, "d_coast_m", 5000, false, -1.0, 1.0, () => 1, G.desal),
+    O(9, "desalination", "Desalination (MED/MD)", "greenfield", 70, ["constant", 0.9], "water", 800, 900, "d_coast_m", 5000, false, -1.0, 1.0, () => 1, G.desal),
     O(10, "biomass_processing", "Biomass Processing", "greenfield", 65, ["constant", 0.7], "heat", 500, 0, "d_bio_m", 25000, true, 0.3, 0.5, () => 0.6, G.biomass),
     O(11, "industrial_drying", "Industrial Drying", "greenfield", 75, ["constant", 0.8], "heat", 450, 0, null, 1, false, 0.4, 0.4, () => 1, G.drying),
     O(12, "snow_melt", "Radiant / Snow-Melt", "greenfield", 35, ["heating", 2, 10, 0.0], "heat", 350, 0, null, 1, false, 0.1, 0.2, areaCap("campus_area_m2", 400), G.snowmelt),
@@ -209,7 +214,9 @@ export const ENGINE = (() => {
     const peakSrcKw = q * cap * 1000;
     const peakHpKw = W > 0 ? Math.max(...qdel) * 1000 : 0;
     const dist = o.dist_key ? s[o.dist_key] : 0;
-    const capex = peakSrcKw * o.capex_usd_kw + dist * o.pipe_usd_m + (W > 0 ? peakHpKw * C.hp_capex_usd_kw : 0);
+    // v3.4 sourced costs: ORC priced per kW of electric output (3,000 USD/kW_e, Quoilin et al. 2013)
+    const plantCapex = o.key === "orc" ? Math.max(...qdel) * 1000 * C.orc_capex_usd_kwe : peakSrcKw * o.capex_usd_kw;
+    const capex = plantCapex + dist * o.pipe_usd_m + (W > 0 ? peakHpKw * C.hp_capex_usd_kw : 0);
     const netAnnual = value + carbonRev - hpCost - C.opex_frac * capex;
     const payback = netAnnual > 0 ? capex / netAnnual : Infinity;
     const pEcon = netAnnual <= 0 ? 0 : 5 * lin(payback, C.payback_worst_yr, C.payback_best_yr);
@@ -247,7 +254,7 @@ export const ENGINE = (() => {
         direct_hx_hours: directHours, mean_cop: r2(meanCop), orc_mean_eta: r2(meanEta), net_abated_tco2: r(netAbated, 1),
         revenue_usd: Math.round(value + carbonRev), hp_elec_cost_usd: Math.round(hpCost), capex_usd: Math.round(capex),
         net_annual_usd: Math.round(netAnnual), payback_yr: r2(payback),
-        capex_plant_usd: Math.round(peakSrcKw * o.capex_usd_kw), capex_pipe_usd: Math.round(dist * o.pipe_usd_m),
+        capex_plant_usd: Math.round(plantCapex), capex_pipe_usd: Math.round(dist * o.pipe_usd_m),
         capex_hp_usd: Math.round(W > 0 ? peakHpKw * C.hp_capex_usd_kw : 0), value_usd: Math.round(value), carbon_rev_usd: Math.round(carbonRev),
         utilisation: r(util, 4), cap_fraction: r(cap, 4),
       },
