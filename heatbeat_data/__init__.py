@@ -150,3 +150,10 @@ def get_site(site_id: str) -> Site:
     g = _q("SELECT * FROM grid_regions WHERE grid_region_id = ?", (m["grid_region_id"],)).iloc[0].to_dict()
     return Site(meta=m, grid=g, weather=_hourly("weather_hourly", "site_id", site_id),
                 prices=_hourly("price_hourly", "grid_region_id", m["grid_region_id"]))
+
+
+# Heat source data per site (IT load, cooling, chips, coolant temperatures). Reads CSVs, no DB needed.
+from .heat_profiles import cooling_profiles, heat_profile, heat_sources, site_heat_profiles  # noqa: E402
+
+__all__ += ["cooling_profiles", "heat_profile", "heat_sources", "site_heat_profiles"]
+Site.heat_profile = lambda self: heat_profile(self.site_id)

@@ -1,0 +1,60 @@
+site_id,scope,it_load_mw_low,it_load_mw,it_load_mw_high,facility_power_mw,pue_assumed,chip_family,cooling_profile_id,liquid_heat_share,data_year,evidence,confidence,is_assumed,source_ids,notes
+us-va-ashburn-equinix,campus,100,200,300,,1.4,mixed,air_chilled_elevated,,2026,estimated,low,1,jll_nova_wtop_2025;team_assumption,"Multi-building colocation campus; no single public MW figure. Northern Virginia market is about 4,900 MW in total (context only)."
+us-va-sterling-digital,campus,100,200,400,,1.4,mixed,air_chilled_elevated,,2026,estimated,low,1,jll_nova_wtop_2025;team_assumption,Multi-building colocation campus; no public total.
+us-va-manassas,cluster_representative,30,60,100,,1.35,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,One representative large facility in the cluster.
+us-va-boydton-microsoft,campus,200,400,600,,1.2,mixed,air_economizer,,2026,estimated,low,1,team_assumption,"Hyperscale cloud campus, mostly CPU and air-cooled with adiabatic outside air (assumed); newer AI halls may be liquid-cooled."
+us-tx-abilene-stargate,campus,600,824,1000,1200,1.25,nvidia_blackwell,dlc_warm,,2026,derived,medium,1,epoch_abilene;crusoe_abilene;compass_rubin_2026,"IT 824 MW is an Epoch AI estimate; 1.2 GW is the announced facility target. Chips B200/B300 per Epoch. Closed-loop liquid with air-cooled chillers."
+us-tx-dallas-infomart,building,20,40,60,,1.5,mixed,air_chilled_legacy,,2026,estimated,low,1,team_assumption,Older carrier hotel converted building.
+us-tx-midlothian-google,campus,100,250,400,,1.1,google_tpu,tpu_dlc,0.4,2026,estimated,low,1,google_ocp_2025;team_assumption,Share of TPU (liquid) versus CPU (air) halls unknown; 40% liquid assumed. PUE 1.1 is a typical Google figure (unverified here).
+us-tx-san-antonio-microsoft,campus,100,200,400,,1.2,mixed,air_economizer,,2026,estimated,low,1,team_assumption,Hyperscale cloud campus.
+us-az-chandler,cluster_representative,30,60,120,,1.35,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,"Desert climate: chillers or evaporative assist run most of the year."
+us-az-mesa,cluster_representative,30,60,120,,1.35,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,"Desert climate: chillers or evaporative assist run most of the year."
+us-il-chicago-cermak,building,60,100,130,,1.5,mixed,air_chilled_legacy,,2026,estimated,low,1,team_assumption,Large multi-tenant carrier hotel; MW not verified.
+us-il-elk-grove,cluster_representative,20,40,80,,1.4,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,
+us-ga-atlanta-qts,campus,100,200,300,,1.35,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,Large wholesale campus; mix of tenants including AI.
+us-ga-douglas-google,campus,100,200,350,,1.1,google_tpu,tpu_dlc,0.4,2026,estimated,low,1,google_ocp_2025;team_assumption,TPU share assumed 40%.
+us-ca-santa-clara,cluster_representative,10,20,40,,1.45,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,Power-constrained market; facilities are small.
+us-ca-la-one-wilshire,building,5,10,15,,1.6,cpu_legacy,air_chilled_legacy,,2026,estimated,low,1,team_assumption,Downtown carrier hotel.
+us-or-hillsboro,cluster_representative,30,60,120,,1.3,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,
+us-or-the-dalles-google,campus,100,250,400,,1.1,google_tpu,tpu_dlc,0.4,2026,estimated,low,1,google_ocp_2025;team_assumption,TPU share assumed 40%.
+us-or-prineville-meta,campus,150,300,450,,1.1,mixed,air_economizer,,2026,estimated,low,1,team_assumption,"Meta campuses use outside air with evaporative cooling (assumed for this campus); newer AI halls likely liquid."
+us-wa-quincy,cluster_representative,30,80,150,,1.2,mixed,air_economizer,,2026,estimated,low,1,team_assumption,Several hyperscale campuses; one representative facility.
+us-ia-council-bluffs-google,campus,150,300,500,,1.1,google_tpu,tpu_dlc,0.4,2026,estimated,low,1,google_ocp_2025;team_assumption,TPU share assumed 40%.
+us-ia-west-des-moines-microsoft,campus,150,300,500,,1.2,mixed,air_economizer,,2026,estimated,low,1,team_assumption,
+us-ia-altoona-meta,campus,100,200,350,,1.1,mixed,air_economizer,,2026,estimated,low,1,team_assumption,
+us-ne-sarpy-meta,campus,100,200,350,,1.1,mixed,air_economizer,,2026,estimated,low,1,team_assumption,
+us-ok-pryor-google,campus,150,300,500,,1.1,google_tpu,tpu_dlc,0.4,2026,estimated,low,1,google_ocp_2025;team_assumption,TPU share assumed 40%.
+us-oh-new-albany,cluster_representative,50,100,200,,1.25,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,"Several hyperscale campuses (Meta, Google, AWS); one representative facility."
+us-wi-mount-pleasant-microsoft,campus,300,450,600,,1.2,nvidia_blackwell,dlc_warm,0.9,2026,derived,medium,1,msft_fairwater_2025;klockwood_fairwater;lenovo_lp2357,"GB200 NVL72 and closed-loop liquid for over 90% of capacity are confirmed by Microsoft. 450 MW is an outside inference from photos, not a Microsoft figure."
+us-la-richland-meta,campus,1000,1500,2000,2000,1.2,nvidia_vera_rubin,dlc_hot,,2028,estimated,low,1,nvidia_45c_2026;team_assumption,"Under construction; 2 GW is the press-reported initial facility size. Chip generation is an assumption (Rubin era by the time it fills)."
+us-tn-memphis-xai,campus,120,150,250,300,1.3,nvidia_hopper,dlc_cold,,2025,derived,medium,1,toms_colossus_2025;klockwood_colossus;semianalysis_cooling,"Colossus 1: H100/H200 in Supermicro nodes, cold plates plus rear door heat exchangers (confirmed). 150 MW grid supply reported, 300 MW total planned; IT share derived. Later phases (GB200) not modelled here."
+us-nv-reno-switch,campus,150,300,500,,1.25,mixed,air_economizer,,2026,estimated,low,1,team_assumption,High desert; hybrid air and evaporative cooling assumed.
+us-nv-las-vegas-switch,campus,100,200,350,,1.3,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,Hot desert.
+us-ut-eagle-mountain-meta,campus,100,200,350,,1.1,mixed,air_economizer,,2026,estimated,low,1,team_assumption,
+us-nc-maiden-apple,campus,50,100,200,,1.2,cpu_legacy,air_chilled_elevated,,2026,estimated,low,1,team_assumption,
+us-nc-lenoir-google,campus,50,150,250,,1.1,google_tpu,tpu_dlc,0.3,2026,estimated,low,1,google_ocp_2025;team_assumption,Older campus; TPU share assumed 30%.
+us-sc-berkeley-google,campus,100,200,350,,1.1,google_tpu,tpu_dlc,0.4,2026,estimated,low,1,google_ocp_2025;team_assumption,TPU share assumed 40%.
+us-ny-nyc-60-hudson,building,10,20,30,,1.6,cpu_legacy,air_chilled_legacy,,2026,estimated,low,1,team_assumption,Carrier hotel in an old office building.
+us-nj-secaucus-equinix,campus,30,60,90,,1.45,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,
+us-ma-boston-one-summer,building,10,15,25,,1.6,cpu_legacy,air_chilled_legacy,,2026,estimated,low,1,team_assumption,
+us-wy-cheyenne-microsoft,campus,50,150,250,,1.15,mixed,air_economizer,,2026,estimated,low,1,team_assumption,
+us-fl-miami-equinix,building,10,20,30,,1.6,cpu_legacy,air_chilled_legacy,,2026,estimated,low,1,team_assumption,Hot humid climate.
+ie-dublin,cluster_representative,20,50,100,,1.3,mixed,air_economizer,,2026,estimated,low,1,team_assumption,Mild climate allows outside air most of the year.
+de-frankfurt,cluster_representative,20,40,80,,1.35,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,German Energy Efficiency Act pushes heat reuse; good district heating case.
+nl-amsterdam,cluster_representative,10,20,40,,1.35,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,
+gb-slough,cluster_representative,20,50,100,,1.4,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,
+fr-paris,cluster_representative,20,40,80,,1.4,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,
+se-lulea-meta,campus,60,120,200,,1.1,mixed,air_economizer,,2026,estimated,low,1,team_assumption,Subarctic; outside air nearly all year.
+dk-odense-meta,campus,50,100,150,,1.1,mixed,air_economizer,,2026,derived,low,1,meta_odense_2018;ramboll_odense,"Existing heat reuse: exhaust air heat recovered via water coils, heat pumps lift to 70 to 75 C, about 45 MW heat, 215,000 MWh/yr (Ramboll). IT load inferred from that, not disclosed."
+fi-hamina-google,campus,50,100,200,,1.1,google_tpu,tpu_dlc,0.3,2026,estimated,low,1,google_ocp_2025;team_assumption,Seawater cooled; TPU share assumed 30%.
+sg-singapore,cluster_representative,10,30,60,,1.45,mixed,air_chilled_legacy,,2026,estimated,low,1,team_assumption,Tropical; chillers run all year.
+jp-inzai,cluster_representative,20,40,80,,1.4,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,
+au-sydney,cluster_representative,20,40,80,,1.4,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,
+br-sao-paulo,cluster_representative,10,30,60,,1.5,mixed,air_chilled_legacy,,2026,estimated,low,1,team_assumption,
+za-johannesburg,cluster_representative,10,20,40,,1.5,mixed,air_chilled_legacy,,2026,estimated,low,1,team_assumption,
+in-navi-mumbai,cluster_representative,20,50,100,,1.5,mixed,air_chilled_legacy,,2026,estimated,low,1,team_assumption,Hot humid.
+ae-dubai,cluster_representative,10,30,60,,1.5,mixed,air_chilled_legacy,,2026,estimated,low,1,team_assumption,Hot arid coastal; comparison for Israel.
+il-petah-tikva,cluster_representative,5,15,30,,1.5,mixed,air_chilled_legacy,,2026,estimated,low,1,team_assumption,Colocation; Israeli sites are small by US standards.
+il-tel-aviv,cluster_representative,10,30,60,,1.4,mixed,air_chilled_elevated,,2026,estimated,low,1,team_assumption,Hyperscaler cloud region; exact sites undisclosed.
+il-haifa,cluster_representative,5,10,20,,1.5,mixed,air_chilled_legacy,,2026,estimated,low,1,team_assumption,
+il-beer-sheva-hypothetical,hypothetical,20,50,100,,1.1,nvidia_vera_rubin,dlc_hot,,2027,estimated,low,1,nvidia_45c_2026;team_assumption,"Hypothetical new-build AI site to show the best case: 45 C warm-water cooling, chiller-free most of the year."
