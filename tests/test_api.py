@@ -1,0 +1,151 @@
+"""API tests (offline: HEATBEAT_LIVE=0, stored weather only)."""
+import os
+
+os.environ.setdefault("HEATBEAT_LIVE", "0")
+
+import pytest  # noqa: E402
+
+pytest.importorskip("fastapi")
+pytest.importorskip("httpx")
+from fastapi.testclient import TestClient  # noqa: E402
+
+from heatbeat_api.app import MODELS, app  # noqa: E402
+from heatbeat_api.models import ExcelRankingModel, SiteModel, flag_for  # noqa: E402
+from heatbeat_api.schemas import ModelResult  # noqa: E402
+
+c = TestClient(app)
+SITE = "us-va-ashburn-equinix"
+
+
+def test_health_and_models():
+    h = c.get("/api/health").json()
+    assert h["status"] == "ok" and h["default_model"] in h["models"]
+    m = c.get("/api/models").json()
+    assert {"excel_ranking"} <= {x["name"] for x in m}
+    assert all(isinstance(x, SiteModel) for x in MODELS.values())
+
+
+def test_sites_for_map():
+    s = c.get("/api/sites").json()
+    assert len(s) >= 40
+    for p in s:
+        assert -90 <= p["lat"] <= 90 and -180 <= p["lon"] <= 180 and p["name"]
+    us = c.get("/api/sites", params={"country": "us"}).json()
+    assert us and all(p["country"] == "US" for p in us)
+    assert c.get(f"/api/sites/{SITE}").json()["site_id"] == SITE
+    assert c.get("/api/sites/nope").status_code == 404
+
+
+def test_inputs_have_flags_and_sources():
+    j = c.get(f"/api/sites/{SITE}/inputs").json()
+    keys = {i["key"]: i for i in j["inputs"]}
+    assert {"q_dc_mw", "p_elec_usd_kwh", "wsi_index", "ci_grid_g_kwh"} <= set(keys)
+    assert all(i["flag"] in ("real", "estimated", "synthetic", "user") for i in j["inputs"])
+    assert keys["p_elec_usd_kwh"]["flag"] == "real" and keys["p_elec_usd_kwh"]["unit"] == "USD/kWh"
+    assert keys["q_dc_mw"]["flag"] == "estimated"  # team estimate, must never show as real
+    assert sum(j["flag_counts"].values()) == len(j["inputs"])
+    g = c.get(f"/api/sites/{SITE}/inputs", params={"is_greenfield": 1}).json()
+    gf = next(i for i in g["inputs"] if i["key"] == "is_greenfield")
+    assert gf["value"] == 1 and gf["flag"] == "user"
+
+
+@pytest.mark.parametrize("mode", ["corrected", "excel"])
+def test_ranking_schema(mode):
+    r = c.get(f"/api/sites/{SITE}/ranking", params={"mode": mode})
+    assert r.status_code == 200
+    res = ModelResult.model_validate(r.json())
+    assert res.mode == mode and len(res.options) == 13
+    ranks = [o.rank for o in res.options if o.feasible]
+    assert ranks == list(range(1, len(ranks) + 1)) or mode == "excel"
+    # feasible options first, knocked out last
+    feas = [o.feasible for o in res.options]
+    assert feas == sorted(feas, reverse=True)
+    assert all(o.ko_reasons for o in res.options if not o.feasible)
+    assert res.baseline.it_energy_mwh_yr > 0 and res.baseline.pue >= 1
+    if res.tornado:
+        assert res.tornado.option_id == next(o.option_id for o in res.options if o.feasible)
+        swings = [abs(b.metric_high - b.metric_low) for b in res.tornado.bars]
+        assert swings == sorted(swings, reverse=True)
+
+
+def test_corrected_kpis_and_energy_balance():
+    res = ModelResult.model_validate(c.get(f"/api/sites/{SITE}/ranking").json())
+    best = res.options[0]
+    k = best.kpis
+    assert k.co2_avoided_t_yr is not None and k.net_value_usd_yr is not None and k.pue_with <= k.pue_baseline
+    # energy balance closes: delivered heat = recovered heat + heat pump electricity
+    assert k.heat_delivered_mwh_yr == pytest.approx(k.heat_recovered_mwh_yr + (k.electricity_used_mwh_yr or 0))
+    assert any("placeholder" in w for w in res.warnings)
+
+
+def test_bad_requests():
+    assert c.get(f"/api/sites/{SITE}/ranking", params={"mode": "nope"}).status_code == 422
+    assert c.get(f"/api/sites/{SITE}/ranking", params={"model": "nope"}).status_code == 404
+    assert c.get(f"/api/sites/{SITE}/ranking", params={"is_greenfield": 3}).status_code == 422
+    assert c.post("/api/evaluate", json={}).status_code == 422
+    assert c.post("/api/plan", json={"lat": 40, "lon": -100}).status_code == 422  # it_mw missing
+    assert c.post("/api/plan", json={"lat": 40, "lon": -100, "it_mw": 50, "cooling_profile": "x"}).status_code == 422
+    assert c.post("/api/plan", json={"lat": 400, "lon": -100, "it_mw": 50}).status_code == 422
+
+
+def test_evaluate_overrides_change_result():
+    base = c.get(f"/api/sites/{SITE}/ranking").json()
+    r = c.post("/api/evaluate", json={"site_id": SITE, "overrides": {"d_bio_m": 2000}, "tornado": False})
+    assert r.status_code == 200
+    j = r.json()
+    assert j["tornado"] is None and j["inputs_used"]["d_bio_m"] == 2000
+    biogas = lambda res: next(o for o in res["options"] if o["option_id"] == "biogas")  # noqa: E731
+    assert biogas(j)["feasible"]
+    assert base["inputs_used"]["d_bio_m"] != 2000
+
+
+def test_cooling_profiles():
+    cp = c.get("/api/cooling-profiles").json()
+    ids = {p["cooling_profile_id"]: p for p in cp}
+    assert {"air_chilled_legacy", "dlc_warm", "dlc_hot"} <= set(ids)
+    assert ids["dlc_hot"]["cooling_type"] == "liquid" and ids["dlc_hot"]["heat_temp_c"] > ids["dlc_warm"]["heat_temp_c"]
+
+
+def test_plan_future_data_center():
+    """Any point, size in MW, cooling: ranking with cost and savings (offline: nearest site weather)."""
+    body = {"lat": 41.6, "lon": -93.6, "it_mw": 1000, "cooling_profile": "dlc_hot"}
+    r = c.post("/api/plan", json=body)
+    assert r.status_code == 200, r.text
+    res = ModelResult.model_validate(r.json())
+    assert res.planned_site.it_mw == 1000 and res.baseline.it_load_mw == pytest.approx(1000)
+    assert res.inputs_used["is_greenfield"] == 1 and res.inputs_used["cooling_type"] == "liquid"
+    assert any("offline" in w for w in res.warnings) and any("nearest database site" in w for w in res.warnings)
+    flags = {i.key: i.flag for i in res.inputs}
+    assert flags["q_dc_mw"] == "user" and flags["d_bio_m"] == "estimated" and flags["p_elec_usd_kwh"] == "estimated"
+    feas = [o for o in res.options if o.feasible]
+    assert feas, "a 1 GW greenfield site should have feasible options"
+    for o in feas:
+        assert o.implementation
+        assert sum(o.capex_breakdown.values()) == pytest.approx(o.kpis.capex_usd)
+    # size scales the result
+    small = c.post("/api/plan", json=dict(body, it_mw=10, tornado=False)).json()
+    assert small["baseline"]["it_energy_mwh_yr"] == pytest.approx(res.baseline.it_energy_mwh_yr / 100)
+    # retrofit has fewer feasible options than greenfield
+    retro = c.post("/api/plan", json=dict(body, is_greenfield=0, tornado=False)).json()
+    assert sum(o["feasible"] for o in retro["options"]) <= len(feas)
+
+
+def test_flag_mapping():
+    assert flag_for("data", "database: grid_regions") == "real"
+    assert flag_for("data", "site_profiles.csv (estimate)") == "estimated"
+    assert flag_for("assumption", "x") == "estimated"
+    assert flag_for("data", "synthetic shape") == "synthetic"
+    assert flag_for("user", "") == "user"
+
+
+def test_all_us_sites_rank():
+    """Every US site with stored weather returns a valid result (what the map needs)."""
+    for s in c.get("/api/sites", params={"country": "US"}).json():
+        if not s["weather_stored"]:
+            continue
+        r = c.get(f"/api/sites/{s['site_id']}/ranking")
+        assert r.status_code == 200, (s["site_id"], r.text[:200])
+
+
+def test_adapter_is_a_site_model():
+    assert isinstance(ExcelRankingModel(), SiteModel)
