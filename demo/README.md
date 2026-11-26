@@ -23,7 +23,7 @@ To test the app code with placeholders only: `python -m data_pipeline.build_db -
 
 | Input | Origin in the app | Live call (no API key) |
 |---|---|---|
-| Hourly weather 2024 (dry bulb, RH, dew point, wind, solar) | LIVE if the call works, else DB | Open-Meteo archive API (ERA5), same request as the pipeline |
+| Hourly weather 2024 (dry bulb, RH, dew point, wind, solar) | LIVE if the call works, else DB or local cache (the database build no longer stores weather) | Open-Meteo archive API (ERA5), same request as the pipeline |
 | Elevation | LIVE | Open-Meteo elevation API |
 | Weather cross-check | LIVE, optional | NASA POWER hourly API |
 | Hourly electricity price | DB | optional one-week spot check via gridstatus (CAISO, MISO, NYISO, ISO-NE, SPP) |

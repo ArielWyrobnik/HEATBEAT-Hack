@@ -36,9 +36,10 @@ def check_point(lat: float, lon: float, label: str, site_id: str | None, nasa: b
         online = False
         res.append(ck._row("stored database present", None, "not found, live checks only"))
     if site_id and online:
-        s = hd.get_site(site_id)
-        res += ck.weather_checks(s.weather, "DB weather")
-        res += ck.compare_weather(w_live, s.weather, "LIVE vs DB weather", 0.2)
+        s = hd.get_site(site_id, live=False)
+        if not s.weather.empty:
+            res += ck.weather_checks(s.weather, "DB weather")
+            res += ck.compare_weather(w_live, s.weather, "LIVE vs DB weather", 0.2)
         res += ck.price_checks(s.prices)
         res += ck.grid_checks(s.grid)
         if price:

@@ -31,23 +31,23 @@ Local context: Israel has low heating demand, high cooling demand, water scarcit
 
 Focus: US sites first. Israel is set aside for now (Ariel, 2026-11-26).
 
-PRs #1, #3, #4, #5, #6 and #7 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020, shorter Open-Meteo timeout). What is on `main`:
+PRs #1 and #3 to #10 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020, shorter Open-Meteo timeout; #8: free cooling capped by site supply temperature; #10: demo works without stored weather). What is on `main`:
 
 | Part | Where | Docs | Status |
 |---|---|---|---|
-| Location database: 59 sites, electricity prices, carbon intensity, `heatbeat_data` access module, GitHub Actions build. Weather is fetched live on first use (Open-Meteo, fallback NASA POWER) and cached. | `data_pipeline/`, `heatbeat_data/` | `docs/DATA.md` | Merged. The hourly price data is not committed yet: the build workflow run on the old PR #1 branch was still running at merge time, so its data commit lands on that branch and needs a follow-up PR (or a new workflow run on `main`). Until then the 4 data tests in `tests/test_database.py` fail with FileNotFoundError. |
+| Location database: 59 sites, electricity prices, carbon intensity, `heatbeat_data` access module, GitHub Actions build. Weather is fetched live on first use (Open-Meteo, fallback NASA POWER) and cached. | `data_pipeline/`, `heatbeat_data/` | `docs/DATA.md` | Merged. `data/parquet/` (hourly prices, carbon) is not committed yet; the `Build location database` workflow on `main` commits it when it finishes. Until then the 4 data tests in `tests/test_database.py` fail with FileNotFoundError. |
 | Heat source per site: IT load, cooling type, chip generation, coolant temperatures, `hd.site_heat_profiles()` | `data_pipeline/cooling_profiles.csv`, `site_profiles.csv`, `heat_sources.csv`, `heatbeat_data/heat_profiles.py` | `docs/HEAT_PROFILES.md` | Merged. Most site MW and chip values are team estimates (low confidence). |
 | Solution catalogue: 21 solutions with ideal parameters, schema validation, `screen()` first pass ranking | `heatbeat_solutions/` | `docs/SOLUTIONS.md` | Merged. Market prices not included yet. |
-| Demo: Streamlit input overview with live API calls and pipeline checks | `demo/` | `demo/README.md` | Merged. |
+| Demo: Streamlit input overview with live API calls and pipeline checks, every input labelled real / estimated / synthetic | `demo/` (`streamlit run demo/app.py`) | `demo/README.md` | Merged. The `Demo pipeline check` workflow runs the live calls in CI. |
 | Frontend: landing page, "How it works" section, world map (React, TypeScript, Vite, Leaflet) | `frontend/` | | Merged. Map pins load from `frontend/public/datacenters.json`. |
 
 Next steps:
 
 - Shortlist solutions and collect economic and regional market data per solution (plan in the Claude Doc "Lösungs-Ranking: Datenschema und Aufgabenverteilung"). Regional values go into a planned `data_pipeline/market_prices.csv` keyed by `country_iso2` + `region` like `sites.csv`.
 - Water prices for US regions (separate thread).
-- Ranking logic and the connection between map, database and models.
+- Ranking logic and the connection between map, database and models. A teammate spreadsheet with 13 options, knock-out gates and a weighted score (35% thermo, 30% climate/geo, 25% economics, 10% utilization) is a candidate basis; not yet in the repo.
 
-Known gaps: PJM prices need a `PJM_API_KEY` secret, non-US retail prices and the Israel tariff mapping are unverified placeholders.
+Known gaps: PJM prices need a `PJM_API_KEY` secret, non-US retail prices and the Israel tariff mapping are unverified placeholders, no water (WUE, water price) or heat demand data yet.
 
 ## Working rules
 

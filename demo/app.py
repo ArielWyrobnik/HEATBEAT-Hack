@@ -51,7 +51,7 @@ def site_table() -> pd.DataFrame:
 
 @st.cache_data(show_spinner=False)
 def stored_site(site_id: str):
-    s = hd.get_site(site_id)
+    s = hd.get_site(site_id, live=False)  # weather comes from this app's own live call
     return s.meta, s.grid, s.weather, s.prices
 
 
@@ -450,7 +450,11 @@ with t_h:
 
 with t_chk:
     res = []
-    res += ck.weather_checks(w_db, "DB weather") if status["ok"] and site_id else []
+    if status["ok"] and site_id:
+        if w_db is not None and not w_db.empty:
+            res += ck.weather_checks(w_db, "DB weather")
+        else:
+            res.append(ck._row("DB weather", None, "not stored in the database (weather is fetched live by design)"))
     res += ck.weather_checks(w_live, "LIVE weather") if do_live else []
     res += ck.weather_checks(w_nasa, "NASA weather") if do_nasa else []
     if w_db is not None and w_live is not None and status.get("build_mode") == "online":
