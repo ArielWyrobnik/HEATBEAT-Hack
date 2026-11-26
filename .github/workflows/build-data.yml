@@ -1,0 +1,109 @@
+name: Build location database
+
+# Fetches real weather and energy data (needs internet, which GitHub runners have),
+# writes data/parquet/*.parquet + data/build_report.json and commits them to the branch.
+# Each source runs as its own step with a time limit, so one slow source cannot block the rest.
+# Weather is NOT fetched here: heatbeat_data.get_site() fetches it live from Open-Meteo on first
+# use and caches it locally (GitHub runners hit the Open-Meteo free-tier rate limit).
+# Anything that did not arrive falls back to flagged synthetic data in the assemble step.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "data_pipeline/**"
+      - ".github/workflows/build-data.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-data-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Restore fetch cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/cache
+          key: fetch-cache-${{ github.run_id }}
+          restore-keys: fetch-cache-
+
+      - name: Fetch retail prices and carbon (EIA, Ember)
+        timeout-minutes: 10
+        continue-on-error: true
+        run: python -m data_pipeline.build_db --stage regions
+      - name: Fetch prices ERCOT
+        timeout-minutes: 15
+        continue-on-error: true
+        run: python -m data_pipeline.build_db --stage prices --iso ERCOT
+      - name: Fetch prices CAISO
+        timeout-minutes: 20
+        continue-on-error: true
+        run: python -m data_pipeline.build_db --stage prices --iso CAISO
+      - name: Fetch prices NYISO
+        timeout-minutes: 15
+        continue-on-error: true
+        run: python -m data_pipeline.build_db --stage prices --iso NYISO
+      - name: Fetch prices ISO-NE
+        timeout-minutes: 15
+        continue-on-error: true
+        run: python -m data_pipeline.build_db --stage prices --iso ISONE
+      - name: Fetch prices MISO
+        timeout-minutes: 20
+        continue-on-error: true
+        run: python -m data_pipeline.build_db --stage prices --iso MISO
+      - name: Fetch prices SPP
+        timeout-minutes: 15
+        continue-on-error: true
+        run: python -m data_pipeline.build_db --stage prices --iso SPP
+      - name: Fetch prices PJM (needs PJM_API_KEY secret)
+        timeout-minutes: 15
+        continue-on-error: true
+        env:
+          PJM_API_KEY: ${{ secrets.PJM_API_KEY }}
+        run: python -m data_pipeline.build_db --stage prices --iso PJM
+
+      - name: Save fetch cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/cache
+          key: fetch-cache-${{ github.run_id }}
+
+      - name: Assemble database from cache
+        run: python -m data_pipeline.build_db --stage assemble
+      - name: Show build report
+        if: always()
+        run: cat data/build_report.json || true
+      - name: Tests (must pass before data is published)
+        run: python -m pytest -q
+      - uses: actions/upload-artifact@v4
+        with:
+          name: heatbeat-db
+          path: |
+            data/heatbeat.db
+            data/build_report.json
+      - name: Commit data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/parquet data/build_report.json
+          if git diff --cached --quiet; then echo "no data changes"; exit 0; fi
+          git commit -m "data: rebuild location database (run ${{ github.run_id }})"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
