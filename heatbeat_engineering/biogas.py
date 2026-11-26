@@ -101,15 +101,25 @@ def rng_value(site, P: dict) -> float:
 def _dc_heat_cost(site, P: dict, dem: np.ndarray, t_supply: float) -> tuple[np.ndarray, float, float]:
     """Screening for sizing: heat the DC can deliver per hour, electricity cost and CAPEX of the HX / heat pump.
 
-    Uses the hottest loop; the chain simulator does the exact hourly allocation afterwards.
+    Same order as the chain simulator: hottest loop first, each loop directly through a heat exchanger
+    when hot enough, else through a heat pump with that loop's own COP (source heat = delivered x (1 - 1/COP)).
     """
-    hot = max(site.loops, key=lambda l: l.t_return_c)
-    avail = sum(l.q_mw for l in site.loops)
-    served = np.minimum(dem, avail)
-    if hp.needs_hp(hot.t_return_c, t_supply, P):
-        c = float(hp.cop(hot.t_return_c, t_supply, P))
-        return served, float((served / c).sum()) * site.x["p_elec_usd_mwh"], P["capex_hp_usd_kw"] * float(served.max()) * 1000 * P["capex_factor"]
-    return served, 0.0, P["capex_hx_usd_kw"] * float(served.max()) * 1000 * P["capex_factor"]
+    served = np.zeros(H)
+    e_mwh = capex = 0.0
+    for l in sorted(site.loops, key=lambda l: -l.t_return_c):
+        need = np.clip(dem - served, 0, None)
+        if not need.any():
+            break
+        if hp.needs_hp(l.t_return_c, t_supply, P):
+            c = float(hp.cop(l.t_return_c, t_supply, P))
+            out = np.minimum(need, l.q_mw / (1 - 1 / c))
+            e_mwh += float((out / c).sum())
+            capex += P["capex_hp_usd_kw"] * float(out.max()) * 1000 * P["capex_factor"]
+        else:
+            out = np.minimum(need, l.q_mw)
+            capex += P["capex_hx_usd_kw"] * float(out.max()) * 1000 * P["capex_factor"]
+        served = served + out
+    return served, e_mwh * site.x["p_elec_usd_mwh"], capex
 
 
 def _new_plant_economics(site, P: dict, feed: float, t_dig: float, mode: str, d: float, with_dc: bool = True,
