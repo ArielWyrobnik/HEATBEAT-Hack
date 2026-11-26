@@ -1,0 +1,177 @@
+"""Response schema of the HEATBEAT API. This is the contract between models and the frontend.
+
+Any model (today `heatbeat_ranking`, later `heatbeat_engineering`) returns a `ModelResult`.
+The frontend only reads these types, so a new model plugs in without frontend changes.
+TypeScript mirror: frontend/src/types/api.ts (keep both in sync).
+
+Units are in the field names: _mwh_yr = MWh per year, _t_yr = tonnes CO2 per year,
+_m3_yr = cubic metres per year, _usd = US dollars, _yr = years.
+"""
+from __future__ import annotations
+
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
+
+# How trustworthy a number is. Shown next to every value in the UI.
+#   real       measured or looked up for this site (database, GIS, published table)
+#   estimated  team estimate or a default that is not site specific (low confidence)
+#   synthetic  generated data standing in for missing real data
+#   user       set by the user in the UI
+Flag = Literal["real", "estimated", "synthetic", "user"]
+
+
+class SiteSummary(BaseModel):
+    """One map pin."""
+    site_id: str
+    name: str
+    lat: float
+    lon: float
+    operator: str | None = None
+    city: str | None = None
+    region: str | None = None
+    country: str | None = Field(None, description="ISO 3166-1 alpha-2")
+    capacity_mw: float | None = None
+    it_load_mw: float | None = None
+    cooling_type: str | None = None
+    pue: float | None = None
+    grid_region: str | None = None
+    retail_usd_mwh: float | None = None
+    co2_kg_mwh: float | None = None
+    is_hypothetical: bool = False
+    weather_stored: bool = Field(True, description="False: first ranking call fetches weather live (needs internet)")
+
+
+class InputValue(BaseModel):
+    key: str
+    label: str | None = None
+    value: Any
+    unit: str | None = None
+    flag: Flag
+    status: str = Field(description="Raw status from the model input layer (data, assumption, user, ...)")
+    source: str | None = None
+    description: str | None = None
+    sens_low: float | None = Field(None, description="Low end of the sensitivity range")
+    sens_high: float | None = None
+
+
+class SiteInputs(BaseModel):
+    site_id: str
+    inputs: list[InputValue]
+    weather: dict[str, Any] = Field(default_factory=dict, description="Annual weather and price indicators")
+    flag_counts: dict[str, int] = Field(default_factory=dict)
+
+
+class Kpis(BaseModel):
+    """Annual results of one option against the site baseline. None = the model does not compute it."""
+    heat_recovered_mwh_yr: float | None = None
+    heat_delivered_mwh_yr: float | None = None
+    electricity_used_mwh_yr: float | None = Field(None, description="Extra electricity (heat pump, pumps)")
+    electricity_saved_mwh_yr: float | None = None
+    co2_avoided_t_yr: float | None = None
+    water_saved_m3_yr: float | None = None
+    net_value_usd_yr: float | None = None
+    capex_usd: float | None = None
+    payback_yr: float | None = Field(None, description="None if the option never pays back")
+    pue_baseline: float | None = None
+    pue_with: float | None = None
+    wue_baseline_l_kwh: float | None = None
+    wue_with_l_kwh: float | None = None
+    ere: float | None = None
+    cop: float | None = None
+    capacity_factor: float | None = None
+
+
+class EnergyFlow(BaseModel):
+    """One line of the energy balance (Sankey or table). Positive mwh_yr = flow from source to target."""
+    source: str
+    target: str
+    mwh_yr: float
+    kind: Literal["heat", "electricity", "cooling", "fuel", "loss", "other"] = "heat"
+
+
+class OptionResult(BaseModel):
+    """One candidate: a single option (ranking engine) or a heat chain of components (engineering)."""
+    option_id: str
+    name: str
+    rank: int | None = Field(None, description="1 = best. None = knocked out")
+    feasible: bool
+    score: float | None = Field(None, description="Higher is better. Scale given by ModelResult.score_scale")
+    eco_grade: str | None = None
+    components: list[str] = Field(default_factory=list, description="Heat chain parts, e.g. ['dry_cooler', 'heat_pump', 'district_heating']")
+    product: str | None = Field(None, description="What it delivers, e.g. '65,961 MWh heat at 38 C'")
+    ko_reasons: list[str] = Field(default_factory=list)
+    kpis: Kpis = Field(default_factory=Kpis)
+    energy_balance: list[EnergyFlow] = Field(default_factory=list)
+    details: dict[str, Any] = Field(default_factory=dict, description="Model specific extra columns")
+
+
+class Baseline(BaseModel):
+    """The site without any solution (counterfactual reference)."""
+    it_load_mw: float | None = None
+    it_energy_mwh_yr: float | None = None
+    facility_energy_mwh_yr: float | None = None
+    heat_rejected_mwh_yr: float | None = Field(None, description="Heat the cooling plant rejects to ambient")
+    pue: float | None = None
+    wue_l_kwh: float | None = None
+    water_use_m3_yr: float | None = None
+    co2_t_yr: float | None = None
+    electricity_cost_usd_yr: float | None = None
+    cooling_type: str | None = None
+
+
+class TornadoBar(BaseModel):
+    input: str
+    label: str | None = None
+    low_value: float
+    high_value: float
+    metric_low: float
+    metric_high: float
+    flag: Flag | None = None
+
+
+class Tornado(BaseModel):
+    option_id: str
+    metric: str
+    unit: str | None = None
+    base: float
+    bars: list[TornadoBar]
+
+
+class ModelResult(BaseModel):
+    """Everything the frontend shows for one site."""
+    site_id: str
+    model: str
+    mode: str
+    model_version: str | None = None
+    score_scale: str = "0 to 5"
+    baseline: Baseline
+    options: list[OptionResult] = Field(description="Sorted, best first; knocked out options last")
+    tornado: Tornado | None = None
+    warnings: list[str] = Field(default_factory=list, description="Shown above the results, e.g. unverified CAPEX")
+    inputs_used: dict[str, Any] = Field(default_factory=dict)
+
+
+class ModelInfo(BaseModel):
+    name: str
+    label: str
+    modes: list[str]
+    default_mode: str
+    description: str
+    default: bool = False
+
+
+class EvaluateRequest(BaseModel):
+    """Run a model with changed inputs, for one site or for a custom location.
+
+    With lat/lon and no site_id, the nearest database site is the template for all inputs except
+    the weather, which is fetched live for the given point (needs internet).
+    """
+    site_id: str | None = None
+    lat: float | None = Field(None, ge=-90, le=90)
+    lon: float | None = Field(None, ge=-180, le=180)
+    model: str | None = None
+    mode: str | None = None
+    is_greenfield: int | None = Field(None, ge=0, le=1)
+    overrides: dict[str, Any] = Field(default_factory=dict)
+    tornado: bool = True
