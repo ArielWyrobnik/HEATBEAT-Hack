@@ -1,0 +1,234 @@
+{
+  "carbon_and_retail": {
+    "eia_retail": "ok (2020)",
+    "ember": "ok (209 countries)"
+  },
+  "counts": {
+    "grid_regions": 44,
+    "price_rows": 386496,
+    "sites": 59,
+    "weather_rows": 518256
+  },
+  "meta": {
+    "build_mode": "online",
+    "built_utc": "2026-11-26T11:52:44+00:00",
+    "reference_year": "2024",
+    "schema_version": "1",
+    "timestamps": "UTC, hour-beginning"
+  },
+  "prices": {
+    "AE": {
+      "kind": "synthetic_shape"
+    },
+    "AU": {
+      "kind": "synthetic_shape"
+    },
+    "BR": {
+      "kind": "synthetic_shape"
+    },
+    "DE": {
+      "kind": "synthetic_shape"
+    },
+    "DK": {
+      "kind": "synthetic_shape"
+    },
+    "FI": {
+      "kind": "synthetic_shape"
+    },
+    "FR": {
+      "kind": "synthetic_shape"
+    },
+    "GB": {
+      "kind": "synthetic_shape"
+    },
+    "IE": {
+      "kind": "synthetic_shape"
+    },
+    "IL": {
+      "kind": "retail_tou"
+    },
+    "IN": {
+      "kind": "synthetic_shape"
+    },
+    "JP": {
+      "kind": "synthetic_shape"
+    },
+    "NL": {
+      "kind": "synthetic_shape"
+    },
+    "SE": {
+      "kind": "synthetic_shape"
+    },
+    "SG": {
+      "kind": "synthetic_shape"
+    },
+    "US-AZ": {
+      "kind": "synthetic_shape"
+    },
+    "US-CAISO-NP15": {
+      "coverage": 0.0027,
+      "kind": "synthetic_shape"
+    },
+    "US-CAISO-SP15": {
+      "coverage": 0.0027,
+      "kind": "synthetic_shape"
+    },
+    "US-ERCOT-NORTH": {
+      "coverage": 0.9993,
+      "kind": "wholesale_da_lmp"
+    },
+    "US-ERCOT-SOUTH": {
+      "coverage": 0.9993,
+      "kind": "wholesale_da_lmp"
+    },
+    "US-ERCOT-WEST": {
+      "coverage": 0.9993,
+      "kind": "wholesale_da_lmp"
+    },
+    "US-FL": {
+      "kind": "synthetic_shape"
+    },
+    "US-ISONE-BOS": {
+      "coverage": 0.9994,
+      "kind": "wholesale_da_lmp"
+    },
+    "US-MISO-IA": {
+      "coverage": 0.9994,
+      "kind": "wholesale_da_lmp"
+    },
+    "US-MISO-LA": {
+      "coverage": 0.9994,
+      "kind": "wholesale_da_lmp"
+    },
+    "US-MISO-WI": {
+      "coverage": 0.9994,
+      "kind": "wholesale_da_lmp"
+    },
+    "US-NV-N": {
+      "kind": "synthetic_shape"
+    },
+    "US-NV-S": {
+      "kind": "synthetic_shape"
+    },
+    "US-NW-OR": {
+      "kind": "synthetic_shape"
+    },
+    "US-NW-WA": {
+      "kind": "synthetic_shape"
+    },
+    "US-NYISO-NYC": {
+      "coverage": 0.9994,
+      "kind": "wholesale_da_lmp"
+    },
+    "US-PJM-AEP": {
+      "coverage": 0.0,
+      "kind": "synthetic_shape"
+    },
+    "US-PJM-COMED": {
+      "coverage": 0.0,
+      "kind": "synthetic_shape"
+    },
+    "US-PJM-DOM": {
+      "coverage": 0.0,
+      "kind": "synthetic_shape"
+    },
+    "US-PJM-PSEG": {
+      "coverage": 0.0,
+      "kind": "synthetic_shape"
+    },
+    "US-SE-GA": {
+      "kind": "synthetic_shape"
+    },
+    "US-SE-NC": {
+      "kind": "synthetic_shape"
+    },
+    "US-SE-SC": {
+      "kind": "synthetic_shape"
+    },
+    "US-SPP-NE": {
+      "coverage": 0.0,
+      "kind": "synthetic_shape"
+    },
+    "US-SPP-OK": {
+      "coverage": 0.0,
+      "kind": "synthetic_shape"
+    },
+    "US-TVA-TN": {
+      "kind": "synthetic_shape"
+    },
+    "US-UT": {
+      "kind": "synthetic_shape"
+    },
+    "US-WY": {
+      "kind": "synthetic_shape"
+    },
+    "ZA": {
+      "kind": "synthetic_shape"
+    }
+  },
+  "synthetic_share": {
+    "price_rows": 0.7955658014571949,
+    "weather_sites": 0.0
+  },
+  "weather": {
+    "ae-dubai": "open_meteo_era5",
+    "au-sydney": "open_meteo_era5",
+    "br-sao-paulo": "open_meteo_era5",
+    "de-frankfurt": "open_meteo_era5",
+    "dk-odense-meta": "open_meteo_era5",
+    "fi-hamina-google": "open_meteo_era5",
+    "fr-paris": "open_meteo_era5",
+    "gb-slough": "open_meteo_era5",
+    "ie-dublin": "open_meteo_era5",
+    "il-beer-sheva-hypothetical": "open_meteo_era5",
+    "il-haifa": "open_meteo_era5",
+    "il-petah-tikva": "open_meteo_era5",
+    "il-tel-aviv": "open_meteo_era5",
+    "in-navi-mumbai": "open_meteo_era5",
+    "jp-inzai": "open_meteo_era5",
+    "nl-amsterdam": "open_meteo_era5",
+    "se-lulea-meta": "open_meteo_era5",
+    "sg-singapore": "open_meteo_era5",
+    "us-az-chandler": "open_meteo_era5",
+    "us-az-mesa": "open_meteo_era5",
+    "us-ca-la-one-wilshire": "open_meteo_era5",
+    "us-ca-santa-clara": "open_meteo_era5",
+    "us-fl-miami-equinix": "open_meteo_era5",
+    "us-ga-atlanta-qts": "open_meteo_era5",
+    "us-ga-douglas-google": "open_meteo_era5",
+    "us-ia-altoona-meta": "open_meteo_era5",
+    "us-ia-council-bluffs-google": "open_meteo_era5",
+    "us-ia-west-des-moines-microsoft": "open_meteo_era5",
+    "us-il-chicago-cermak": "open_meteo_era5",
+    "us-il-elk-grove": "open_meteo_era5",
+    "us-la-richland-meta": "open_meteo_era5",
+    "us-ma-boston-one-summer": "open_meteo_era5",
+    "us-nc-lenoir-google": "open_meteo_era5",
+    "us-nc-maiden-apple": "open_meteo_era5",
+    "us-ne-sarpy-meta": "open_meteo_era5",
+    "us-nj-secaucus-equinix": "open_meteo_era5",
+    "us-nv-las-vegas-switch": "open_meteo_era5",
+    "us-nv-reno-switch": "open_meteo_era5",
+    "us-ny-nyc-60-hudson": "open_meteo_era5",
+    "us-oh-new-albany": "open_meteo_era5",
+    "us-ok-pryor-google": "open_meteo_era5",
+    "us-or-hillsboro": "open_meteo_era5",
+    "us-or-prineville-meta": "open_meteo_era5",
+    "us-or-the-dalles-google": "open_meteo_era5",
+    "us-sc-berkeley-google": "open_meteo_era5",
+    "us-tn-memphis-xai": "open_meteo_era5",
+    "us-tx-abilene-stargate": "open_meteo_era5",
+    "us-tx-dallas-infomart": "open_meteo_era5",
+    "us-tx-midlothian-google": "open_meteo_era5",
+    "us-tx-san-antonio-microsoft": "open_meteo_era5",
+    "us-ut-eagle-mountain-meta": "open_meteo_era5",
+    "us-va-ashburn-equinix": "open_meteo_era5",
+    "us-va-boydton-microsoft": "open_meteo_era5",
+    "us-va-manassas": "open_meteo_era5",
+    "us-va-sterling-digital": "open_meteo_era5",
+    "us-wa-quincy": "open_meteo_era5",
+    "us-wi-mount-pleasant-microsoft": "open_meteo_era5",
+    "us-wy-cheyenne-microsoft": "open_meteo_era5",
+    "za-johannesburg": "open_meteo_era5"
+  }
+}
