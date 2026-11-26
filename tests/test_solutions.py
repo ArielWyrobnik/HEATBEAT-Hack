@@ -64,3 +64,11 @@ def test_air_economizer_with_nan_temperatures():
     rows = {r["solution_id"]: r for r in hs.screen(hp, TEL_AVIV_SUMMARY)}
     assert "32 C" in rows["aquaculture_ras"]["reasons"][0]
     assert rows["aquaculture_ras"]["recoverable_heat_mw"] is None
+
+
+def test_free_cooling_ambient_uses_site_supply_temperature():
+    cold_loop = dict(RUBIN, facility_supply_temp_c=15, facility_return_temp_c=25)
+    warm = {r["solution_id"]: r for r in hs.screen(RUBIN, TEL_AVIV_SUMMARY)}
+    cold = {r["solution_id"]: r for r in hs.screen(cold_loop, TEL_AVIV_SUMMARY)}
+    assert warm["dry_cooling_free_cooling"]["ambient"] == 1.0
+    assert cold["dry_cooling_free_cooling"]["ambient"] == 0.0  # mean 21 C above 15 - 5 + 2
