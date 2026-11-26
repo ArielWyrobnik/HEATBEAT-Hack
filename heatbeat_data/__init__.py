@@ -207,3 +207,9 @@ from .site_ecology_data import ecology, excel_ecology_inputs, site_ecology  # no
 
 __all__ += ["ecology", "excel_ecology_inputs", "site_ecology"]
 Site.ecology = lambda self: ecology(self.site_id)
+
+# Site GIS inputs (distances, terrain, land, district heating) for the Excel model.
+from .site_gis import GIS_KEYS, gis_inputs, site_gis, site_gis_row  # noqa: E402
+
+__all__ += ["GIS_KEYS", "gis_inputs", "site_gis", "site_gis_row"]
+Site.gis = lambda self: site_gis_row(self.site_id)
