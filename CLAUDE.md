@@ -58,6 +58,8 @@ Two perspectives (2026-11-26, Ariel): the app shows every result as **Cooling** 
 
 Biogas (2026-11-26): new plants are sized per site by NPV with economies of scale (see `docs/ENGINEERING.md`); the chain counts only what the DC heat adds over the same plant heating itself. Biogas reuse NPV > 0 at 23 of 44 US sites (was 6).
 
+Heat waste cascade (2026-11-26, Ariel): the Heat waste tab shows the top 2 cascades (biogas, greenhouse, fish farm, ambient heat network in series by temperature, booster heat pump), optimized for heat used and water saved, with a flow view (`heatbeat_engineering/cascade.py`, `frontend/src/components/Cascade.tsx`). The site panel has a full screen button again.
+
 Next steps:
 
 - Shortlist solutions and fill the per solution economics (plan in the Claude Doc "Lösungs-Ranking: Datenschema und Aufgabenverteilung").

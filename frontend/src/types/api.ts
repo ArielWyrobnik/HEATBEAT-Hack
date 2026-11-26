@@ -240,6 +240,7 @@ export interface ModelResult {
   cooling_vendors?: Vendor[];
   planned_site?: PlanRequest | null;
   budget_summary?: BudgetSummary | null;
+  cascades?: Cascade[];
 }
 
 export interface CoolingProfile {
@@ -302,4 +303,35 @@ export interface LeaderboardRow {
   heat_reuse_npv_usd?: number | null;
   heat_npv_usd?: number | null;
   heat_pays_off?: boolean | null;
+}
+
+export interface CascadeStage {
+  key: string;
+  label: string;
+  size: string;
+  mwh_yr: number;
+  share: number;
+  t_in_c: number;
+  t_out_c: number;
+  peak_mw: number;
+  value_usd_yr: number;
+}
+
+export interface Cascade {
+  title: string;
+  users: string[];
+  stages: CascadeStage[];
+  heat_used_share: number;
+  heat_used_mwh_yr: number;
+  heat_rejected_mwh_yr: number;
+  water_saved_m3_yr: number;
+  co2_avoided_t_yr: number;
+  npv_usd: number;
+  capex_usd: number;
+  t_top_c: number;
+  t_back_c: number;
+  heat_pump_cop?: number | null;
+  heat_pump_mwh_yr: number;
+  direct_mwh_yr: number;
+  rejection: string;
 }

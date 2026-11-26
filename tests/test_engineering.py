@@ -257,3 +257,22 @@ def test_net_value_splits_into_cash_and_water_value():
     df, _, results = evaluate_site(synthetic_site())
     for r in results.values():
         assert r["cash_value_usd_yr"] + r["water_value_usd_yr"] == pytest.approx(r["net_value_usd_yr"])
+
+
+def test_cascade_uses_heat_in_temperature_order_and_saves_water():
+    from heatbeat_engineering import cascade
+    s = synthetic_site(it_mw=15.0, d_bio_m=3000.0, d_dh_m=1500.0)
+    _, base, _ = evaluate_site(s, P)
+    ds = cascade.designs(s, P, base)
+    assert 1 <= len(ds) <= 2
+    total = base["it_mwh"]
+    for d in ds:
+        assert 0 < d["heat_used_share"] <= 1
+        assert d["heat_used_mwh_yr"] + d["heat_rejected_mwh_yr"] == pytest.approx(total, rel=1e-6)
+        assert sum(st["mwh_yr"] for st in d["stages"]) >= d["heat_used_mwh_yr"] * 0.999
+        assert d["water_saved_m3_yr"] >= -1e-6
+        temps = [st["t_in_c"] for st in d["stages"]]
+        assert temps == sorted(temps, reverse=True)  # hottest user first
+        for st in d["stages"]:
+            assert st["t_out_c"] <= st["t_in_c"] + 1e-9
+    assert ds[0]["heat_used_mwh_yr"] >= max(d["heat_used_mwh_yr"] for d in ds)

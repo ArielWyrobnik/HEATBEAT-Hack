@@ -4,6 +4,7 @@ import { PERSPECTIVES } from '../perspectives';
 import type { CalcStep, Flag, InputValue, ModelResult, OptionResult, Vendor } from '../types/api';
 import HeatFlow, { HeatOrderSelect, PROFIT_FALLBACK, rankHeatOptions, reuseShare, totalNpv, type HeatOrder } from './HeatFlow';
 import Tornado from './Tornado';
+import Cascades from './Cascade';
 
 /**
  * Compact results: a one line verdict, the best 2 to 3 options that change something, and per option
@@ -245,7 +246,8 @@ export default function Results({ r }: { r: ModelResult }) {
   const reuse = engineering && (palette === null ? feasible.some((o) => !coolingOnly(o)) : palette === 'reuse');
   const options = feasible.filter((o) => !engineering || coolingOnly(o) !== reuse);
   const comparison = reuse ? rankHeatOptions(options, order) : { options, fallback: false };
-  const top = comparison.options.slice(0, 3);
+  const top = comparison.options.slice(0, 2);
+  const cascades = engineering && reuse && r.cascades?.length ? r.cascades : null;
   const firstOption = top[0]?.option_id;
   const [open, setOpen] = useState<string | null>(null);
   useEffect(() => setOpen(!reuse && r.verdict_level === 'no_gain' ? null : firstOption ?? null),
@@ -264,8 +266,10 @@ export default function Results({ r }: { r: ModelResult }) {
         <button type="button" aria-pressed={reuse} className={reuse ? 'on' : ''} onClick={() => setPalette('reuse')}
                 title={PERSPECTIVES.heat.def}>{PERSPECTIVES.heat.label}</button>
       </div>}
-      {reuse && <HeatOrderSelect order={order} onChange={setOrder} />}
-      {comparison.fallback && <p className="muted">{PROFIT_FALLBACK}</p>}
+      {cascades && <Cascades items={cascades} />}
+      {!cascades && reuse && <HeatOrderSelect order={order} onChange={setOrder} />}
+      {!cascades && comparison.fallback && <p className="muted">{PROFIT_FALLBACK}</p>}
+      {!cascades && <>
       <h4>Best options {!reuse && <small title={DEFS.npv}>ranked by value over 20 years (NPV) ⓘ</small>}</h4>
       {top.length === 0 && <p className="muted">{reuse ? 'No tested design recovers heat at this site.' : 'No option passes the technical checks at this site.'}</p>}
       <ol className="options">
@@ -299,6 +303,7 @@ export default function Results({ r }: { r: ModelResult }) {
           );
         })}
       </ol>
+      </>}
 
       {r.warnings.length > 0 && (
         <details className="notes">

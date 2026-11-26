@@ -486,3 +486,45 @@ button.link { background: none; border: 0; color: #6bb8ff; cursor: pointer; font
 .heat-flow-routes > .heat-flow-route { border-left-color: #5b7895; }
 .heat-flow-route.reuse { border-left-color: var(--green-bright); }
 .heat-flow p { margin: 9px 0 0; line-height: 1.4; }
+
+/* Heat cascade (heat waste perspective) */
+.cascades { display: grid; gap: 14px; margin-top: 14px; }
+.cascade { margin: 0; border: 1px solid var(--border); background: var(--surface); padding: 14px; }
+.cascade figcaption { display: flex; align-items: center; gap: 10px; }
+.cascade-rank { color: var(--green); font-weight: 700; }
+.cascade-title { flex: 1; font-weight: 600; font-size: 14px; }
+.cascade-share { font-size: 22px; color: var(--green); text-align: right; line-height: 1; }
+.cascade-share small { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 3px; }
+.cascade-bar { display: flex; height: 10px; margin: 12px 0; background: var(--surface-2); overflow: hidden; }
+.cascade-bar i { display: block; min-width: 2px; }
+.cascade-bar i.rest { background: #3a3a3a; min-width: 0; }
+.cascade-flow { list-style: none; margin: 0; padding: 0 0 0 10px; border-left: 3px solid; border-image: linear-gradient(#e8743b, #2bb3c0) 1; }
+.cascade-flow li { display: grid; grid-template-columns: 84px 1fr auto; gap: 10px; align-items: center; padding: 7px 0 7px 10px; position: relative; font-size: 13px; }
+.cascade-flow li::before { content: ''; position: absolute; left: -17px; top: 50%; width: 11px; height: 11px; margin-top: -5px; border-radius: 50%; background: var(--c, var(--muted)); }
+.cascade-flow li + li { border-top: 1px dashed var(--border); }
+.cascade-flow .t { font-variant-numeric: tabular-nums; color: var(--text); font-weight: 600; }
+.cascade-flow .name small { display: block; color: var(--muted); font-size: 11px; }
+.cascade-flow .e { color: var(--muted); font-variant-numeric: tabular-nums; }
+.cascade-flow .cascade-src, .cascade-flow .cascade-end { grid-template-columns: 84px 1fr; color: var(--muted); }
+.cascade-flow .cascade-src::before { background: #e8743b; }
+.cascade-flow .cascade-end::before { background: #3a3a3a; }
+.cascade-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 12px; background: var(--border); border: 1px solid var(--border); }
+.cascade-kpis span { background: var(--surface); padding: 8px; font-size: 11px; color: var(--muted); }
+.cascade-kpis b { display: block; font-size: 15px; color: var(--text); }
+.cascade-kpis .neg b { color: #ff7a6b; }
+
+/* Expandable site panel */
+.panel-actions { display: flex; gap: 8px; align-items: flex-start; }
+.expand-btn { background: none; border: 1px solid var(--border); color: var(--muted); cursor: pointer; padding: 5px 6px; line-height: 0; margin-top: 2px; }
+.expand-btn:hover { color: var(--green); border-color: var(--green); }
+.site-panel.expanded { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1100; background: var(--bg); border-left: 0; box-shadow: none; }
+body.panel-full { overflow: hidden; }
+.site-panel.expanded header { padding: 16px 32px 8px; max-width: 1200px; margin: 0 auto; width: 100%; }
+.site-panel.expanded h3 { font-size: 26px; }
+.site-panel.expanded .panel-body { max-width: 1200px; margin: 0 auto; width: 100%; padding-left: 32px; padding-right: 32px; }
+.site-panel.expanded .cascades { grid-template-columns: 1fr 1fr; }
+.site-panel.expanded .options { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+@media (max-width: 760px) {
+  .site-panel.expanded .cascades, .site-panel.expanded .options { grid-template-columns: 1fr; }
+  .site-panel.expanded header, .site-panel.expanded .panel-body { padding-left: 16px; padding-right: 16px; }
+}
