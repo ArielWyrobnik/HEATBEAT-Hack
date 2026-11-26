@@ -8,7 +8,21 @@ npm install
 npm run dev
 ```
 
-## Adding the data center pins
+## Backend (pins, rankings)
+
+With the backend running, the map loads its pins from `GET /api/sites` and a click on a pin opens a
+side panel (`src/components/SitePanel.tsx`) with baseline, ranked options, KPIs, tornado chart and
+every input with its real / estimated / synthetic flag. Start both from the repo root:
+
+```bash
+./scripts/dev.sh
+```
+
+Vite proxies `/api` to `http://127.0.0.1:8000` (override with `HEATBEAT_API=...`, or set
+`VITE_API_URL` for a deployed backend). API contract: `src/types/api.ts`, mirror of
+`heatbeat_api/schemas.py`, see `docs/API.md`. Without a backend the map falls back to the static file below.
+
+## Static pins (fallback without backend)
 
 The map loads `public/datacenters.json` at runtime (currently `[]`).
 Replace it with an array of objects – see `src/types/datacenter.ts`:

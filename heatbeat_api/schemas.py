@@ -101,6 +101,8 @@ class OptionResult(BaseModel):
     components: list[str] = Field(default_factory=list, description="Heat chain parts, e.g. ['dry_cooler', 'heat_pump', 'district_heating']")
     product: str | None = Field(None, description="What it delivers, e.g. '65,961 MWh heat at 38 C'")
     ko_reasons: list[str] = Field(default_factory=list)
+    implementation: str | None = Field(None, description="How it would be built at this site, one or two sentences")
+    capex_breakdown: dict[str, float] = Field(default_factory=dict, description="USD per cost item, sums to kpis.capex_usd")
     kpis: Kpis = Field(default_factory=Kpis)
     energy_balance: list[EnergyFlow] = Field(default_factory=list)
     details: dict[str, Any] = Field(default_factory=dict, description="Model specific extra columns")
@@ -150,6 +152,8 @@ class ModelResult(BaseModel):
     tornado: Tornado | None = None
     warnings: list[str] = Field(default_factory=list, description="Shown above the results, e.g. unverified CAPEX")
     inputs_used: dict[str, Any] = Field(default_factory=dict)
+    inputs: list["InputValue"] = Field(default_factory=list, description="Inputs with flags (filled for planned sites)")
+    planned_site: "PlanRequest | None" = Field(None, description="Set when the result is for a planned data center")
 
 
 class ModelInfo(BaseModel):
@@ -162,16 +166,41 @@ class ModelInfo(BaseModel):
 
 
 class EvaluateRequest(BaseModel):
-    """Run a model with changed inputs, for one site or for a custom location.
-
-    With lat/lon and no site_id, the nearest database site is the template for all inputs except
-    the weather, which is fetched live for the given point (needs internet).
-    """
-    site_id: str | None = None
-    lat: float | None = Field(None, ge=-90, le=90)
-    lon: float | None = Field(None, ge=-180, le=180)
+    """What-if for an existing database site: rerun a model with changed inputs."""
+    site_id: str
     model: str | None = None
     mode: str | None = None
     is_greenfield: int | None = Field(None, ge=0, le=1)
     overrides: dict[str, Any] = Field(default_factory=dict)
     tornado: bool = True
+
+
+class CoolingProfile(BaseModel):
+    cooling_profile_id: str
+    label: str
+    cooling_type: str = Field(description="air or liquid (what the ranking engine distinguishes)")
+    heat_temp_c: float | None = Field(None, description="Temperature of the recoverable heat (facility return or exhaust air)")
+    pue_typical: float | None = None
+    description: str | None = None
+
+
+class PlanRequest(BaseModel):
+    """A future data center at any location: the model ranks the options for it.
+
+    Inputs that depend on the region (power price, grid CO2, gas and water prices, water stress)
+    come from the nearest database site; distance inputs use US defaults. Both are flagged estimated.
+    """
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
+    it_mw: float = Field(gt=0, le=10000, description="IT load in MW (1 GW = 1000 MW)")
+    cooling_profile: str = Field("dlc_warm", description="cooling_profile_id, see GET /api/cooling-profiles")
+    name: str | None = None
+    pue: float | None = Field(None, ge=1.0, le=3.0, description="Design PUE; default typical for the cooling profile")
+    is_greenfield: int = Field(1, ge=0, le=1, description="1 = solution designed in from the start")
+    model: str | None = None
+    mode: str | None = None
+    overrides: dict[str, Any] = Field(default_factory=dict)
+    tornado: bool = True
+
+
+ModelResult.model_rebuild()

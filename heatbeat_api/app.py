@@ -16,8 +16,9 @@ import pandas as pd
 from fastapi import APIRouter, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from .models import clean, default_model, load_models
-from .schemas import EvaluateRequest, ModelInfo, ModelResult, SiteInputs, SiteSummary
+from .models import clean, cooling_profiles, default_model, load_models
+from .schemas import (CoolingProfile, EvaluateRequest, ModelInfo, ModelResult, PlanRequest, SiteInputs,
+                      SiteSummary)
 
 # HEATBEAT_LIVE=0 never fetches weather from the internet (CI, offline demo); default 1.
 LIVE = os.getenv("HEATBEAT_LIVE", "1") != "0"
@@ -152,45 +153,76 @@ def ranking(site_id: str, model: str | None = None, mode: str | None = None,
 
 @api.post("/evaluate", response_model=ModelResult)
 def evaluate(req: EvaluateRequest) -> ModelResult:
-    """Run a model with changed inputs (what-if), or at a custom location (nearest site as template)."""
-    m = _model(req.model)
-    weather = None
-    site_id = req.site_id
-    if site_id is None:
-        if req.lat is None or req.lon is None:
-            raise HTTPException(422, "give site_id, or lat and lon")
-        site_id = nearest_site(req.lat, req.lon).site_id
-        if not LIVE:
-            raise HTTPException(503, "custom coordinates need a live weather fetch (HEATBEAT_LIVE=0)")
+    """What-if for a database site: rerun the model with changed inputs (not cached)."""
+    _site(req.site_id)
+    return _run(_model(req.model), req.site_id, req.mode, req.is_greenfield, req.overrides or None, None, req.tornado)
+
+
+@api.get("/cooling-profiles", response_model=list[CoolingProfile])
+def get_cooling_profiles() -> list[CoolingProfile]:
+    return _cooling()
+
+
+@lru_cache(maxsize=1)
+def _cooling() -> list[CoolingProfile]:
+    return cooling_profiles()
+
+
+@lru_cache(maxsize=64)
+def _point_weather(lat: float, lon: float) -> pd.DataFrame | None:
+    """Hourly weather for any point (Open-Meteo, fallback NASA POWER). None when offline."""
+    if not LIVE:
+        return None
+    from data_pipeline.fetch_weather import fetch_nasa_power, fetch_open_meteo
+    for fn in (fetch_open_meteo, fetch_nasa_power):
         try:
-            from data_pipeline.fetch_weather import fetch_nasa_power, fetch_open_meteo
-            weather = None
-            for fn in (fetch_open_meteo, fetch_nasa_power):
-                try:
-                    weather = fn(req.lat, req.lon)
-                    break
-                except Exception:  # noqa: BLE001
-                    continue
-            if weather is None:
-                raise RuntimeError("live weather fetch failed (internet?)")
-            weather.index = pd.to_datetime(weather.index, utc=True)
-        except RuntimeError as e:
-            raise HTTPException(503, str(e)) from e
-    else:
-        _site(site_id)
-    res = _run(m, site_id, req.mode, req.is_greenfield, req.overrides or None, weather, req.tornado)
-    if req.site_id is None:
-        res.warnings.insert(0, f"Custom location {req.lat:.3f}, {req.lon:.3f}: weather fetched live, all other "
-                               f"inputs taken from the nearest database site {site_id} (estimated).")
+            w = fn(lat, lon)
+            w.index = pd.to_datetime(w.index, utc=True)
+            return w
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
+@api.post("/plan", response_model=ModelResult)
+def plan(req: PlanRequest) -> ModelResult:
+    """A future data center anywhere on the map: location + IT size (MW) + cooling -> ranked options."""
+    m = _model(req.model)
+    if not hasattr(m, "plan"):
+        raise HTTPException(501, f"model {m.info.name!r} cannot plan new sites")
+    if req.cooling_profile not in {c.cooling_profile_id for c in _cooling()}:
+        raise HTTPException(422, f"unknown cooling_profile {req.cooling_profile!r}, see /api/cooling-profiles")
+    if req.mode and req.mode not in m.info.modes:
+        raise HTTPException(422, f"mode must be one of {m.info.modes}")
+    near, km = nearest_site(req.lat, req.lon, with_weather=True)
+    weather = _point_weather(round(req.lat, 2), round(req.lon, 2))
+    weather_note = None
+    if weather is None:
+        import heatbeat_data as hd
+        weather = hd.get_site(near.site_id, live=False).weather
+        weather_note = (f"Weather for this point could not be fetched (offline), so the 2024 weather of "
+                        f"{near.name} ({km:.0f} km away) is used.")
+    try:
+        with _lock:
+            res = m.plan(req, weather, near.site_id, km)
+    except (KeyError, ValueError) as e:
+        raise HTTPException(422, str(e)) from e
+    if weather_note:
+        res.warnings.insert(0, weather_note)
+    if km > 300:
+        res.warnings.insert(0, f"The nearest database site is {km:.0f} km away: regional prices may not fit.")
     return res
 
 
-def nearest_site(lat: float, lon: float) -> SiteSummary:
+def nearest_site(lat: float, lon: float, with_weather: bool = False) -> tuple[SiteSummary, float]:
+    """Nearest database site and its distance in km (great circle)."""
     def d(s):
         dlat, dlon = math.radians(s.lat - lat), math.radians(s.lon - lon)
         a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat)) * math.cos(math.radians(s.lat)) * math.sin(dlon / 2) ** 2
         return 2 * 6371 * math.asin(math.sqrt(a))
-    return min(_sites().values(), key=d)
+    cands = [s for s in _sites().values() if s.weather_stored or not with_weather]
+    best = min(cands, key=d)
+    return best, d(best)
 
 
 app.include_router(api)

@@ -46,11 +46,12 @@ PRs #1 and #3 to #27 are merged into `main` (#7: US retail prices from EIA 2024 
 | Ecology and geology scores: eco_sens_index, geo_storage_score, mit_tier; `hd.excel_ecology_inputs(site_id)` | `data_pipeline/site_ecology.csv`, `data_pipeline/ecology/` | `docs/ECOLOGY.md` | Merged (#17). Thresholds are team choices. |
 | Neighbouring industry per US site: d_pp_m, q_fw_mw, d_co2_m, d_bio_m, d_market_m; `hd.excel_industry_inputs(site_id)` (named so it does not shadow the market `hd.excel_inputs`) | `data_pipeline/site_industry.csv`, `fetch_industry.py`, `heatbeat_data/site_industry.py` | `docs/INDUSTRY.md` | Merged (#23). `q_fw_mw` is an engineering estimate; `d_market_m` and `ind_zoning` follow in a later PR. |
 | Ranking engine: port of the team Excel "Hack data.xlsx" (13 options, KO gates, score 0 to 5, eco grade A to F), modes `excel` (tested against the Excel) and `corrected`. Data threads hand missing site inputs over as `data_pipeline/site_ranking_inputs_<topic>.csv`. | `heatbeat_ranking/` | `docs/RANKING.md`, `heatbeat_ranking/AUDIT.md` | Merged (#14). CAPEX per option is a placeholder, heat sink not sized yet (upper bounds). |
+| API between models and frontend: FastAPI with `/api/sites`, `/api/sites/{id}/inputs`, `/api/sites/{id}/ranking`, `POST /api/evaluate`, `POST /api/plan` (future data center: any map point + MW/GW + cooling); model interface `SiteModel` (auto loads `heatbeat_engineering.api_model.MODEL`); map pins from the API, side panel with baseline, ranking, KPIs, tornado and flagged inputs. Start both with `./scripts/dev.sh`. | `heatbeat_api/`, `frontend/src/components/SitePanel.tsx`, `scripts/dev.sh` | `docs/API.md` | Open PR. Today serves the Excel ranking; the engineering model plugs in later. |
 
 Next steps:
 
 - Shortlist solutions and fill the per solution economics (plan in the Claude Doc "Lösungs-Ranking: Datenschema und Aufgabenverteilung").
-- Connect map, database and ranking engine (`heatbeat_ranking.rank_site`).
+- Plug `heatbeat_engineering` into the API (`heatbeat_engineering/api_model.py`, see `docs/API.md`).
 
 Known gaps: PJM prices need a `PJM_API_KEY` secret, non-US retail prices and the Israel tariff mapping are unverified placeholders, no heat demand data yet.
 
