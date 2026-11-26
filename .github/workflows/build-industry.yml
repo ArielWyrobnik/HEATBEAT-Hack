@@ -1,7 +1,7 @@
 name: Build site industry layers
 
 # Fetches the neighbour data behind data_pipeline/site_industry.csv (power plants, CO2 sinks, biomass,
-# cold chain hubs) on a GitHub runner, because the cloud sandbox cannot reach epa.gov or Overpass.
+# cold chain hubs) on a GitHub runner, because the cloud sandbox cannot reach epa.gov.
 # Each source is its own step with a time limit; a failed source leaves its committed layer unchanged.
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,14 +45,10 @@ jobs:
         timeout-minutes: 10
         continue-on-error: true
         run: python -m data_pipeline.fetch_industry --stage agstar
-      - name: OpenStreetMap industrial land use near each site (zoning proxy)
+      - name: Overture Maps places (cold chain and food hubs)
         timeout-minutes: 20
         continue-on-error: true
-        run: python -m data_pipeline.fetch_industry --stage osm_zoning
-      - name: OpenStreetMap cold chain and food hubs (Overpass)
-        timeout-minutes: 60
-        continue-on-error: true
-        run: python -m data_pipeline.fetch_industry --stage osm
+        run: python -m data_pipeline.fetch_industry --stage overture
       - name: Assemble site_industry.csv
         run: python -m data_pipeline.fetch_industry --stage assemble
       - name: Tests
