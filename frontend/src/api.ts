@@ -1,5 +1,14 @@
 import type { CoolingProfile, ModelInfo, ModelResult, PlanRequest, SiteInputs, SiteSummary } from './types/api';
 
+export interface EvaluateRequest {
+  site_id: string;
+  model?: string;
+  mode?: string;
+  is_greenfield?: number;
+  overrides: Record<string, unknown>;
+  tornado?: boolean;
+}
+
 /** Base URL of heatbeat_api. Empty = same origin (Vite proxies /api to the backend). */
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
@@ -31,6 +40,7 @@ export const api = {
   config: () => get<{ feedback_url: string | null }>('/config'),
   coolingProfiles: () => get<CoolingProfile[]>('/cooling-profiles'),
   plan: (req: PlanRequest) => post<ModelResult>('/plan', req),
+  evaluate: (req: EvaluateRequest) => post<ModelResult>('/evaluate', req),
   sites: () => get<SiteSummary[]>('/sites'),
   models: () => get<ModelInfo[]>('/models'),
   inputs: (id: string, p: { model?: string; is_greenfield?: number }) => get<SiteInputs>(`/sites/${id}/inputs`, p),
