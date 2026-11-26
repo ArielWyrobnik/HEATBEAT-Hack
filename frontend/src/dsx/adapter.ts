@@ -238,6 +238,11 @@ function toOption(ctx: Ctx, o: DsxOption, rank: number | null): OptionResult {
     details: {
       build_mode: o.mode, t_sink_c: o.t_sink_c, ...o.subscores, viability_ungated: o.viability_ungated,
       eco_score: o.eco_score, ...o.eco_subscores, direct_hx_hours: a.direct_hx_hours,
+      // money and energy pieces for the pie charts (USD/yr and MWh/yr)
+      money_product_usd: a.value_usd, money_carbon_usd: a.carbon_rev_usd, money_hp_usd: a.hp_elec_cost_usd,
+      money_om_usd: Math.round(0.02 * a.capex_usd), money_net_usd: a.net_annual_usd,
+      capex_plant_usd: a.capex_plant_usd, capex_pipe_usd: a.capex_pipe_usd, capex_hp_usd: a.capex_hp_usd,
+      energy_src_mwh: a.q_src_mwh, energy_hp_mwh: a.w_hp_mwh, energy_del_mwh: a.q_del_mwh, product: ENGINE.OPTIONS.find((x) => x.key === o.key)?.product ?? null,
     },
     calculation: steps(ctx, o),
     calculation_inputs: [...ctx.inputs.values()].filter((i) => used.has(i.key)),

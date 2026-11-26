@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import Pie from './Pie';
+import { ECO_PARTS, VIABILITY_PARTS } from './ScoreBreakdown';
 
 type Status = 'built' | 'review' | 'planned';
 
@@ -288,6 +290,23 @@ export default function HowItWorks() {
             </li>
           ))}
         </ol>
+
+        <div className="how-block">
+          <h3>How the two scores are weighted</h3>
+          <p>
+            Every option gets a viability score (can it work and does it pay) and a separate eco grade (is it good for the
+            climate, water and the area). Each is a weighted sum of sub-scores from 0 to 5. Open any option on the map and
+            click "Show calculation" to see its own points, money and energy as pie charts.
+          </p>
+          <div className="pie-grid">
+            <Pie title="Viability score (0–5)" fmt={(v) => `${Math.round(v * 100)} %`} pct={false}
+              slices={VIABILITY_PARTS.map((x) => ({ label: x.label, value: x.w, color: x.color, note: x.hint }))}
+              caption="A failed knock-out gate (for example, no heat network nearby) sets viability to 0." />
+            <Pie title="Eco grade (A–F)" fmt={(v) => `${Math.round(v * 100)} %`} pct={false}
+              slices={ECO_PARTS.map((x) => ({ label: x.label, value: x.w, color: x.color, note: x.hint }))}
+              caption="A ≥ 4.2, B ≥ 3.4, C ≥ 2.6, D ≥ 1.8, else F." />
+          </div>
+        </div>
 
         <div className="how-block">
           <h3>Temperature decides what is possible</h3>

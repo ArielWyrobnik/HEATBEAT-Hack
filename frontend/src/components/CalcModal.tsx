@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { compact, num, value } from '../format';
 import type { CalcTerm, EnergyFlow, Flag, InputValue, ModelResult, OptionResult } from '../types/api';
 import { FlagBadge } from './SitePanel';
+import { ScoreBreakdown } from './ScoreBreakdown';
 
 const fmt = (v: number | string | null | undefined, unit?: string | null) => {
   if (v == null) return 'n/a';
@@ -82,6 +83,9 @@ export default function CalcModal({ o, r, onClose }: { o: OptionResult; r: Model
             </div>
           )}
           {o.implementation && <p className="impl-text"><b>How it is built:</b> {o.implementation}</p>}
+
+          <h4>Score breakdown</h4>
+          <ScoreBreakdown details={o.details} score={o.score} ecoScore={o.details?.eco_score} feasible={o.feasible} />
 
           {steps.length === 0 ? (
             <p className="muted">This model does not report a step by step calculation yet. The inputs it used are listed below.</p>

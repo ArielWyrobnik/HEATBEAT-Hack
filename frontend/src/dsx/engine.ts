@@ -10,7 +10,8 @@ export const ENGINE = (() => {
   const C = {
     carnot_eta: 0.50, approach_k: 5.0, cop_cap: 8.0, air_offset_c: 12.0,
     orc_eta_frac: 0.45, orc_cond_offset_c: 10.0, hp_capex_usd_kw: 600.0, opex_frac: 0.02,
-    payback_best_yr: 3.0, payback_worst_yr: 15.0, boiler_eff: 0.90, availability: 0.998, absorption_cop: 0.70,
+    payback_best_yr: 3.0, payback_worst_yr: 15.0, boiler_eff: 0.90, availability: 0.998,
+    weights: { thermo: 0.30, climate: 0.30, econ: 0.25, util: 0.15 }, eco_weights: { ghg: 0.40, water: 0.30, local: 0.30 }, absorption_cop: 0.70,
     chiller_cop: 5.0, med_kwh_th_m3: 60.0, ro_kwh_e_m3: 3.5, dac_mwh_th_t: 1.8, btes_round_trip: 0.75,
     market_ref_m: 100000.0, mit_mult: { low: 1.0, med: 0.70, high: 0.35 },
   };
@@ -211,7 +212,8 @@ export const ENGINE = (() => {
     const netAnnual = value + carbonRev - hpCost - C.opex_frac * capex;
     const payback = netAnnual > 0 ? capex / netAnnual : Infinity;
     const pEcon = netAnnual <= 0 ? 0 : 5 * lin(payback, C.payback_worst_yr, C.payback_best_yr);
-    const rawV = 0.30 * pThermo + 0.30 * pClimate + 0.25 * pEcon + 0.15 * pUtil;
+    const VW = C.weights;
+    const rawV = VW.thermo * pThermo + VW.climate * pClimate + VW.econ * pEcon + VW.util * pUtil;
     const viability = r(gate * rawV, 2);
 
     const intensity = Qd > 0 ? netAbated * 1000 / Qd : 0;
@@ -221,7 +223,8 @@ export const ENGINE = (() => {
     const waterCredit = 0.8 * s.wsi_index * Math.min(util, 1) * (s.baseline_evaporative || 0);
     const eWater = clip(5 - 0.8 * s.wsi_index * o.water_factor * mit + waterCredit, 1, 5);
     const eLocal = clip(5 - o.local_impact * (s.eco_sens_index - 1) * mit, 1, 5);
-    const eco = r(0.40 * eGhg + 0.30 * eWater + 0.30 * eLocal, 2);
+    const EW = C.eco_weights;
+    const eco = r(EW.ghg * eGhg + EW.water * eWater + EW.local * eLocal, 2);
 
     let meanCop = null, directHours = 0;
     if (cop) {
