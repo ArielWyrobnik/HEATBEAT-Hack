@@ -29,12 +29,12 @@ Local context: Israel has low heating demand, high cooling demand, water scarcit
 
 ## Current state (2026-11-26)
 
-Early stage. `main` only holds a short README and this file. The work so far lives on two unmerged branches:
+Early stage. `main` holds this file, a short README and the frontend in `frontend/`. `main` is the default branch.
 
 | Work | Branch | Status |
 |---|---|---|
 | Data center location database: 59 sites, hourly 2024 weather, electricity prices, carbon intensity, `heatbeat_data` Python access module, GitHub Actions build. Docs in `docs/DATA.md`. | `claude/project-thread-n1j7gu` | In progress, open as PR #1 |
-| Frontend: landing page and world map with search (React, TypeScript, Vite, Leaflet) in `frontend/`. Pins load from `frontend/public/datacenters.json`, still empty. | `claude/funny-hopper-859d23` | In progress, no PR yet |
+| Frontend: landing page and world map with search (React, TypeScript, Vite, Leaflet) in `frontend/`. Pins load from `frontend/public/datacenters.json`, still empty. | `main` (merged from `claude/funny-hopper-859d23`) | On main, in progress |
 
 Not started yet: the solution models, the ranking logic, and the connection between map, database and models.
 
