@@ -1,0 +1,720 @@
+# HEATBEAT solution catalogue (catalogue_version 1)
+#
+# One entry per candidate solution for data center waste streams.
+# Read it through `heatbeat_solutions.load_catalogue()`, which validates it against schema.py.
+#
+# Conventions
+# - All numeric values are RANGES [low, high]. A single typical value is given as [x, x].
+# - Temperatures in degrees C. Heat in kWh_th, electricity in kWh_e, water in m3.
+# - `heat.source_t_min_c`: lowest heat source (coolant return) temperature at which the
+#   solution works at all WITHOUT a heat pump. `source_t_ideal_c`: range where it works well.
+# - `ambient.*` refers to outdoor dry bulb `t_db_c` from the location database (weather_hourly).
+# - `demand_driver` tells the screening which climate signal drives demand:
+#   heating_degree | cooling_degree | constant | price_volatility | water_stress
+# - `confidence` per entry: literature (from a cited review or vendor source),
+#   estimate (engineering estimate derived from physics or several sources),
+#   unverified (placeholder, must be checked before it is used in a result).
+#   `unverified_fields` lists the fields that are weakest.
+# - `requires`: hard site conditions passed in the screening `context` (coastal, evaporative_cooling).
+# - Market prices (for example fish price per country) are deliberately NOT in here.
+#   They are added later, only for shortlisted solutions.
+# - capex and opex are rough order of magnitude, for screening only, never for results.
+
+catalogue_version: 1
+currency: USD
+reference_year: 2025
+
+sources:
+  - id: nvidia_45c_blog
+    title: "NVIDIA blog: Hotter Than a Hot Tub, the 45 C breakthrough to cool AI's biggest machines"
+    url: https://blogs.nvidia.com/blog/liquid-cooling-ai-factories/
+    checked_in_session: true
+    note: "Vera Rubin: coolant enters rack at 45 C, exits chip at about 55 C, 100% liquid cooled, 75/25 water/propylene glycol."
+  - id: facilitiesdive_rubin_2026
+    title: "Facilities Dive (2026-01-09): No chillers needed for Vera Rubin server racks, NVIDIA CEO"
+    url: https://www.facilitiesdive.com/news/no-chillers-needed-for-vera-rubin-server-racks-nvidia-ceo/809216/
+    checked_in_session: true
+    note: "Huang at CES 2026: Rubin uses the same 45 C water as Grace Blackwell; no chiller needed at 45 C."
+  - id: idatacool_2013
+    title: "Meyer et al. (2013), iDataCool: HPC with hot-water cooling and energy reuse, arXiv:1309.4887"
+    url: https://arxiv.org/abs/1309.4887
+    checked_in_session: false
+    note: "Hot water cooled cluster driving an adsorption chiller; drive temperatures around 65 to 70 C."
+  - id: dicicco_adsorption_dc
+    title: "Di Cicco et al., Testing of an adsorption chiller prototype for data center cooling (Politecnico di Milano)"
+    url: https://re.public.polimi.it/handle/11311/1258469
+    checked_in_session: false
+  - id: ashrae_tc99_liquid
+    title: "ASHRAE TC 9.9, Water-Cooled Servers: Common Designs, Components and Processes (2019), facility water classes W17 to W45 and W+"
+    url: null
+    checked_in_session: false
+  - id: lund_4gdh_2014
+    title: "Lund et al. (2014), 4th Generation District Heating (4GDH), Energy 68:1-11, doi:10.1016/j.energy.2014.02.089"
+    url: https://doi.org/10.1016/j.energy.2014.02.089
+    checked_in_session: false
+  - id: stockholm_data_parks
+    title: "Stockholm Data Parks (Stockholm Exergi), data center heat recovery into district heating"
+    url: https://stockholmdataparks.com/
+    checked_in_session: false
+  - id: karaghouli_desal_2013
+    title: "Al-Karaghouli and Kazmerski (2013), Energy consumption and water production cost of conventional and renewable-energy-powered desalination processes, RSER 24:343-356"
+    url: https://doi.org/10.1016/j.rser.2012.12.064
+    checked_in_session: false
+  - id: alkhudhiri_md_2012
+    title: "Alkhudhiri, Darwish and Hilal (2012), Membrane distillation: a comprehensive review, Desalination 287:2-18"
+    url: https://doi.org/10.1016/j.desal.2011.08.027
+    checked_in_session: false
+  - id: fao_tilapia
+    title: "FAO Cultured Aquatic Species Information Programme, Oreochromis niloticus"
+    url: https://www.fao.org/fishery/en/culturedspecies/oreochromis_niloticus
+    checked_in_session: false
+  - id: iea_dac
+    title: "IEA, Direct Air Capture (energy system technology page)"
+    url: https://www.iea.org/energy-system/carbon-capture-utilisation-and-storage/direct-air-capture
+    checked_in_session: false
+  - id: iea_heat_pumps
+    title: "IEA (2022), The Future of Heat Pumps"
+    url: https://www.iea.org/reports/the-future-of-heat-pumps
+    checked_in_session: false
+  - id: engineering_estimate
+    title: "HEATBEAT engineering estimate (physics: sensible and latent heat, Carnot fraction). Not a literature value."
+    url: null
+    checked_in_session: true
+
+solutions:
+
+  # ---------------------------------------------------------------- waste heat, low temperature (< 40 C)
+  - id: aquaculture_ras
+    name: Recirculating aquaculture (warm water fish, e.g. tilapia, barramundi)
+    category: waste_heat
+    description: >
+      Keep fish tanks of a recirculating aquaculture system (RAS) at growth temperature with
+      data center heat. Warm water species need 25 to 32 C, so even air cooled or rear door heat works.
+    heat:
+      source_t_min_c: [28, 30]
+      source_t_ideal_c: [32, 45]
+      process_t_c: [25, 32]
+      heat_pump_boost_ok: true
+      demand: {value: [1, 8], unit: kWh_th per kg fish}
+    ambient:
+      t_db_ideal_c: [0, 20]
+      t_db_tolerable_c: [-20, 35]
+      note: "Heat need falls to near zero above about 25 C outdoor (tanks indoors). In hot climates heat is only needed in winter nights."
+    demand_driver: heating_degree
+    seasonality: heating_season
+    water:
+      role: consumer
+      need: {value: [0.1, 1.0], unit: m3 per kg fish}
+      note: "RAS replaces 1 to 10 percent of volume per day; far below flow through farms."
+    output: {product: fish (live weight), unit: t per year}
+    economics:
+      capex: {value: [5000, 15000], unit: USD per t annual capacity}
+      opex:  {value: [2000, 4000], unit: USD per t fish}
+    trl: [9, 9]
+    israel_fit: {rating: medium, note: "Israel already farms tilapia and barramundi. Small heat sink because winters are mild; feed cost dominates."}
+    confidence: estimate
+    unverified_fields: [heat.demand, water.need, economics]
+    source_ids: [fao_tilapia, engineering_estimate]
+
+  - id: pool_heating
+    name: Swimming pool and leisure water heating
+    category: waste_heat
+    description: Heat public pools (26 to 30 C) directly from the coolant loop through a heat exchanger.
+    heat:
+      source_t_min_c: [30, 32]
+      source_t_ideal_c: [35, 50]
+      process_t_c: [26, 30]
+      heat_pump_boost_ok: true
+      demand: {value: [1500, 4000], unit: kWh_th per m2 pool surface per year}
+    ambient:
+      t_db_ideal_c: [-5, 18]
+      t_db_tolerable_c: [-20, 35]
+      note: "Indoor pools need heat all year; outdoor pools mostly in shoulder seasons."
+    demand_driver: heating_degree
+    seasonality: year_round
+    water:
+      role: neutral
+      need: {value: [0, 0], unit: m3 per MWh_th}
+    output: {product: pool heat delivered, unit: MWh_th per year}
+    economics:
+      capex: {value: [100000, 500000], unit: USD per MW_th connection (heat exchanger and pipe, excl. long pipelines)}
+      opex:  {value: [2, 8], unit: USD per MWh_th}
+    trl: [9, 9]
+    israel_fit: {rating: low, note: "Small sink (a few hundred kW per pool). Only works if a pool is next to the site."}
+    confidence: unverified
+    unverified_fields: [heat.demand, economics]
+    source_ids: [engineering_estimate]
+
+  - id: swro_feed_preheat
+    name: Preheating seawater reverse osmosis (SWRO) feed water
+    category: water
+    description: >
+      Warmer feed water lowers viscosity and raises membrane permeability, so an SWRO plant needs
+      less pressure. Coastal sites next to desalination plants (Israel: Hadera, Sorek, Ashkelon, Palmachim)
+      can dump low grade heat into the intake.
+    heat:
+      source_t_min_c: [25, 30]
+      source_t_ideal_c: [30, 45]
+      process_t_c: [25, 35]
+      heat_pump_boost_ok: false
+      demand: {value: [1, 3], unit: percent RO electricity saved per K feed temperature rise}
+    ambient:
+      t_db_ideal_c: [5, 25]
+      t_db_tolerable_c: [-5, 45]
+      note: "Benefit shrinks in summer when sea water is already warm (eastern Mediterranean about 30 C in August). Membranes are typically limited to about 40 to 45 C."
+    requires: [coastal]
+    demand_driver: constant
+    seasonality: year_round
+    water:
+      role: producer
+      need: {value: [0, 0], unit: m3 per m3 product}
+    output: {product: SWRO electricity saved, unit: MWh_e per year}
+    economics:
+      capex: {value: [50000, 300000], unit: USD per MW_th (heat exchanger at intake)}
+      opex:  {value: [1, 3], unit: USD per MWh_th}
+    trl: [5, 7]
+    israel_fit: {rating: high, note: "Israel gets most of its drinking water from coastal SWRO plants. Needs a site within a few km of a plant. Biofouling and membrane temperature limits must be checked."}
+    confidence: unverified
+    unverified_fields: [heat.demand, economics, trl]
+    source_ids: [karaghouli_desal_2013, engineering_estimate]
+
+  # ---------------------------------------------------------------- waste heat, mid temperature (35 to 60 C)
+  - id: greenhouse_heating
+    name: Greenhouse heating (and CO2 enrichment where available)
+    category: waste_heat
+    description: Low temperature heating of greenhouses via pipe rails or air handlers.
+    heat:
+      source_t_min_c: [30, 35]
+      source_t_ideal_c: [40, 60]
+      process_t_c: [18, 25]
+      heat_pump_boost_ok: true
+      demand: {value: [50, 400], unit: kWh_th per m2 per year}
+    ambient:
+      t_db_ideal_c: [-10, 15]
+      t_db_tolerable_c: [-25, 30]
+      note: "Upper end is Northern Europe (Netherlands about 300 to 400). Mediterranean greenhouses need heat mainly on winter nights, lower end."
+    demand_driver: heating_degree
+    seasonality: heating_season
+    water:
+      role: consumer
+      need: {value: [0.5, 1.5], unit: m3 per m2 per year}
+    output: {product: vegetables (tomato equivalent), unit: t per year}
+    economics:
+      capex: {value: [100, 300], unit: USD per m2 greenhouse (high tech glass)}
+      opex:  {value: [20, 60], unit: USD per m2 per year (excl. heat)}
+    trl: [9, 9]
+    israel_fit: {rating: medium, note: "Israel has a large greenhouse sector (Arava, Negev), but heat demand is seasonal and small; summer cooling of greenhouses is the bigger problem."}
+    confidence: estimate
+    unverified_fields: [heat.demand, water.need]
+    source_ids: [engineering_estimate]
+
+  - id: anaerobic_digestion
+    name: Biogas digester heating (anaerobic digestion)
+    category: waste_heat
+    description: >
+      Keep a digester at mesophilic (35 to 42 C) or thermophilic (50 to 57 C) temperature and
+      preheat feedstock (manure, food waste, sewage sludge). The digester then sells its biogas
+      instead of burning part of it for heat.
+    heat:
+      source_t_min_c: [40, 45]
+      source_t_ideal_c: [45, 65]
+      process_t_c: [35, 42]
+      heat_pump_boost_ok: true
+      demand: {value: [30, 80], unit: kWh_th per t feedstock}
+    ambient:
+      t_db_ideal_c: [-10, 20]
+      t_db_tolerable_c: [-30, 45]
+      note: "Feed heating (about 25 K x 4.2 kJ/kgK = 29 kWh/t) plus tank losses. Warm climates need less."
+    demand_driver: heating_degree
+    seasonality: year_round
+    water:
+      role: neutral
+      need: {value: [0, 0.2], unit: m3 per t feedstock}
+    output: {product: biogas, unit: Nm3 per year (about 20 to 150 Nm3 per t feedstock depending on type)}
+    economics:
+      capex: {value: [3000, 8000], unit: USD per kW_el equivalent of biogas CHP}
+      opex:  {value: [3, 8], unit: percent of capex per year}
+    trl: [9, 9]
+    israel_fit: {rating: medium, note: "Israel has dairy, poultry and food waste streams; heat saving is modest in a warm climate, value is mostly the feedstock logistics."}
+    confidence: estimate
+    unverified_fields: [economics]
+    source_ids: [engineering_estimate]
+
+  - id: microalgae
+    name: Microalgae cultivation (e.g. spirulina) with heat and CO2
+    category: waste_heat
+    description: Keep open ponds or photobioreactors at 30 to 37 C at night and in winter to extend the growing season.
+    heat:
+      source_t_min_c: [35, 38]
+      source_t_ideal_c: [40, 55]
+      process_t_c: [28, 37]
+      heat_pump_boost_ok: true
+      demand: {value: [5, 50], unit: kWh_th per kg dry biomass}
+    ambient:
+      t_db_ideal_c: [10, 30]
+      t_db_tolerable_c: [0, 40]
+      note: "Needs high solar irradiance (ghi_wm2). Heat need is driven by night time and winter cooling of the culture."
+    demand_driver: heating_degree
+    seasonality: heating_season
+    water:
+      role: consumer
+      need: {value: [0.5, 3], unit: m3 per kg dry biomass (open ponds, evaporation)}
+    output: {product: algae biomass (dry), unit: t per year}
+    economics:
+      capex: {value: [50, 300], unit: USD per m2 cultivation area}
+      opex:  {value: [5, 30], unit: USD per kg dry biomass}
+    trl: [7, 9]
+    israel_fit: {rating: medium, note: "Israel has an algae industry in the Arava; very sunny. Water use of open ponds is a concern."}
+    confidence: unverified
+    unverified_fields: [heat.demand, water.need, economics]
+    source_ids: [engineering_estimate]
+
+  - id: low_temp_drying
+    name: Low temperature drying (crops, dates, wood, sewage sludge)
+    category: waste_heat
+    description: Belt or chamber dryers using 40 to 70 C air heated by the coolant loop.
+    heat:
+      source_t_min_c: [40, 45]
+      source_t_ideal_c: [50, 70]
+      process_t_c: [35, 65]
+      heat_pump_boost_ok: true
+      demand: {value: [0.9, 1.5], unit: kWh_th per kg water evaporated}
+    ambient:
+      t_db_ideal_c: [10, 40]
+      t_db_tolerable_c: [-20, 45]
+      note: "Dry warm air helps (low rh_pct). Latent heat of water is about 0.63 kWh/kg, the rest is losses."
+    demand_driver: constant
+    seasonality: year_round
+    water:
+      role: neutral
+      need: {value: [0, 0], unit: m3 per t product}
+    output: {product: water removed, unit: t water evaporated per year}
+    economics:
+      capex: {value: [200000, 800000], unit: USD per t/h evaporation capacity}
+      opex:  {value: [5, 20], unit: USD per t water evaporated (excl. heat)}
+    trl: [9, 9]
+    israel_fit: {rating: medium, note: "Year round, does not depend on heating demand. Sewage sludge drying is a steady municipal sink."}
+    confidence: estimate
+    unverified_fields: [economics]
+    source_ids: [engineering_estimate]
+
+  - id: district_heating_5gdh
+    name: Ambient or 5th generation district heating and cooling network
+    category: waste_heat
+    description: >
+      Low temperature network (10 to 30 C) with heat pumps at each building. Data center heat is fed
+      in directly; buildings can also reject cooling heat into the same loop.
+    heat:
+      source_t_min_c: [20, 25]
+      source_t_ideal_c: [25, 40]
+      process_t_c: [10, 30]
+      heat_pump_boost_ok: false
+      demand: {value: [30, 120], unit: kWh_th per m2 floor area per year}
+    ambient:
+      t_db_ideal_c: [-15, 15]
+      t_db_tolerable_c: [-30, 35]
+      note: "Bidirectional, so it also serves cooling dominated climates better than classic district heating."
+    demand_driver: heating_degree
+    seasonality: year_round
+    water:
+      role: neutral
+      need: {value: [0, 0], unit: m3 per MWh_th}
+    output: {product: heat delivered to buildings, unit: MWh_th per year}
+    economics:
+      capex: {value: [1000000, 3000000], unit: USD per km network}
+      opex:  {value: [2, 6], unit: USD per MWh_th}
+    trl: [8, 9]
+    israel_fit: {rating: low, note: "Israel has no district heating tradition and low heating demand. Only interesting for new mixed use districts."}
+    confidence: estimate
+    unverified_fields: [economics, heat.demand]
+    source_ids: [lund_4gdh_2014, engineering_estimate]
+
+  # ---------------------------------------------------------------- waste heat, higher temperature (> 55 C, often needs heat pump)
+  - id: district_heating_4gdh
+    name: Classic or 4th generation district heating (with heat pump)
+    category: waste_heat
+    description: Lift coolant heat to 55 to 80 C with a large heat pump and feed a district heating network.
+    heat:
+      source_t_min_c: [55, 60]
+      source_t_ideal_c: [65, 80]
+      process_t_c: [55, 80]
+      heat_pump_boost_ok: true
+      demand: {value: [50, 150], unit: kWh_th per m2 floor area per year}
+    ambient:
+      t_db_ideal_c: [-20, 10]
+      t_db_tolerable_c: [-35, 25]
+      note: "Value scales with heating degree hours (heating_degree_hours_18c)."
+    demand_driver: heating_degree
+    seasonality: heating_season
+    water:
+      role: neutral
+      need: {value: [0, 0], unit: m3 per MWh_th}
+    output: {product: heat delivered to network, unit: MWh_th per year}
+    economics:
+      capex: {value: [500000, 1200000], unit: USD per MW_th heat pump and connection}
+      opex:  {value: [2, 6], unit: USD per MWh_th (excl. heat pump electricity)}
+    trl: [9, 9]
+    israel_fit: {rating: low, note: "Very low heating demand. Strong reference case for Nordic and US north sites."}
+    confidence: literature
+    unverified_fields: [economics]
+    source_ids: [lund_4gdh_2014, stockholm_data_parks, iea_heat_pumps]
+
+  - id: domestic_hot_water
+    name: Domestic hot water for hotels, hospitals, campuses
+    category: waste_heat
+    description: Supply sanitary hot water (55 to 60 C because of legionella) to nearby large consumers.
+    heat:
+      source_t_min_c: [58, 62]
+      source_t_ideal_c: [60, 70]
+      process_t_c: [55, 60]
+      heat_pump_boost_ok: true
+      demand: {value: [1, 3], unit: MWh_th per hotel room per year}
+    ambient:
+      t_db_ideal_c: [-10, 30]
+      t_db_tolerable_c: [-30, 45]
+      note: "Year round demand, only weakly climate dependent. Good fit where space heating demand is low."
+    demand_driver: constant
+    seasonality: year_round
+    water:
+      role: neutral
+      need: {value: [0, 0], unit: m3 per MWh_th}
+    output: {product: hot water heat delivered, unit: MWh_th per year}
+    economics:
+      capex: {value: [300000, 900000], unit: USD per MW_th (heat pump, storage, pipe)}
+      opex:  {value: [2, 6], unit: USD per MWh_th (excl. heat pump electricity)}
+    trl: [9, 9]
+    israel_fit: {rating: medium, note: "Year round demand fits Israel better than space heating, but most Israeli homes use solar water heaters already; target hotels and hospitals."}
+    confidence: unverified
+    unverified_fields: [heat.demand, economics]
+    source_ids: [engineering_estimate]
+
+  - id: adsorption_chiller
+    name: Adsorption chiller (silica gel or zeolite) driven by coolant heat
+    category: waste_heat
+    description: >
+      Turn warm coolant into chilled water for the remaining air cooled load, offices or neighbours.
+      Works at lower drive temperatures than absorption chillers, at lower COP.
+    heat:
+      source_t_min_c: [50, 55]
+      source_t_ideal_c: [60, 75]
+      process_t_c: [55, 75]
+      heat_pump_boost_ok: false
+      demand: {value: [1.7, 2.5], unit: kWh_th per kWh_cooling (COP_th 0.4 to 0.6)}
+    ambient:
+      t_db_ideal_c: [15, 35]
+      t_db_tolerable_c: [5, 45]
+      note: "Valuable when cooling demand is high (cooling_degree_hours_18c). Heat rejection = drive heat + cooling, via dry or wet cooler."
+    demand_driver: cooling_degree
+    seasonality: cooling_season
+    water:
+      role: consumer
+      need: {value: [0, 4], unit: L per kWh_cooling (0 with dry cooler, up to about 4 with wet tower)}
+    output: {product: chilled water, unit: MWh_cooling per year}
+    economics:
+      capex: {value: [500, 1500], unit: USD per kW_cooling}
+      opex:  {value: [1, 3], unit: percent of capex per year}
+    trl: [8, 9]
+    israel_fit: {rating: high, note: "Cooling demand is high all summer. Fits dlc_hot and Vera Rubin sites if the return reaches about 55 C or more."}
+    confidence: literature
+    unverified_fields: [economics]
+    source_ids: [idatacool_2013, dicicco_adsorption_dc, engineering_estimate]
+
+  - id: absorption_chiller
+    name: Single effect absorption chiller (LiBr water)
+    category: waste_heat
+    description: Classic thermally driven chiller. Needs hotter drive heat than adsorption; usually requires a heat pump booster for data center heat.
+    heat:
+      source_t_min_c: [65, 70]
+      source_t_ideal_c: [80, 95]
+      process_t_c: [70, 95]
+      heat_pump_boost_ok: true
+      demand: {value: [1.3, 1.7], unit: kWh_th per kWh_cooling (COP_th 0.6 to 0.75)}
+    ambient:
+      t_db_ideal_c: [15, 35]
+      t_db_tolerable_c: [5, 45]
+      note: "Heat rejection is large (about 2.4 x cooling output); a wet tower raises water use."
+    demand_driver: cooling_degree
+    seasonality: cooling_season
+    water:
+      role: consumer
+      need: {value: [3, 6], unit: L per kWh_cooling (wet tower)}
+    output: {product: chilled water, unit: MWh_cooling per year}
+    economics:
+      capex: {value: [300, 800], unit: USD per kW_cooling}
+      opex:  {value: [1, 3], unit: percent of capex per year}
+    trl: [9, 9]
+    israel_fit: {rating: medium, note: "Cooling demand is high, but temperature gap to data center heat is large and water use conflicts with water scarcity."}
+    confidence: estimate
+    unverified_fields: [economics, water.need]
+    source_ids: [engineering_estimate]
+
+  - id: med_desalination
+    name: Low temperature multi effect distillation (MED) desalination
+    category: water
+    description: Evaporate sea water in several effects under vacuum. Low temperature MED runs at top brine temperatures of about 55 to 70 C.
+    heat:
+      source_t_min_c: [55, 60]
+      source_t_ideal_c: [65, 75]
+      process_t_c: [55, 70]
+      heat_pump_boost_ok: true
+      demand: {value: [50, 90], unit: kWh_th per m3 fresh water}
+    ambient:
+      t_db_ideal_c: [10, 40]
+      t_db_tolerable_c: [-5, 45]
+      note: "Needs sea water access (coastal sites). Plus about 1.5 to 2.5 kWh_e per m3 for pumps. With 45 to 55 C heat, fewer effects and lower GOR."
+    requires: [coastal]
+    demand_driver: water_stress
+    seasonality: year_round
+    water:
+      role: producer
+      need: {value: [-1, -1], unit: m3 per m3 product (negative = produces)}
+    output: {product: fresh water, unit: m3 per year}
+    economics:
+      capex: {value: [1000, 2500], unit: USD per m3/day capacity}
+      opex:  {value: [0.2, 0.5], unit: USD per m3 (excl. heat)}
+    trl: [7, 9]
+    israel_fit: {rating: high, note: "Water scarcity and existing desalination know how. Must beat Israeli SWRO at roughly 3 to 3.5 kWh_e per m3."}
+    confidence: literature
+    unverified_fields: [economics]
+    source_ids: [karaghouli_desal_2013]
+
+  - id: membrane_distillation
+    name: Membrane distillation (MD) for desalination or brine concentration
+    category: water
+    description: Vapour passes a hydrophobic membrane driven by a temperature difference. Works with 50 to 80 C feed.
+    heat:
+      source_t_min_c: [45, 50]
+      source_t_ideal_c: [60, 80]
+      process_t_c: [50, 80]
+      heat_pump_boost_ok: true
+      demand: {value: [100, 1000], unit: kWh_th per m3 fresh water}
+    ambient:
+      t_db_ideal_c: [10, 40]
+      t_db_tolerable_c: [-5, 45]
+      note: "Thermally inefficient but tolerant to high salinity; useful for SWRO brine minimisation."
+    requires: [coastal]
+    demand_driver: water_stress
+    seasonality: year_round
+    water:
+      role: producer
+      need: {value: [-1, -1], unit: m3 per m3 product (negative = produces)}
+    output: {product: fresh water, unit: m3 per year}
+    economics:
+      capex: {value: [1500, 5000], unit: USD per m3/day capacity}
+      opex:  {value: [0.5, 1.5], unit: USD per m3 (excl. heat)}
+    trl: [5, 7]
+    israel_fit: {rating: medium, note: "Brine from coastal SWRO plants is an Israeli issue; MD could concentrate it. Low TRL."}
+    confidence: literature
+    unverified_fields: [economics]
+    source_ids: [alkhudhiri_md_2012]
+
+  - id: dac_solid_sorbent
+    name: Direct air capture with solid sorbent (temperature vacuum swing)
+    category: waste_heat
+    description: Regenerate amine sorbent with low grade heat; DC heat usually needs a heat pump booster to about 80 to 100 C.
+    heat:
+      source_t_min_c: [75, 80]
+      source_t_ideal_c: [85, 110]
+      process_t_c: [80, 120]
+      heat_pump_boost_ok: true
+      demand: {value: [1500, 2800], unit: kWh_th per t CO2 (about 5.5 to 10 GJ/t)}
+    ambient:
+      t_db_ideal_c: [0, 25]
+      t_db_tolerable_c: [-20, 40]
+      note: "Plus about 300 to 700 kWh_e per t CO2 for fans and vacuum. Humidity affects sorbent uptake."
+    demand_driver: constant
+    seasonality: year_round
+    water:
+      role: neutral
+      need: {value: [0, 2], unit: m3 per t CO2 (some designs co-produce water)}
+    output: {product: CO2 captured, unit: t CO2 per year}
+    economics:
+      capex: {value: [1000, 3000], unit: USD per t CO2 per year capacity}
+      opex:  {value: [100, 300], unit: USD per t CO2}
+    trl: [6, 7]
+    israel_fit: {rating: low, note: "No local CO2 storage or market; value depends on carbon credit prices."}
+    confidence: estimate
+    unverified_fields: [economics, heat.demand]
+    source_ids: [iea_dac, engineering_estimate]
+
+  - id: orc_power
+    name: Organic Rankine cycle (ORC) power from waste heat
+    category: waste_heat
+    description: Turn heat back into electricity. At data center temperatures efficiency is very low.
+    heat:
+      source_t_min_c: [70, 80]
+      source_t_ideal_c: [90, 120]
+      process_t_c: [70, 120]
+      heat_pump_boost_ok: false
+      demand: {value: [12, 30], unit: kWh_th per kWh_e (net efficiency 3 to 8 percent)}
+    ambient:
+      t_db_ideal_c: [-20, 15]
+      t_db_tolerable_c: [-30, 35]
+      note: "Cold ambient raises efficiency (lower condenser temperature)."
+    demand_driver: constant
+    seasonality: year_round
+    water:
+      role: neutral
+      need: {value: [0, 0], unit: m3 per MWh_e}
+    output: {product: electricity, unit: MWh_e per year}
+    economics:
+      capex: {value: [2000, 5000], unit: USD per kW_e}
+      opex:  {value: [1, 3], unit: percent of capex per year}
+    trl: [6, 8]
+    israel_fit: {rating: low, note: "Hot ambient lowers efficiency further. Kept as a reference case."}
+    confidence: estimate
+    unverified_fields: [heat.demand, economics]
+    source_ids: [engineering_estimate]
+
+  # ---------------------------------------------------------------- enablers (combine with other solutions)
+  - id: heat_pump_booster
+    name: Industrial heat pump to raise coolant temperature (enabler)
+    category: enabler
+    description: >
+      Lifts coolant heat (25 to 55 C) to 60 to 120 C so that solutions with `heat_pump_boost_ok: true`
+      become possible. The screening uses it automatically. COP estimate = carnot_fraction x T_hot / (T_hot - T_cold), in K.
+    heat:
+      source_t_min_c: [15, 20]
+      source_t_ideal_c: [30, 60]
+      process_t_c: [60, 120]
+      heat_pump_boost_ok: false
+      demand: {value: [0.45, 0.55], unit: carnot_fraction}
+    ambient:
+      t_db_ideal_c: [-30, 45]
+      t_db_tolerable_c: [-30, 45]
+      note: "Not climate dependent (water source). Above about 90 C output, TRL drops."
+    demand_driver: constant
+    seasonality: year_round
+    water:
+      role: neutral
+      need: {value: [0, 0], unit: m3 per MWh_th}
+    output: {product: lifted heat, unit: MWh_th per year}
+    economics:
+      capex: {value: [400, 1000], unit: USD per kW_th}
+      opex:  {value: [1, 3], unit: percent of capex per year (excl. electricity)}
+    trl: [7, 9]
+    israel_fit: {rating: medium, note: "Required for most heat uses above 60 C."}
+    confidence: literature
+    unverified_fields: [economics]
+    source_ids: [iea_heat_pumps, engineering_estimate]
+
+  # ---------------------------------------------------------------- stranded power
+  - id: flexible_compute
+    name: Flexible compute and load shifting to cheap or low carbon hours
+    category: stranded_power
+    description: Shift deferrable jobs (training, batch inference) to hours with low price or carbon intensity, or absorb curtailed renewables.
+    heat:
+      source_t_min_c: null
+      source_t_ideal_c: null
+      process_t_c: null
+      heat_pump_boost_ok: false
+      demand: null
+    ambient:
+      t_db_ideal_c: null
+      t_db_tolerable_c: null
+      note: "Uses price_hourly (price_p10, price_p90, price_peak_local_hour), not weather."
+    demand_driver: price_volatility
+    seasonality: year_round
+    water:
+      role: neutral
+      need: {value: [0, 0], unit: m3 per MWh_e}
+    output: {product: electricity cost and CO2 avoided, unit: USD per year and t CO2 per year}
+    economics:
+      capex: {value: [0, 50000], unit: USD per MW_IT (scheduler, software)}
+      opex:  {value: [0, 0], unit: USD per year}
+    trl: [7, 9]
+    israel_fit: {rating: medium, note: "Israel has a TOU tariff (IEC TAOZ) with clear peak hours, and rising solar curtailment."}
+    confidence: estimate
+    unverified_fields: [economics]
+    source_ids: [engineering_estimate]
+
+  - id: battery_arbitrage
+    name: On site battery storage for price arbitrage and grid services
+    category: stranded_power
+    description: Use the data center's grid connection and UPS footprint for a battery that charges in cheap hours and discharges at peak.
+    heat:
+      source_t_min_c: null
+      source_t_ideal_c: null
+      process_t_c: null
+      heat_pump_boost_ok: false
+      demand: null
+    ambient:
+      t_db_ideal_c: [10, 30]
+      t_db_tolerable_c: [-20, 45]
+      note: "Battery needs climate control in hot sites."
+    demand_driver: price_volatility
+    seasonality: year_round
+    water:
+      role: neutral
+      need: {value: [0, 0], unit: m3 per MWh_e}
+    output: {product: arbitrage revenue, unit: USD per year}
+    economics:
+      capex: {value: [200, 400], unit: USD per kWh storage}
+      opex:  {value: [1, 2], unit: percent of capex per year}
+    trl: [9, 9]
+    israel_fit: {rating: medium, note: "Israel is adding large storage alongside solar; TOU spreads matter."}
+    confidence: unverified
+    unverified_fields: [economics]
+    source_ids: [engineering_estimate]
+
+  # ---------------------------------------------------------------- water
+  - id: dry_cooling_free_cooling
+    name: Dry coolers and chiller free operation (reduce WUE)
+    category: water
+    description: >
+      Replace evaporative cooling with dry coolers wherever the coolant supply temperature allows.
+      With 45 C facility water (Blackwell and Vera Rubin) dry coolers work almost all year, even in hot climates.
+    heat:
+      source_t_min_c: null
+      source_t_ideal_c: null
+      process_t_c: null
+      heat_pump_boost_ok: false
+      demand: null
+    ambient:
+      t_db_ideal_c: [-30, 35]
+      t_db_tolerable_c: [-30, 42]
+      note: "Feasible hours = hours with t_db_c below facility_supply_temp_c minus approach (about 3 to 8 K)."
+    demand_driver: constant
+    seasonality: year_round
+    water:
+      role: saver
+      need: {value: [-1.8, -0.5], unit: L per kWh_IT saved versus evaporative cooling}
+    output: {product: water and chiller electricity saved, unit: m3 per year and MWh_e per year}
+    economics:
+      capex: {value: [100, 300], unit: USD per kW_th dry cooler capacity}
+      opex:  {value: [1, 2], unit: percent of capex per year}
+    trl: [9, 9]
+    israel_fit: {rating: high, note: "Directly addresses water scarcity. Summer peaks above about 40 C in inland Israel need a trim chiller or adiabatic assist."}
+    confidence: estimate
+    unverified_fields: [water.need, economics]
+    source_ids: [nvidia_45c_blog, facilitiesdive_rubin_2026, ashrae_tc99_liquid]
+
+  - id: reclaimed_water_cooling
+    name: Treated wastewater or brackish water for cooling towers
+    category: water
+    description: Use reclaimed municipal effluent or brackish groundwater instead of potable water for evaporative cooling.
+    heat:
+      source_t_min_c: null
+      source_t_ideal_c: null
+      process_t_c: null
+      heat_pump_boost_ok: false
+      demand: null
+    ambient:
+      t_db_ideal_c: [20, 45]
+      t_db_tolerable_c: [-10, 45]
+      note: "Only relevant where evaporative cooling stays (hot sites, high wet bulb hours)."
+    requires: [evaporative_cooling]
+    demand_driver: water_stress
+    seasonality: year_round
+    water:
+      role: saver
+      need: {value: [-1.8, -0.5], unit: L potable per kWh_IT replaced}
+    output: {product: potable water saved, unit: m3 per year}
+    economics:
+      capex: {value: [0.5, 3], unit: USD per m3/year treatment and pipe capacity}
+      opex:  {value: [0.2, 0.8], unit: USD per m3}
+    trl: [9, 9]
+    israel_fit: {rating: high, note: "Israel reuses most of its treated wastewater, mostly for agriculture, so competition for effluent exists."}
+    confidence: unverified
+    unverified_fields: [water.need, economics]
+    source_ids: [engineering_estimate]
