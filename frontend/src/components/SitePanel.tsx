@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
 import { compact, num, usd, value } from '../format';
-import type { Flag, ModelInfo, ModelResult, OptionResult, SiteInputs } from '../types/api';
+import type { CoolingProfile, Flag, ModelInfo, ModelResult, OptionResult, SiteInputs } from '../types/api';
 import type { DataCenter } from '../types/datacenter';
 import { createPortal } from 'react-dom';
 import CalcModal from './CalcModal';
@@ -60,12 +60,77 @@ function useCalc(r: ModelResult) {
   return [modal, setCalc] as const;
 }
 
+/** Parts of an option the site already has today (from the documented current setup). */
+function AlreadyInPlace({ o }: { o: OptionResult }) {
+  if (!o.already_in_place?.length) return null;
+  return (
+    <ul className="already-list">
+      {o.already_in_place.map((t) => <li key={t}><span className="already">already in place</span> {t}</li>)}
+    </ul>
+  );
+}
+
+const REJECTION_LABEL: Record<string, string> = { dry: 'Dry cooler / air-cooled chiller (no water)', adiabatic: 'Adiabatic / direct evaporative (water in hot hours)', tower: 'Cooling tower (evaporative all year)' };
+const STATUS_TEXT: Record<string, string> = {
+  verified: 'Heat rejection documented for this site',
+  partial: 'Some facts documented, heat rejection not confirmed',
+  context: 'Only operator or area level facts',
+};
+
+export type SetupOverrides = { cooling_profile?: string; baseline_rejection?: string };
+
+/** What the site does today, with a source per fact, plus overrides for cooling and heat rejection. */
+export function CurrentSetup({ r, ov, setOv }: { r: ModelResult; ov: SetupOverrides; setOv: (o: SetupOverrides) => void }) {
+  const b = r.baseline;
+  const [profiles, setProfiles] = useState<CoolingProfile[]>([]);
+  useEffect(() => { api.coolingProfiles().then(setProfiles).catch(() => setProfiles([])); }, []);
+  if (!b.heat_rejection) return null;
+  const facts = (b.current_setup ?? []).filter((f) => f.field !== 'already_implemented');
+  const status = b.setup_status ?? 'none';
+  return (
+    <section className="current-setup">
+      <h4>Current setup <span className={`setup-status setup-${status}`}>{status === 'none' ? 'not documented' : status}</span></h4>
+      <p className="muted small">{STATUS_TEXT[status] ?? 'No public source found: the baseline uses a typical setup for this kind of site. Options are only improvements if the site does not already do them.'}</p>
+      <p className="setup-line">
+        <b>Baseline heat rejection:</b> {REJECTION_LABEL[b.heat_rejection] ?? b.heat_rejection}{' '}
+        {b.heat_rejection_flag && <FlagBadge flag={b.heat_rejection_flag} />}
+      </p>
+      {facts.length > 0 && (
+        <ul className="setup-facts">
+          {facts.map((f) => (
+            <li key={f.field} title={f.note ?? ''}>
+              <b>{f.label ?? f.field}:</b> {String(f.value)}{f.unit ? ` ${f.unit}` : ''}
+              <small className={`conf conf-${f.confidence}`}>{f.confidence}{f.scope && f.scope !== 'site' ? `, ${f.scope.replace(/_/g, ' ')}` : ''}</small>
+              {f.source_url && <a href={f.source_url} target="_blank" rel="noreferrer">{f.source_title ?? 'source'}{f.source_date ? ` (${f.source_date})` : ''}</a>}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="controls setup-controls">
+        <label>Cooling at the rack
+          <select value={ov.cooling_profile ?? b.cooling_profile ?? ''} onChange={(e) => setOv({ ...ov, cooling_profile: e.target.value })}>
+            {profiles.length === 0 && b.cooling_profile && <option value={b.cooling_profile}>{b.cooling_profile}</option>}
+            {profiles.map((p) => <option key={p.cooling_profile_id} value={p.cooling_profile_id}>{p.label}</option>)}
+          </select>
+        </label>
+        <label>Heat rejection today
+          <select value={ov.baseline_rejection ?? b.heat_rejection} onChange={(e) => setOv({ ...ov, baseline_rejection: e.target.value })}>
+            {Object.entries(REJECTION_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+          </select>
+        </label>
+        {(ov.cooling_profile || ov.baseline_rejection) && <button className="link" onClick={() => setOv({})}>Reset to documented setup</button>}
+      </div>
+    </section>
+  );
+}
+
 function OptionKpis({ o, placeholderCosts, onCalc }: { o: OptionResult; placeholderCosts: boolean; onCalc: () => void }) {
   const k = o.kpis;
   const costs = Object.entries(o.capex_breakdown ?? {});
   return (
     <>
     <div className="calc-row"><CalcButton onClick={onCalc} /></div>
+    <AlreadyInPlace o={o} />
     {(o.implementation || costs.length > 0) && (
       <div className="impl">
         {o.implementation && <p><b>How it is built:</b> {o.implementation}</p>}
@@ -131,6 +196,7 @@ export function Results({ r }: { r: ModelResult }) {
               <span className="opt-name">
                 {o.name}
                 {o.product && <small>{o.product}</small>}
+                {o.already_in_place?.length ? <span className="already">already in place</span> : null}
               </span>
               <span className="opt-score">
                 <span className="bar"><i className={(o.score ?? 0) < 0 ? 'neg' : ''} style={{ width: `${(Math.abs(o.score ?? 0) / maxScore) * 100}%` }} /></span>
@@ -222,7 +288,7 @@ export function FullResults({ r }: { r: ModelResult }) {
                 {feasible.map((x) => (
                   <tr key={x.option_id} className={x.option_id === o?.option_id ? 'on' : ''} onClick={() => setPick(x.option_id)}>
                     <td className="opt-rank">{x.rank ?? '-'}</td>
-                    <td className="opt-name">{x.name}{x.product && <small>{x.product}</small>}</td>
+                    <td className="opt-name">{x.name}{x.already_in_place?.length ? <span className="already">already in place</span> : null}{x.product && <small>{x.product}</small>}</td>
                     <td className="rank-score">
                       <span className="bar"><i className={(x.score ?? 0) < 0 ? 'neg' : ''} style={{ width: `${(Math.abs(x.score ?? 0) / maxScore) * 100}%` }} /></span>
                       {num(x.score, 2)}
@@ -258,6 +324,7 @@ export function FullResults({ r }: { r: ModelResult }) {
                 <h4>{o.rank ? `#${o.rank} ` : ''}{o.name}</h4>
                 <CalcButton onClick={() => setCalc(o)} />
               </div>
+              <AlreadyInPlace o={o} />
               {o.implementation && <p className="impl-text"><b>How it is built:</b> {o.implementation}</p>}
               {costs.length > 0 && (
                 <table className="cost-table">
@@ -362,16 +429,21 @@ export default function SitePanel({ site, onClose }: { site: DataCenter; onClose
   const [model, setModel] = useState<string | undefined>();
   const [mode, setMode] = useState<string | undefined>();
   const [greenfield, setGreenfield] = useState<number | undefined>();
+  const [ov, setOv] = useState<SetupOverrides>({});
+  useEffect(() => setOv({}), [site.id]);
 
   useEffect(() => { api.models().then(setModels).catch(() => setModels([])); }, []);
   const info = useMemo(() => models.find((m) => m.name === model) ?? models.find((m) => m.default) ?? models[0], [models, model]);
 
   const params = { model: info?.name, mode, is_greenfield: greenfield };
-  const ranking = useLoad(() => api.ranking(site.id, params), [site.id, info?.name, mode, greenfield]);
+  const hasOv = Object.values(ov).some(Boolean);
+  const ranking = useLoad(() => (hasOv
+    ? api.evaluate({ site_id: site.id, model: info?.name, mode, is_greenfield: greenfield, overrides: ov })
+    : api.ranking(site.id, params)), [site.id, info?.name, mode, greenfield, ov.cooling_profile, ov.baseline_rejection]);
   const inputs = useLoad(() => api.inputs(site.id, { model: info?.name, is_greenfield: greenfield }), [site.id, info?.name, greenfield]);
 
   const loc = [site.city, site.country].filter(Boolean).join(', ');
-  const s = site as DataCenter & { it_load_mw?: number; cooling_type?: string; grid_region?: string };
+  const s = site as DataCenter & { it_load_mw?: number; cooling_type?: string; grid_region?: string; setup_status?: string | null };
 
   return (
     <aside className={`site-panel${expanded ? ' expanded' : ''}`} aria-label={`Results for ${site.name}`}>
@@ -390,6 +462,7 @@ export default function SitePanel({ site, onClose }: { site: DataCenter; onClose
         {s.it_load_mw != null && <span>IT {num(s.it_load_mw)} MW</span>}
         {s.cooling_type && <span>{s.cooling_type.replace(/_/g, ' ')}</span>}
         {site.pue != null && <span>PUE {site.pue}</span>}
+        {s.setup_status && <span className={`setup-${s.setup_status}`}>setup {s.setup_status}</span>}
         {s.grid_region && <span>{s.grid_region}</span>}
       </div>
 
@@ -418,7 +491,7 @@ export default function SitePanel({ site, onClose }: { site: DataCenter; onClose
         <div className="panel-body panel-body-full">
           {ranking.state === 'loading' ? <p className="muted">Running the model…</p>
             : ranking.state === 'error' ? <p className="error">Could not run the model. {ranking.error}</p>
-            : <FullResults r={ranking.data} />}
+            : <><CurrentSetup r={ranking.data} ov={ov} setOv={setOv} /><FullResults r={ranking.data} /></>}
           <section className="full-inputs">
             <h4>Inputs {inputs.state === 'ok' && <small className="scale">{inputs.data.inputs.length} values, hover a row for its source</small>}</h4>
             {inputs.state === 'loading' ? <p className="muted">Loading inputs…</p>
@@ -437,7 +510,7 @@ export default function SitePanel({ site, onClose }: { site: DataCenter; onClose
       <div className="panel-body">
         {tab === 'results' && (ranking.state === 'loading' ? <p className="muted">Running the model…</p>
           : ranking.state === 'error' ? <p className="error">Could not run the model. {ranking.error}</p>
-          : <Results r={ranking.data} />)}
+          : <><CurrentSetup r={ranking.data} ov={ov} setOv={setOv} /><Results r={ranking.data} /></>)}
         {tab === 'inputs' && (inputs.state === 'loading' ? <p className="muted">Loading inputs…</p>
           : inputs.state === 'error' ? <p className="error">{inputs.error}</p>
           : <Inputs d={inputs.data} />)}

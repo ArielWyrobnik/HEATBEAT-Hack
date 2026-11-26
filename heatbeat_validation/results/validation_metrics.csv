@@ -2,9 +2,9 @@ ref,solution,metric,reported,model,unit,model_engine,ratio,verdict,source_id,not
 1,Fish Farm (RAS),reuse_mw_th,1.75,7.71144406392694,MW_th,excel,4.406539465101109,miss,waa_hima_2026,phase 1 test capacity; phase 2 aims at 8 MW
 1,Fish Farm (RAS),reuse_mw_th_target,8.0,7.71144406392694,MW_th,excel,0.9639305079908675,match,waa_hima_2026,phase 2 target
 2,District Heating,heat_delivered_mwh,20000.0,7500.0,MWh/yr,engineering,0.375,same order,nebius_75mw_2024,"approximately 20,000 MWh/yr (2024)"
-2,District Heating,co2_avoided_t_yr,3220.0,1375.129674930551,tCO2e/yr,engineering,0.42705890525793505,same order,nebius_heat,"2024, versus the previous local heat supply (not only gas)"
+2,District Heating,co2_avoided_t_yr,3220.0,1374.3695443126876,tCO2e/yr,engineering,0.42682283984866076,same order,nebius_heat,"2024, versus the previous local heat supply (not only gas)"
 2,District Heating,t_source_c,37.5,32.0,C,engineering,0.8533333333333334,match,nebius_heat,air to water heat exchangers give 35 to 40 C (mid value)
-2,District Heating,pue,1.13,1.113717607982094,-,engineering,0.9855908035239771,match,nebius_greenfield_fi,at full capacity
+2,District Heating,pue,1.13,1.1188437090676688,-,engineering,0.9901271761660787,match,nebius_greenfield_fi,at full capacity
 3b,Biogas Generator (stranded gas),co2e_reduction_share,0.63,,-,,,not covered by the model,crusoe_argus_2021,up to 63% lower CO2e than continued flaring
 4,Absorption Cooling,chp_kw,780.0,,kW_e,,,no model value,nyserda_su_gdc,12 x 65 kW Capstone C65
 5,Organic Rankine Cycle,orc_eta_gross_max,0.03,0.05523037670718898,-,engineering,1.8410125569062994,same order,vertiv_orc_wp,best thermal efficiency in the test matrix (Table 7)

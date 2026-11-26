@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
+SITE_SCOPES = ("site", "campus", "campus_legacy", "cluster", "operator_region")  # see heatbeat_data.current_setup
 LCFS_STATES = {"CA", "OR", "WA"}  # state low carbon fuel standards with tradeable credits (2025)
 
 # Baseline heat rejection per cooling profile (what an operating site of that type most likely uses).
@@ -49,6 +50,8 @@ class SiteCase:
     t_wb: np.ndarray
     x: dict  # scalar site inputs (prices, distances, scores)
     prov: dict = field(default_factory=dict)
+    setup: dict = field(default_factory=dict)  # verified current setup (heatbeat_data.current_setup), field -> fact
+    already: list = field(default_factory=list)  # components the site already has (already_implemented)
 
     @property
     def t_mean(self) -> float:
@@ -162,18 +165,58 @@ def load_site(site_id: str, live: bool = True, weather: pd.DataFrame | None = No
     if is_greenfield is not None:
         x["is_greenfield"] = bool(int(is_greenfield))
         prov["is_greenfield"] = {"status": "user", "source": "UI toggle"}
+    # what the site does today, from public sources (heatbeat_data.current_setup); else the profile default
+    setup = hd.current_setup(site_id) if hasattr(hd, "current_setup") else {}
+    vr = hd.verified_rejection(site_id) if setup else None
+    if vr:
+        rej = vr["value"]
+        prov["baseline_rejection"] = {"status": "data", "source": f"{vr['source_title']} ({vr['source_date']}), "
+                                      f"{vr['source_url']}, confidence {vr['confidence']}"}
+    else:
+        rej = BASELINE_REJECTION.get(prof, "tower")
+        prov["baseline_rejection"] = {"status": "assumption", "source": f"typical for cooling profile {prof} "
+                                      "(no public source for this site)"}
+    pue = _num(hp.get("pue_assumed"), 1.4)
+    pf = setup.get("pue")
+    if pf and pf.get("confidence") in ("high", "medium") and pf.get("scope") in SITE_SCOPES:
+        pue = _num(pf["value"], pue)
+        prov["pue_reported"] = {"status": "data", "source": f"{pf['source_title']} ({pf['source_date']})"}
     case = SiteCase(site_id=site_id, name=m["name"], state=m["region"], it_mw=it, loops=loops,
-                    cooling_profile=prof, baseline_rejection=BASELINE_REJECTION.get(prof, "tower"),
-                    pue_reported=_num(hp.get("pue_assumed"), 1.4), t_db=t_db, t_wb=t_wb, x=x, prov=prov)
+                    cooling_profile=prof, baseline_rejection=rej,
+                    pue_reported=pue, t_db=t_db, t_wb=t_wb, x=x, prov=prov, setup=setup,
+                    already=hd.already_implemented(site_id) if setup else [])
     prov["it_mw"] = {"status": "estimate", "source": f"site_profiles.csv it_load_mw (confidence {hp.get('confidence')})"}
-    for k, v in (overrides or {}).items():
-        set_input(case, k, v)
+    apply_overrides(case, overrides)
     return case
+
+
+def apply_overrides(case: "SiteCase", overrides: dict | None) -> None:
+    """UI overrides; the cooling profile first, so a heat rejection override given with it wins."""
+    o = dict(overrides or {})
+    if "cooling_profile" in o:
+        set_input(case, "cooling_profile", o.pop("cooling_profile"))
+    for k, v in o.items():
+        set_input(case, k, v)
 
 
 def set_input(case: SiteCase, key: str, value) -> None:
     """Change one site input in place (UI override)."""
     import dataclasses
+    if key == "cooling_profile":
+        prof = str(value)
+        case.loops = loops_for_profile(prof, case.it_mw)
+        case.cooling_profile = prof
+        case.prov["loops"] = {"status": "user", "source": f"cooling profile {prof} set in the UI"}
+        if case.prov.get("baseline_rejection", {}).get("status") not in ("data", "user"):
+            case.baseline_rejection = BASELINE_REJECTION.get(prof, "tower")
+        return
+    if key == "baseline_rejection":
+        from .heat_rejection import TECHS
+        if value not in TECHS:
+            raise ValueError(f"baseline_rejection must be one of {TECHS}")
+        case.baseline_rejection = str(value)
+        case.prov["baseline_rejection"] = {"status": "user", "source": "set in the UI"}
+        return
     if key == "it_mw":
         f = float(value) / case.it_mw
         case.it_mw = float(value)
@@ -299,11 +342,12 @@ def load_location(lat: float, lon: float, it_mw: float, cooling_profile: str = "
         case.prov[k] = {"status": "estimate", "source": f"nearest database site {tpl} ({dist / 1000:.0f} km): {st}"}
     case.x["is_greenfield"] = bool(is_greenfield)
     case.prov["is_greenfield"] = {"status": "user", "source": "planned site"}
+    case.setup, case.already = {}, []  # a planned site has no current setup; the template's does not apply
+    case.prov["baseline_rejection"] = {"status": "assumption", "source": f"typical for cooling profile {cooling_profile}"}
     if not tpl.startswith("us-"):
         case.prov["template"] = {"status": "estimate", "source": f"template {tpl} is outside the US: most site data "
                                  "(water, GIS, industry) are US only, so defaults are used (flagged)"}
     case.x["template_site_id"] = tpl
     case.x["template_distance_m"] = dist
-    for k, v in (overrides or {}).items():
-        set_input(case, k, v)
+    apply_overrides(case, overrides)
     return case

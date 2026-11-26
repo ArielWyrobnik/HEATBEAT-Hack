@@ -501,3 +501,22 @@ body.panel-full { overflow: hidden; }
 @media (min-width: 721px) {
   .map-wrap:has(.site-panel:not(.expanded)) .search { left: calc((100% - min(460px, 100%)) / 2); width: min(760px, calc(100% - min(460px, 100%) - 32px)); }
 }
+
+/* current setup (what the site already does, with sources) */
+.current-setup { margin: 4px 0 14px; padding: 10px 12px; border: 1px solid var(--border); }
+.current-setup h4 { margin: 0 0 4px; display: flex; gap: 8px; align-items: center; }
+.setup-status { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 6px; border: 1px solid; }
+.setup-verified { color: var(--green); border-color: var(--green); }
+.setup-partial { color: #e0b252; border-color: #8a6a2a; }
+.setup-context, .setup-none { color: var(--muted); border-color: var(--border); }
+.setup-line { margin: 6px 0; font-size: 13px; }
+.setup-facts { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 4px; font-size: 12px; }
+.setup-facts li { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.setup-facts a { color: var(--muted); font-size: 11px; }
+.conf { font-size: 10px; color: var(--muted); }
+.conf-high { color: var(--green); }
+.conf-low { color: #e0b252; }
+.setup-controls { padding: 8px 0 0; flex-wrap: wrap; }
+.already { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 1px 5px; color: #6bb8ff; border: 1px solid #2f5f8a; }
+.already-list { list-style: none; margin: 6px 0; padding: 0; font-size: 12px; display: grid; gap: 4px; }
+button.link { background: none; border: 0; color: #6bb8ff; cursor: pointer; font-size: 12px; padding: 0; }

@@ -1,0 +1,124 @@
+site_id,field,value,unit,scope,confidence,evidence,source_id,note
+us-tx-abilene-stargate,status,operating,,site,high,third_party,epoch_abilene,Buildings 1 and 2 running since 2025; 6 of 8 buildings (618 MW) per Oracle Sep 2026 (via Epoch)
+us-tx-abilene-stargate,cooling_profile_id,dlc_warm,,site,high,operator,crusoe_abilene_2025,"""closed-loop, non-evaporative liquid cooling systems""; GB200 racks delivered June 2025 (OpenAI via Epoch)"
+us-tx-abilene-stargate,heat_rejection,dry,,site,high,operator,crusoe_abilene_2025,"""heat rejected via air-cooled chillers, so the facility does not consume any water as part of the heat-rejection process"". Epoch estimates 640 Airedale OptiChill Free Cool units (free cooling coils + compressors), which is what the model calls dry cooler + trim chiller"
+us-tx-abilene-stargate,water_source,municipal (initial fill only),,site,high,operator,crusoe_abilene_2025,1 million gallons per building initial fill from the municipal supply
+us-tx-abilene-stargate,water_use_m3_yr,1514,m3/yr,site,medium,operator,crusoe_abilene_2025,"about 50,000 gallons per building per year top-up x 8 buildings (operator figure, not metered)"
+us-tx-abilene-stargate,chip_family,nvidia_blackwell,,site,medium,third_party,epoch_abilene,"GB200 (OpenAI statement), B200/B300 per Epoch estimate"
+us-tx-abilene-stargate,onsite_generation,"GE Vernova gas turbines (backup for the data halls), grid connection to ERCOT",,site,high,operator,crusoe_abilene_2025,
+us-tx-abilene-stargate,heat_reuse,none reported,,site,medium,operator,crusoe_abilene_2025,no heat reuse in any source read
+us-tx-abilene-stargate,already_implemented,dry,,site,high,operator,crusoe_abilene_2025,zero-water heat rejection is already in place
+us-wi-mount-pleasant-microsoft,status,"operating (phase 1, early 2026)",,site,medium,press,dcf_fairwater_2025,
+us-wi-mount-pleasant-microsoft,cooling_profile_id,dlc_warm,,site,high,operator,msft_zero_water_2024,"chip-level closed loop cooling, ""economizing chillers with elevated water temperatures""; GB200 NVL72 (DCF)"
+us-wi-mount-pleasant-microsoft,heat_rejection,dry,,site,high,press,dcf_fairwater_2025,"""172 twenty-foot fans to chill large heat-exchanger fins along the building exterior"" plus chillers; outside air for the remaining about 10 %, water only in extreme heat"
+us-wi-mount-pleasant-microsoft,water_source,"municipal (Racine), cooling water only May to September",,site,medium,press,wpr_fairwater_2024,
+us-wi-mount-pleasant-microsoft,water_use_peak_m3_day,1325,m3/day,site,medium,press,wpr_fairwater_2024,"peak about 350,000 gallons per day on the hottest days only (Microsoft statement)"
+us-wi-mount-pleasant-microsoft,chip_family,nvidia_blackwell,,site,high,press,dcf_fairwater_2025,GB200 NVL72
+us-wi-mount-pleasant-microsoft,onsite_generation,temporary natural gas generation planned near the campus,,site,low,press,dcf_fairwater_2025,
+us-wi-mount-pleasant-microsoft,heat_reuse,none reported,,site,medium,operator,dcf_fairwater_2025,
+us-wi-mount-pleasant-microsoft,already_implemented,dry,,site,high,operator,msft_zero_water_2024,closed loop with air-side heat rejection already in place
+us-tn-memphis-xai,status,operating,,site,high,press,dcf_xai_2026,"about 200,000 GPUs (Jan 2026)"
+us-tn-memphis-xai,cooling_profile_id,dlc_cold,,site,high,press,sth_colossus_2024,"""Heat is transferred from the GPUs and rear door heat exchanger loops to the facility water loops at the CDU"""
+us-tn-memphis-xai,heat_rejection,tower,,site,low,inferred,eenews_xai_2026,"ServeTheHome: warm water goes ""outside the facility to chillers"" (type not stated). Up to 3.7 million gallons/day of drinking water requested points to evaporative heat rejection; team inference"
+us-tn-memphis-xai,water_source,potable (MLGW drinking water) until a reuse plant exists,,site,high,press,eenews_xai_2026,13 million gal/day wastewater reuse plant (DCD) stopped April 2026; xAI says it resumes in 2027
+us-tn-memphis-xai,water_use_peak_m3_day,14006,m3/day,site,medium,press,eenews_xai_2026,"requested draw up to 3.7 million gallons/day, both Memphis sites"
+us-tn-memphis-xai,chip_family,nvidia_hopper,,site,high,press,dcf_xai_2026,H100/H200 (Supermicro HGX)
+us-tn-memphis-xai,onsite_generation,Tesla Megapacks; interim gas turbines (contested under the Clean Air Act),,site,high,press,dcf_xai_2026,
+us-tn-memphis-xai,heat_reuse,none reported,,site,medium,press,dcf_xai_2026,
+us-la-richland-meta,status,under construction,,site,high,press,fortune_hyperion_2026,
+us-la-richland-meta,heat_rejection,dry,,operator_fleet,low,operator,meta_water_2025,"Meta typical design: ""direct-to-chip liquid, closed-loop cooling system with dry coolers""; not stated for Hyperion"
+us-la-richland-meta,onsite_generation,"Entergy gas: 3 CCCT plants 2,262 MW (2 on site), now 10 plants 7.5 GW planned",,site,high,press,fortune_hyperion_2026,
+us-la-richland-meta,water_source,new wastewater infrastructure funded by Meta (200 million USD),,site,medium,operator,meta_water_2025,
+us-la-richland-meta,heat_reuse,none reported,,site,low,press,fortune_hyperion_2026,
+us-ia-council-bluffs-google,water_use_m3_yr,3709702,m3/yr,site,high,operator,diw_google_2023,"980 million gallons consumed in 2023 (Google 2024 Environmental Report, as tabled by DIW)"
+us-ia-council-bluffs-google,heat_reuse,none reported,,site,low,press,diw_google_2023,
+us-ok-pryor-google,water_use_m3_yr,3085109,m3/yr,site,high,operator,diw_google_2023,"815 million gallons consumed in 2023 (Google 2024 Environmental Report, as tabled by DIW)"
+us-ok-pryor-google,heat_reuse,none reported,,site,low,press,diw_google_2023,
+us-sc-berkeley-google,water_use_m3_yr,2888268,m3/yr,site,high,operator,diw_google_2023,"763 million gallons consumed in 2023 (Google 2024 Environmental Report, as tabled by DIW)"
+us-sc-berkeley-google,heat_reuse,none reported,,site,low,press,diw_google_2023,
+us-ga-douglas-google,water_use_m3_yr,1309752,m3/yr,site,high,operator,diw_google_2023,"346 million gallons consumed in 2023 (Google 2024 Environmental Report, as tabled by DIW)"
+us-ga-douglas-google,heat_reuse,none reported,,site,low,press,diw_google_2023,
+us-nc-lenoir-google,water_use_m3_yr,1275683,m3/yr,site,high,operator,diw_google_2023,"337 million gallons consumed in 2023 (Google 2024 Environmental Report, as tabled by DIW)"
+us-nc-lenoir-google,heat_reuse,none reported,,site,low,press,diw_google_2023,
+us-or-the-dalles-google,water_use_m3_yr,1143194,m3/yr,site,high,operator,diw_google_2023,"302 million gallons consumed in 2023 (Google 2024 Environmental Report, as tabled by DIW)"
+us-or-the-dalles-google,heat_reuse,none reported,,site,low,press,diw_google_2023,
+us-tx-midlothian-google,water_use_m3_yr,514816,m3/yr,site,high,operator,diw_google_2023,"136 million gallons consumed in 2023 (Google 2024 Environmental Report, as tabled by DIW)"
+us-tx-midlothian-google,heat_reuse,none reported,,site,low,press,diw_google_2023,
+us-ia-council-bluffs-google,water_use_m3_yr_2025,4921033,m3/yr,site,medium,press,flatwater_2026,"1.3 billion gallons in 2025, the most of any Google site (Google self report, via Flatwater)"
+us-ia-council-bluffs-google,heat_rejection,tower,,site,medium,inferred,flatwater_2026,"Google ""uses evaporative cooling or closed-loop, air-cooled chiller systems"" depending on water; about 1 billion gallons a year only fits evaporative cooling"
+us-ok-pryor-google,heat_rejection,tower,,site,high,press,frontier_ok_2026,"cooling towers (photo), water lost to evaporation; more than 1.1 billion gallons Jul 2024 to Jun 2025 (utility records)"
+us-ok-pryor-google,water_source,Neosho River via MidAmerica Industrial Park (about 253 million gallons discharged back),,site,high,press,frontier_ok_2026,
+us-or-the-dalles-google,heat_rejection,tower,,site,medium,inferred,google_dalles_2026,"""We recirculate cooling water at least 10 times"" (cycles of concentration of evaporative cooling)"
+us-or-the-dalles-google,water_source,city water (Dog River and wells),,site,high,press,opb_dalles_2026,about a third of The Dalles city water in 2024 (contested by the mayor)
+us-ga-douglas-google,heat_rejection,tower,,site,medium,inferred,google_georgia,evaporative cooling on recycled water (Google); tower type assumed
+us-ga-douglas-google,water_source,recycled municipal wastewater,,site,high,operator,google_georgia,"""among the first in the industry to use recycled industrial water to cool our servers"""
+us-ga-douglas-google,already_implemented,reclaimed_water,,site,high,operator,google_georgia,already cools on recycled wastewater
+us-sc-berkeley-google,heat_rejection,tower,,site,medium,inferred,live5_berkeley_2019,about 760 million gallons/yr only fits evaporative cooling
+us-sc-berkeley-google,water_source,Berkeley County Water and Sanitation; McQueen Branch aquifer groundwater as last resort,,site,high,press,live5_berkeley_2019,
+us-nc-lenoir-google,heat_rejection,tower,,site,low,inferred,diw_google_2023,water volume points to evaporative cooling; technology not stated
+us-tx-midlothian-google,heat_rejection,tower,,site,low,inferred,diw_google_2023,water volume points to evaporative cooling; technology not stated
+us-va-boydton-microsoft,cooling_profile_id,air_economizer,,site,high,operator,msft_va_2023,"""outdoor air with direct evaporative cooling at our Boydton datacenters"""
+us-va-boydton-microsoft,heat_rejection,adiabatic,,site,high,operator,msft_va_2025,direct evaporative cooling uses water less than 15 % of the year (above 85 F)
+us-va-boydton-microsoft,pue,1.144,,site,high,operator,msft_va_2023,"measured, Jan to Dec 2022 (Virginia region); design PUE new builds 1.12"
+us-va-boydton-microsoft,wue_l_kwh,0.17,L/kWh,site,high,operator,msft_va_2023,"measured, Jan to Dec 2022"
+us-va-boydton-microsoft,water_source,"municipal (Roanoke River Service Authority, Town of Clarksville)",,site,high,operator,msft_va_2025,
+us-va-boydton-microsoft,heat_reuse,none reported,,site,medium,operator,msft_va_2025,
+us-va-boydton-microsoft,already_implemented,free_cooling,,site,high,operator,msft_va_2025,outside air without water about 85 % of the year
+us-tx-san-antonio-microsoft,cooling_profile_id,air_chilled_elevated,,site,medium,operator,msft_tx_2023,"legacy halls on water-cooled chillers, newer halls on air-cooled chillers with air economizers"
+us-tx-san-antonio-microsoft,heat_rejection,tower,,campus_legacy,medium,operator,msft_tx_2023,legacy water-cooled chillers (towers); newer halls air-cooled and zero water. WUE 1.82 shows evaporative still dominates
+us-tx-san-antonio-microsoft,pue,1.307,,site,high,operator,msft_tx_2023,"measured, Jan to Dec 2022 (Texas region); design PUE new builds 1.25"
+us-tx-san-antonio-microsoft,wue_l_kwh,1.82,L/kWh,site,high,operator,msft_tx_2023,"measured, Jan to Dec 2022"
+us-tx-san-antonio-microsoft,water_source,mostly reused water (SAWS); one site moving from potable to reused,,site,high,operator,msft_tx_2025,
+us-tx-san-antonio-microsoft,already_implemented,reclaimed_water,,site,high,operator,msft_tx_2025,
+us-ia-west-des-moines-microsoft,cooling_profile_id,air_economizer,,site,high,operator,msft_ia_2025,direct evaporative cooling; next two buildings zero-water closed loop (Axios Jan 2026)
+us-ia-west-des-moines-microsoft,heat_rejection,adiabatic,,site,high,operator,msft_ia_2025,direct evaporative cooling uses water less than 15 % of the year
+us-ia-west-des-moines-microsoft,water_source,municipal (West Des Moines Water Works),,site,high,operator,msft_ia_2025,
+us-ia-west-des-moines-microsoft,water_use_m3_yr_partial,184544,m3,site,medium,press,bizrecord_ia_2025,"48.75 million gallons Jan to Sep 2025, five sites (utility data)"
+us-wy-cheyenne-microsoft,cooling_profile_id,air_economizer,,site,high,operator,msft_wy_2025,direct evaporative cooling
+us-wy-cheyenne-microsoft,heat_rejection,adiabatic,,site,high,operator,msft_wy_2025,direct evaporative cooling uses water less than 10 % of the year
+us-wy-cheyenne-microsoft,pue,1.125,,site,high,operator,msft_wy_2023,"measured, Jan to Dec 2022; design 1.12"
+us-wy-cheyenne-microsoft,wue_l_kwh,0.23,L/kWh,site,high,operator,msft_wy_2023,"measured, Jan to Dec 2022"
+us-wy-cheyenne-microsoft,water_source,municipal (Cheyenne BOPU),,site,high,operator,msft_wy_2025,
+us-wy-cheyenne-microsoft,already_implemented,free_cooling,,site,high,operator,msft_wy_2025,outside air without water about 90 % of the year
+us-wa-quincy,cooling_profile_id,air_economizer,,operator_region,medium,operator,msft_wa_2025,"Microsoft Washington: direct evaporative, indirect evaporative with fluid coolers, water-cooled chillers (cluster also has other operators)"
+us-wa-quincy,heat_rejection,adiabatic,,operator_region,medium,operator,msft_wa_2025,
+us-wa-quincy,water_source,Quincy Water Reuse Utility (reused cooling water) plus city well water,,site,high,operator,msft_quincy_reuse,"potable use cut about 75 % in FY25, about 1 million m3/yr avoided"
+us-wa-quincy,already_implemented,reclaimed_water,,site,high,operator,msft_wa_2025,
+us-or-prineville-meta,cooling_profile_id,air_economizer,,site,high,operator,fb_prineville_2011,"""100% outside air evaporative cooling and humidification"", no chiller plant, no cooling towers"
+us-or-prineville-meta,heat_rejection,adiabatic,,site,high,operator,ocp_prineville_2013,direct evaporative misting; model treats it as adiabatic assist
+us-or-prineville-meta,pue,1.07,,site,medium,operator,fb_prineville_2011,"at full load, building 1 (2011, design or early measurement); Meta fleet 1.08 in 2024"
+us-or-prineville-meta,wue_l_kwh,0.22,L/kWh,site,medium,operator,ocp_prineville_2013,"measured Q2 2012, building 1"
+us-or-prineville-meta,water_withdrawal_m3_yr,328000,m3/yr,site,high,operator,meta_edi_2025,328 ML withdrawal 2024
+us-or-prineville-meta,heat_reuse,server exhaust heats the office space,,site,high,operator,fb_prineville_2011,
+us-or-prineville-meta,already_implemented,free_cooling;heat_reuse_office,,site,high,operator,fb_prineville_2011,
+us-ia-altoona-meta,water_withdrawal_m3_yr,242000,m3/yr,site,high,operator,meta_edi_2025,242 ML withdrawal 2024
+us-ia-altoona-meta,pue,1.08,,operator_fleet,medium,operator,meta_edi_2025,Meta fleet PUE 2024 (fleet WUE 0.19 L/kWh)
+us-ne-sarpy-meta,water_withdrawal_m3_yr,142000,m3/yr,site,high,operator,meta_edi_2025,142 ML withdrawal 2024
+us-ne-sarpy-meta,pue,1.08,,operator_fleet,medium,operator,meta_edi_2025,Meta fleet PUE 2024 (fleet WUE 0.19 L/kWh)
+us-ut-eagle-mountain-meta,water_withdrawal_m3_yr,133000,m3/yr,site,high,operator,meta_edi_2025,133 ML withdrawal 2024
+us-ut-eagle-mountain-meta,pue,1.08,,operator_fleet,medium,operator,meta_edi_2025,Meta fleet PUE 2024 (fleet WUE 0.19 L/kWh)
+us-ne-sarpy-meta,heat_rejection,adiabatic,,site,medium,press,flatwater_2026,"""a combination of evaporative and closed-loop cooling"""
+us-ia-altoona-meta,heat_rejection,adiabatic,,site,low,inferred,meta_edi_2025,"Meta reports consumption from cycles of concentration, so evaporative cooling is in use; type not stated per site"
+us-ut-eagle-mountain-meta,heat_rejection,adiabatic,,site,low,inferred,meta_edi_2025,"Meta reports consumption from cycles of concentration, so evaporative cooling is in use; type not stated per site"
+us-oh-new-albany,water_use_m3_yr,566747,m3/yr,cluster,medium,operator,diw_google_2023,Google New Albany 127 million gallons (2023) plus Meta New Albany 86 ML withdrawal (2024); AWS not reported
+us-oh-new-albany,heat_rejection,adiabatic,,cluster,low,inferred,meta_edi_2025,
+us-nv-reno-switch,water_source,"effluent (reclaimed) water, over 3,300 acre-feet for the campus",,site,high,operator,switch_tr2,
+us-nv-reno-switch,pue,1.18,,site,medium,operator,switch_tr2,"best annual average of one sector, Tahoe Reno 2"
+us-nv-reno-switch,onsite_generation,127 MW behind-the-meter solar at Citadel (Wikipedia),,site,low,third_party,switch_tr2,
+us-nv-reno-switch,already_implemented,reclaimed_water,,site,high,operator,switch_tr2,
+us-ga-atlanta-qts,cooling_profile_id,air_chilled_elevated,,site,high,operator,qts_atl1,"chillers, CRAH units, plate and frame HX water-side economizer"
+us-ga-atlanta-qts,heat_rejection,tower,,site,high,operator,qts_atl1,cooling towers listed on the data sheet; rainwater feeds the evaporative system
+us-ga-atlanta-qts,water_source,rainwater harvesting plus municipal makeup (1.5 million gallons storage),,site,high,operator,qts_water_wp,
+us-ga-atlanta-qts,already_implemented,free_cooling,,site,medium,operator,qts_atl1,water-side economizer
+us-va-ashburn-equinix,heat_rejection,mixed (closed loop and evaporative),,area,low,press,bbreakfast_ashburn_2025,"""closed loop systems used by 2/3 of Ashburn data centers"" (article also says ""more than half""); not operator specific"
+us-va-ashburn-equinix,water_source,mostly potable (Loudoun Water); reclaimed loop serves about 40 customers,,area,medium,operator,loudoun_water_gov,750 million gallons reclaimed water delivered in 2025; data centers 9 % of potable use on an average day
+us-va-sterling-digital,heat_rejection,mixed (closed loop and evaporative),,area,low,press,bbreakfast_ashburn_2025,"""closed loop systems used by 2/3 of Ashburn data centers"" (article also says ""more than half""); not operator specific"
+us-va-sterling-digital,water_source,mostly potable (Loudoun Water); reclaimed loop serves about 40 customers,,area,medium,operator,loudoun_water_gov,750 million gallons reclaimed water delivered in 2025; data centers 9 % of potable use on an average day
+us-va-manassas,heat_rejection,mixed (closed loop and evaporative),,area,low,press,bbreakfast_ashburn_2025,"""closed loop systems used by 2/3 of Ashburn data centers"" (article also says ""more than half""); not operator specific"
+us-va-manassas,water_source,mostly potable (Loudoun Water); reclaimed loop serves about 40 customers,,area,medium,operator,loudoun_water_gov,750 million gallons reclaimed water delivered in 2025; data centers 9 % of potable use on an average day
+us-va-ashburn-equinix,pue,1.39,,operator_fleet,low,operator,equinix_data_2024,Equinix global average 2024 (WUE 0.95 L/kWh)
+us-va-ashburn-equinix,heat_reuse,"none in the US (heat export only in Canada, Finland, France; US projects in development)",,operator_fleet,medium,operator,equinix_heat_2025,
+us-nj-secaucus-equinix,pue,1.39,,operator_fleet,low,operator,equinix_data_2024,Equinix global average 2024 (WUE 0.95 L/kWh)
+us-nj-secaucus-equinix,heat_reuse,"none in the US (heat export only in Canada, Finland, France; US projects in development)",,operator_fleet,medium,operator,equinix_heat_2025,
+us-fl-miami-equinix,pue,1.39,,operator_fleet,low,operator,equinix_data_2024,Equinix global average 2024 (WUE 0.95 L/kWh)
+us-fl-miami-equinix,heat_reuse,"none in the US (heat export only in Canada, Finland, France; US projects in development)",,operator_fleet,medium,operator,equinix_heat_2025,
