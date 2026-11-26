@@ -6,6 +6,7 @@ Run from the repository root:
 """
 from __future__ import annotations
 
+import calendar
 import sys
 from pathlib import Path
 
@@ -388,7 +389,7 @@ with t_w:
         mon = loc.groupby(loc.index.month.rename("month")).agg({"t_db_c": ["mean", "min", "max"], "t_wb_c": "mean", "rh_pct": "mean",
                                       "ghi_wm2": "mean", "wind_ms": "mean"}).round(1)
         mon.columns = ["t_db mean", "t_db min", "t_db max", "t_wb mean", "RH %", "GHI W/m2", "wind m/s"]
-        mon.index = pd.to_datetime(mon.index, format="%m").strftime("%b")
+        mon.index = [calendar.month_abbr[m] for m in mon.index]
         st.dataframe(mon.T, width="stretch")
 
 with t_p:
