@@ -56,3 +56,11 @@ def test_air_cooled_site_cannot_drive_chillers_directly():
     rows = {r["solution_id"]: r for r in hs.screen(AIR, TEL_AVIV_SUMMARY)}
     assert rows["adsorption_chiller"]["temperature"] == 0
     assert rows["aquaculture_ras"]["temperature"] > 0.5
+
+
+def test_air_economizer_with_nan_temperatures():
+    hp = {"cooling_type": "air_economizer", "it_load_mw": float("nan"), "facility_supply_temp_c": float("nan"),
+          "facility_return_temp_c": float("nan"), "liquid_heat_share": 0.0, "exhaust_air_temp_c": 32.0, "is_assumed": True}
+    rows = {r["solution_id"]: r for r in hs.screen(hp, TEL_AVIV_SUMMARY)}
+    assert "32 C" in rows["aquaculture_ras"]["reasons"][0]
+    assert rows["aquaculture_ras"]["recoverable_heat_mw"] is None

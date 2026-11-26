@@ -21,6 +21,7 @@ Reference scales below are HEATBEAT screening assumptions, not literature values
 """
 from __future__ import annotations
 
+import math
 from typing import Optional
 
 from .schema import Solution, load_catalogue
@@ -49,11 +50,21 @@ def heat_pump_cop(t_source_c: float, t_sink_c: float, carnot_fraction: float = C
     return carnot_fraction * (t_sink_c + 273.15) / lift
 
 
+def _num(v) -> Optional[float]:
+    """float or None; NaN (pandas missing value) becomes None."""
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    return None if math.isnan(f) else f
+
+
 def _source_temperature(hp: dict) -> tuple[float, str]:
-    share = float(hp.get("liquid_heat_share") or 0.0)
-    if share <= 0:
-        return AIR_EXHAUST_T_C, f"air cooled, assumed exhaust air {AIR_EXHAUST_T_C:.0f} C"
-    t = float(hp["facility_return_temp_c"])
+    share = _num(hp.get("liquid_heat_share")) or 0.0
+    t = _num(hp.get("facility_return_temp_c"))
+    if share <= 0 or t is None:
+        t_air = _num(hp.get("exhaust_air_temp_c")) or AIR_EXHAUST_T_C
+        return t_air, f"air side heat, exhaust air {t_air:.0f} C"
     return t, f"liquid return {t:.0f} C ({share:.0%} of IT heat in liquid)"
 
 
@@ -119,8 +130,10 @@ def screen(heat_profile: dict, site_summary: dict, weather=None, context: Option
     cat = catalogue or load_catalogue()
     ctx = dict(context or {})
     t_src, src_note = _source_temperature(heat_profile)
-    it_mw = heat_profile.get("it_load_mw")
-    share = float(heat_profile.get("liquid_heat_share") or 0.0)
+    it_mw = _num(heat_profile.get("it_load_mw"))
+    share = _num(heat_profile.get("liquid_heat_share")) or 0.0
+    if _num(heat_profile.get("facility_return_temp_c")) is None:
+        share = 0.0
     rows = []
     for s in cat.values():
         if s.category == "enabler" and not include_enablers:
@@ -140,7 +153,7 @@ def screen(heat_profile: dict, site_summary: dict, weather=None, context: Option
             "needs_heat_pump": cop is not None, "heat_pump_cop": None if cop is None else round(cop, 2),
             "blocked_by": blockers,
             "reasons": [src_note, why_t, why_d, why_a] + [f"requires {b}" for b in blockers],
-            "recoverable_heat_mw": None if it_mw is None or not s.heat.needs_heat else round(float(it_mw) * (share if share > 0 else 1.0), 2),
+            "recoverable_heat_mw": None if it_mw is None or not s.heat.needs_heat else round(it_mw * (share if share > 0 else 1.0), 2),
             "heat_profile_is_assumed": bool(heat_profile.get("is_assumed", True)),
             "catalogue_confidence": s.confidence, "israel_fit": s.israel_fit,
         })

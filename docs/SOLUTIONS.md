@@ -15,7 +15,7 @@ The screening reads only fields that already exist or are being added:
 
 | Input | From | Fields used |
 |---|---|---|
-| Heat source | `hd.site_heat_profiles()` (power, cooling and chip data thread, branch `claude/project-thread-b8takg`) | `facility_return_temp_c`, `liquid_heat_share`, `it_load_mw`, `is_assumed` |
+| Heat source | `hd.site_heat_profiles()` (PR #4, schema in `docs/HEAT_PROFILES.md`) | `facility_return_temp_c`, `liquid_heat_share`, `exhaust_air_temp_c`, `it_load_mw`, `is_assumed` (NaN temperatures are treated as air side heat) |
 | Climate | `hd.get_site(id).summary()` (PR #1) | `heating_degree_hours_18c`, `cooling_degree_hours_18c`, `t_db_mean_c`, `price_mean_usd_mwh`, `price_p10_usd_mwh`, `price_p90_usd_mwh` |
 | Hourly weather (optional) | `hd.get_site(id).weather` (PR #1) | `t_db_c` |
 | Site context | passed by the caller | `coastal`, `evaporative_cooling`, `water_stress`, `country_iso2` |
