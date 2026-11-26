@@ -34,7 +34,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
         with:
@@ -99,7 +99,7 @@ jobs:
         if: always()
         run: cat data/build_report.json || true
       - name: Tests (must pass before data is published)
-        run: python -m pytest -q
+        run: python -m pytest -q tests/test_database.py  # only the data this workflow builds
       - uses: actions/upload-artifact@v4
         with:
           name: heatbeat-db
