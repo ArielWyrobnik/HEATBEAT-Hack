@@ -70,3 +70,13 @@ def test_source_kind():
     assert ck.source_kind("synthetic_shape", 1) == ck.SYNTHETIC
     assert ck.source_kind("estimate_unverified", 1) == ck.ESTIMATED
     assert ck.source_kind("caiso_gridstatus_da_hourly", 0) == ck.REAL
+
+
+def test_independent_source_difference_is_warning():
+    idx = hourly_index()
+    a = pd.DataFrame({"t_db_c": 15 + 8 * np.sin(np.arange(len(idx)) * 2 * np.pi / 24)}, index=idx)
+    b = a + 3.0
+    same = {r["check"]: r["result"] for r in ck.compare_weather(a, b, "s", 0.2)}
+    ind = {r["check"]: r["result"] for r in ck.compare_weather(a, b, "i", 2.0, independent=True)}
+    assert same["s: mean abs difference (hourly)"] == "FAIL"
+    assert ind["i: mean abs difference (hourly)"] == "warn" and ind["i: annual mean bias"] == "warn"

@@ -41,7 +41,7 @@ Live results are cached for one hour per location ("Clear live cache and refetch
 - **Electricity price**: annual profile, month by hour heatmap, weekday and weekend daily profile.
 - **Heat source**: IT load, facility power, heat in liquid and in air, coolant temperatures.
 - **Pipeline check**: hours present (8784), gaps, plausible ranges, wet bulb below dry bulb, synthetic share,
-  live versus stored weather (same API, must match within 0.2 C), NASA versus Open-Meteo (independent, within 2 C),
+  live versus stored weather (same API, must match within 0.2 C, else FAIL), NASA versus Open-Meteo (independent reanalyses, a gap above 2 C is a warning, not a failure),
   live versus stored prices, heat profile consistency.
 - **API calls**: every request with full URL (clickable), HTTP status, duration, size and rows.
 

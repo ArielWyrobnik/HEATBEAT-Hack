@@ -29,7 +29,7 @@ def check_point(lat: float, lon: float, label: str, site_id: str | None, nasa: b
     res = ck.weather_checks(w_live, "LIVE weather")
     if w_nasa is not None:
         res += ck.weather_checks(w_nasa, "NASA weather")
-        res += ck.compare_weather(w_nasa, w_live, "NASA vs Open-Meteo", 2.0)
+        res += ck.compare_weather(w_nasa, w_live, "NASA vs Open-Meteo", 2.0, independent=True)
     try:
         online = hd.meta().get("build_mode") == "online"
     except FileNotFoundError:

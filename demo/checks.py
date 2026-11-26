@@ -103,8 +103,14 @@ def heat_checks(hp: dict | None) -> list[dict]:
     ]
 
 
-def compare_weather(a: pd.DataFrame | None, b: pd.DataFrame | None, label: str, tol_c: float) -> list[dict]:
-    """Hour by hour comparison of two temperature series (e.g. live call versus stored database)."""
+def compare_weather(a: pd.DataFrame | None, b: pd.DataFrame | None, label: str, tol_c: float,
+                    independent: bool = False) -> list[dict]:
+    """Hour by hour comparison of two temperature series.
+
+    Same source (live call versus stored database): any difference above tol_c is a pipeline FAIL.
+    Independent sources (NASA POWER versus Open-Meteo, different reanalyses and grids): a difference
+    above tol_c is only a warning, since it reflects the data products, not a broken pipeline.
+    """
     if a is None or b is None or a.empty or b.empty:
         return [_row(f"{label}", None, "one side missing")]
     j = pd.concat([a["t_db_c"].rename("a"), b["t_db_c"].rename("b")], axis=1).dropna()
@@ -112,8 +118,16 @@ def compare_weather(a: pd.DataFrame | None, b: pd.DataFrame | None, label: str, 
         return [_row(f"{label}", False, "no overlapping hours")]
     mae = float((j["a"] - j["b"]).abs().mean())
     r = float(j["a"].corr(j["b"]))
-    return [_row(f"{label}: mean abs difference", mae <= tol_c, f"{mae:.2f} C over {len(j)} h (tolerance {tol_c} C)"),
-            _row(f"{label}: correlation", r > 0.9, f"r = {r:.3f}")]
+    bias = float((j["a"] - j["b"]).mean())
+    miss = "warn" if independent else False
+    out = [_row(f"{label}: mean abs difference (hourly)", True if mae <= tol_c else miss,
+                f"{mae:.2f} C over {len(j)} h (tolerance {tol_c} C)"),
+           _row(f"{label}: correlation", r > 0.9, f"r = {r:.3f}")]
+    if independent:
+        d = j.resample("D").mean()
+        out.append(_row(f"{label}: annual mean bias", abs(bias) <= 1.5 or "warn",
+                        f"{bias:+.2f} C; daily mean abs difference {float((d['a'] - d['b']).abs().mean()):.2f} C"))
+    return out
 
 
 def compare_prices(live: pd.Series | None, stored: pd.DataFrame | None) -> list[dict]:
