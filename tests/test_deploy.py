@@ -18,9 +18,9 @@ def _client(monkeypatch, tmp_path, feedback=None):
 
 def test_config_feedback_url(monkeypatch, tmp_path):
     c = _client(monkeypatch, tmp_path, feedback="https://example.com/form")
-    assert c.get("/api/config").json() == {"feedback_url": "https://example.com/form"}
+    assert c.get("/api/config").json()["feedback_url"] == "https://example.com/form"
     c = _client(monkeypatch, tmp_path)
-    assert c.get("/api/config").json() == {"feedback_url": None}
+    assert c.get("/api/config").json()["feedback_url"] is None
 
 
 def test_static_frontend_and_spa_fallback(monkeypatch, tmp_path):

@@ -23,6 +23,14 @@ from .schemas import (CoolingProfile, EvaluateRequest, ModelInfo, ModelResult, P
 
 # HEATBEAT_LIVE=0 never fetches weather from the internet (CI, offline demo); default 1.
 LIVE = os.getenv("HEATBEAT_LIVE", "1") != "0"
+# Which sites the map and the picker list (GET /api/sites):
+#   verified (default)  only sites whose heat rejection (cooling) is documented by a source, see
+#                       heatbeat_data.verification_status(); the others stay in the database and stay
+#                       reachable by id (/api/sites/{id}, /ranking), they are just not listed
+#   all                 every site in the database
+# Show all again:  HEATBEAT_SITES=all ./scripts/dev.sh   (or ?sites=all in the browser address)
+SITES_SCOPE = os.getenv("HEATBEAT_SITES", "verified").strip().lower()
+SCOPES = ("verified", "all")
 
 app = FastAPI(title="HEATBEAT API", version="0.1.0",
               description="Which waste stream solution is the most feasible at this data center?")
@@ -115,7 +123,10 @@ def health() -> dict:
 @api.get("/config")
 def config() -> dict:
     """Settings the frontend reads at runtime (set as environment variables on the host)."""
-    return {"feedback_url": os.getenv("FEEDBACK_URL") or None}
+    n_all = len(_sites())
+    n_ver = sum(s.setup_status == "verified" for s in _sites().values())
+    return {"feedback_url": os.getenv("FEEDBACK_URL") or None, "sites_scope": SITES_SCOPE,
+            "n_sites_all": n_all, "n_sites_verified": n_ver}
 
 
 @api.get("/models", response_model=list[ModelInfo])
@@ -124,8 +135,15 @@ def models() -> list[ModelInfo]:
 
 
 @api.get("/sites", response_model=list[SiteSummary])
-def sites(country: str | None = Query(None, description="ISO2 filter, e.g. US")) -> list[SiteSummary]:
+def sites(country: str | None = Query(None, description="ISO2 filter, e.g. US"),
+          scope: str | None = Query(None, description="verified (sites with documented cooling) or all; "
+                                    "default from HEATBEAT_SITES, which defaults to verified")) -> list[SiteSummary]:
+    scope = (scope or SITES_SCOPE).lower()
+    if scope not in SCOPES:
+        raise HTTPException(422, f"scope must be one of {SCOPES}")
     out = list(_sites().values())
+    if scope == "verified":
+        out = [s for s in out if s.setup_status == "verified"]
     if country:
         out = [s for s in out if (s.country or "").upper() == country.upper()]
     return out

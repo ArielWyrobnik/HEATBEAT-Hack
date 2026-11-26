@@ -28,7 +28,7 @@ All routes are under `/api`; Vite proxies `/api` to the backend (`frontend/vite.
 |---|---|---|
 | `GET /api/health` | status, models, default model | |
 | `GET /api/models` | `ModelInfo[]` | name, label, modes, default mode |
-| `GET /api/sites?country=US` | `SiteSummary[]` | map pins: coordinates, IT load, cooling, PUE, grid region |
+| `GET /api/sites?country=US&scope=` | `SiteSummary[]` | map pins: coordinates, IT load, cooling, PUE, grid region. `scope=verified` (default, from `HEATBEAT_SITES`) lists only sites whose heat rejection is documented by a source (`setup_status = verified`, see `docs/CURRENT_SETUP.md`); `scope=all` lists every site. Hidden sites stay in the database and answer by id. |
 | `GET /api/sites/{id}` | `SiteSummary` | |
 | `GET /api/sites/{id}/inputs?model=&is_greenfield=` | `SiteInputs` | every model input with unit, flag, source, sensitivity range, plus annual weather and price indicators |
 | `GET /api/sites/{id}/ranking?model=&mode=&is_greenfield=` | `ModelResult` | baseline, options best first with KPIs and energy balance, tornado of the best option, warnings. Cached per process. |
@@ -97,3 +97,15 @@ stays available as `?model=excel_ranking`. `ExcelRankingModel` in `models.py` is
   default 1.8 L/kWh unless the profile is chiller free. Both are flagged as estimates.
 - `ko_reasons` for the Excel ranking only name the failed gate, not the failing input.
 - Results are cached in memory per process; restart the API after changing data files.
+
+## Which sites the map shows
+
+By default the map and the picker list only the sites with documented cooling (heat rejection verified by a source,
+25 of 68 sites on 2026-11-26: 24 US plus Nebius Mantsala). The other sites are not deleted: they stay in the database,
+in every model output and answer `/api/sites/{id}` and `/ranking` by id.
+
+Show all sites again:
+
+- local: `HEATBEAT_SITES=all ./scripts/dev.sh`
+- in the browser, for one visit: add `?sites=all` to the address (the map header has a "show all" link)
+- on Render: set the environment variable `HEATBEAT_SITES` to `all` (Dashboard, Environment), or change it in `render.yaml`

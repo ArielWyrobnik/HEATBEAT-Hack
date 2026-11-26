@@ -27,14 +27,26 @@ def test_health_and_models():
 
 
 def test_sites_for_map():
-    s = c.get("/api/sites").json()
+    s = c.get("/api/sites", params={"scope": "all"}).json()
     assert len(s) >= 40
     for p in s:
         assert -90 <= p["lat"] <= 90 and -180 <= p["lon"] <= 180 and p["name"]
-    us = c.get("/api/sites", params={"country": "us"}).json()
+    us = c.get("/api/sites", params={"country": "us", "scope": "all"}).json()
     assert us and all(p["country"] == "US" for p in us)
     assert c.get(f"/api/sites/{SITE}").json()["site_id"] == SITE
     assert c.get("/api/sites/nope").status_code == 404
+
+
+def test_default_lists_only_sites_with_verified_cooling():
+    default = c.get("/api/sites").json()
+    every = c.get("/api/sites", params={"scope": "all"}).json()
+    assert 0 < len(default) < len(every)
+    assert all(p["setup_status"] == "verified" for p in default)
+    hidden = next(p for p in every if p["setup_status"] != "verified")
+    assert c.get(f"/api/sites/{hidden['site_id']}").status_code == 200  # hidden, not deleted
+    assert c.get("/api/sites", params={"scope": "nope"}).status_code == 422
+    cfg = c.get("/api/config").json()
+    assert cfg["n_sites_verified"] == len(default) and cfg["n_sites_all"] == len(every)
 
 
 def test_inputs_have_flags_and_sources():

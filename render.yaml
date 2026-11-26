@@ -10,5 +10,7 @@ services:
     envVars:
       - key: HEATBEAT_LIVE    # 1 = fetch weather from Open-Meteo for planned sites (no API key needed)
         value: "1"
+      - key: HEATBEAT_SITES   # verified = map lists only sites with documented cooling; all = every site
+        value: "verified"
       - key: FEEDBACK_URL     # optional: link behind the "Give feedback" button (e.g. a Google Form)
         sync: false

@@ -31,7 +31,7 @@ Local context: Israel has low heating demand, high cooling demand, water scarcit
 
 Focus: US sites first. Israel is set aside for now (Ariel, 2026-11-26).
 
-PRs #1 and #3 to #43 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020; #8: free cooling capped by site supply temperature; #10: demo works without stored weather; #13: DAC credit split from avoided emission carbon value). What is on `main`:
+PRs #1 and #3 to #46 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020; #8: free cooling capped by site supply temperature; #10: demo works without stored weather; #13: DAC credit split from avoided emission carbon value). What is on `main`:
 
 | Part | Where | Docs | Status |
 |---|---|---|---|
@@ -51,6 +51,8 @@ PRs #1 and #3 to #43 are merged into `main` (#7: US retail prices from EIA 2024 
 | Current setup per site (what sites already do): heat rejection, cooling, water source and volume, PUE/WUE, on-site power, heat reuse, "already implemented", field-level sources; engineering baseline uses it, panel shows it with overrides; model checked against reported WUE/PUE/water | `data_pipeline/site_current_setup*.csv`, `heatbeat_data/current_setup.py`, `heatbeat_engineering/validate_setup.py` | `docs/CURRENT_SETUP.md` | 28 of 40 US sites with sourced facts, 15 with documented heat rejection (2026-11-26). Inferred values flagged `evidence = inferred`. |
 | Validation against 13 real reference projects (Nebius Mantsala, Green Mountain Rjukan, EcoDataCenter Falun, NorthC Eindhoven, Equinix AM3 and PA10, Echelon Arklow, Crusoe, Syracuse, Vertiv ORC, Orbital DAC, Trevi, Westin Seattle): 9 new sites with sources, implemented facts in `site_current_setup_refs.csv`, runner `python -m heatbeat_validation` | `data_pipeline/reference_sites.py`, `heatbeat_validation/` | `docs/VALIDATION.md`, `docs/VALIDATION_RESULTS.md` | Merged (#42). GIS, ecology, water, industry of the new sites are hand estimates (low). |
 | Audit of recommendations and inputs: old vs new recommendation per site, baseline robustness (dry / adiabatic / tower), NPV at water-implied IT load, input inventory per site (sourced / derived / estimate / synthetic), public data gaps; plain verdict per site (`no_gain` / `small_gain` / `gain`) in API and panel | `heatbeat_engineering/audit.py`, `verdict.py`, `docs/audit/*.csv` | `docs/audit/README.md` | 2026-11-26. IT load from public data at 17 of 40 sites (Meta reported electricity, Epoch AI, Google reported water, capacity bounds; `data_pipeline/site_it_load_evidence.csv`), heat rejection documented at 24 sites (`site_current_setup_research.csv`). 15 sites no gain, 3 small, 22 gain (11 on an assumed baseline). |
+
+Map scope (2026-11-26, Ariel): the map and picker list only sites with documented cooling (`setup_status = verified`, 25 of 68). Others stay in the database and answer by id. Show all: `HEATBEAT_SITES=all ./scripts/dev.sh`, `?sites=all` in the browser, or `HEATBEAT_SITES=all` on Render. Heat value outside the US: Eurostat gas price per country (`data_pipeline/heat_prices_intl.csv`).
 
 Next steps:
 
