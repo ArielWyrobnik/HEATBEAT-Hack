@@ -346,3 +346,14 @@ class LeaderboardRow(BaseModel):
     co2_avoided_t_yr: float | None = None
     water_saved_m3_yr: float | None = None
     payback_yr: float | None = None
+    # two perspectives (tabs in the ranking): cooling = most money saved by changing the heat rejection,
+    # heat waste = most server heat reused by a design that pays off (reuse NPV > 0 and total NPV > 0)
+    cooling_option_name: str | None = None
+    cooling_npv_usd: float | None = None
+    cooling_cash_usd_yr: float | None = None
+    heat_option_name: str | None = None
+    heat_reused_mwh_yr: float | None = None
+    heat_reused_share: float | None = Field(None, description="Reused server heat / IT energy, 0 to 1")
+    heat_reuse_npv_usd: float | None = None
+    heat_npv_usd: float | None = None
+    heat_pays_off: bool | None = Field(None, description="True when reuse NPV and total NPV are both > 0")

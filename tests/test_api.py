@@ -207,6 +207,21 @@ def test_leaderboard_ranks_sites_by_best_change():
     assert sum(o.is_today for o in res.options) <= 1
 
 
+def test_leaderboard_has_cooling_and_heat_waste_perspectives():
+    rows = c.get("/api/leaderboard", params={"scope": "verified"}).json()
+    assert any(r["cooling_npv_usd"] is not None for r in rows)
+    assert any(r["heat_reused_mwh_yr"] for r in rows)
+    for r in rows:
+        if r["heat_pays_off"]:
+            assert r["heat_reuse_npv_usd"] > 0 and r["heat_npv_usd"] > 0
+        if r["heat_reused_share"] is not None:
+            assert 0 <= r["heat_reused_share"] <= 1
+    r = next(x for x in rows if x["cooling_option_name"])
+    res = ModelResult.model_validate(c.get(f"/api/sites/{r['site_id']}/ranking").json())
+    o = next(o for o in res.options if o.name == r["cooling_option_name"])
+    assert len(o.components) == 1 and not o.is_today
+
+
 def test_plan_defaults_and_budget_mode():
     d = c.get("/api/plan/defaults", params={"lat": 41.6, "lon": -93.6})
     assert d.status_code == 200

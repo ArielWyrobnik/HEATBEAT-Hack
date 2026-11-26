@@ -293,4 +293,13 @@ export interface LeaderboardRow {
   co2_avoided_t_yr?: number | null;
   water_saved_m3_yr?: number | null;
   payback_yr?: number | null;
+  cooling_option_name?: string | null;
+  cooling_npv_usd?: number | null;
+  cooling_cash_usd_yr?: number | null;
+  heat_option_name?: string | null;
+  heat_reused_mwh_yr?: number | null;
+  heat_reused_share?: number | null;
+  heat_reuse_npv_usd?: number | null;
+  heat_npv_usd?: number | null;
+  heat_pays_off?: boolean | null;
 }

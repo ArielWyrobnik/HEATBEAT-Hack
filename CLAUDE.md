@@ -54,6 +54,10 @@ PRs #1 and #3 to #46 are merged into `main` (#7: US retail prices from EIA 2024 
 
 Map scope (2026-11-26, Ariel): the map and picker list only sites with documented cooling (`setup_status = verified`, 25 of 68). Others stay in the database and answer by id. Show all: `HEATBEAT_SITES=all ./scripts/dev.sh`, `?sites=all` in the browser, or `HEATBEAT_SITES=all` on Render. Heat value outside the US: Eurostat gas price per country (`data_pipeline/heat_prices_intl.csv`).
 
+Two perspectives (2026-11-26, Ariel): the app shows every result as **Cooling** (most money saved by the heat rejection choice, NPV) and **Heat waste** (most server heat reused by a design with reuse NPV > 0 and total NPV > 0). Shared definitions in `frontend/src/perspectives.ts`; ranking tabs from `/api/leaderboard` fields `cooling_*` and `heat_*`; planner proposals are one per perspective. Heat reuse is the hackathon sidestream, so it stays visible even where cooling alone earns more.
+
+Biogas (2026-11-26): new plants are sized per site by NPV with economies of scale (see `docs/ENGINEERING.md`); the chain counts only what the DC heat adds over the same plant heating itself. Biogas reuse NPV > 0 at 23 of 44 US sites (was 6).
+
 Next steps:
 
 - Shortlist solutions and fill the per solution economics (plan in the Claude Doc "Lösungs-Ranking: Datenschema und Aufgabenverteilung").
