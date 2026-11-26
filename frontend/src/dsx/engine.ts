@@ -1,22 +1,22 @@
 // @ts-nocheck
 /**
- * DSX Waste-Heat Recovery Evaluator v3.1.1, the same engine as evaluator.py (verified to give identical
+ * DSX Waste-Heat Recovery Evaluator v3.2.0, the same engine as evaluator.py (verified to give identical
  * results). 8,760-h diurnal physics, 13 knock-out gates, viability 0-5 and a standalone eco grade A-F.
  * Typed facade: ./types.ts. Used by ./adapter.ts to plug the evaluator into Heat Beat as a model.
  */
 export const ENGINE = (() => {
-  const VERSION = "3.1.1";
+  const VERSION = "3.2.0";
   const HOURS = 8760;
   const C = {
     carnot_eta: 0.50, approach_k: 5.0, cop_cap: 8.0, air_offset_c: 12.0,
     orc_eta_frac: 0.45, orc_cond_offset_c: 10.0, hp_capex_usd_kw: 600.0, opex_frac: 0.02,
-    payback_best_yr: 3.0, payback_worst_yr: 15.0, ghg_ref_kg_mwh: 150.0, absorption_cop: 0.70,
+    payback_best_yr: 3.0, payback_worst_yr: 15.0, boiler_eff: 0.90, availability: 0.998, absorption_cop: 0.70,
     chiller_cop: 5.0, med_kwh_th_m3: 60.0, ro_kwh_e_m3: 3.5, dac_mwh_th_t: 1.8, btes_round_trip: 0.75,
     market_ref_m: 100000.0, mit_mult: { low: 1.0, med: 0.70, high: 0.35 },
   };
   const GRADE_BANDS = [[4.20, "A"], [3.40, "B"], [2.60, "C"], [1.80, "D"], [-Infinity, "F"]];
   const DSX_PRESETS = {
-    legacy_air:       { label: "Legacy Air-Cooled (35 C)",         cooling_type: "air",    t_dc_base_c: 35.0 },
+    legacy_air:       { label: "Legacy Air-Cooled (28 C)",         cooling_type: "air",    t_dc_base_c: 28.0 },
     dlc_coldplate:    { label: "Direct-to-Chip Cold Plate (60 C)", cooling_type: "liquid", t_dc_base_c: 60.0 },
     immersion_single: { label: "Single-Phase Immersion (65 C)",    cooling_type: "liquid", t_dc_base_c: 65.0 },
     two_phase_dlc:    { label: "Two-Phase Waterless DLC (70 C)",   cooling_type: "liquid", t_dc_base_c: 70.0 },
@@ -56,6 +56,7 @@ export const ENGINE = (() => {
       clean[k] = v;
     }
     if (errors.length) throw new InputError(errors.join("; "));
+    clean.baseline_evaporative = (site.baseline_evaporative === 1 || site.baseline_evaporative === true || site.baseline_evaporative === "1") ? 1 : 0;
     return clean;
   }
 
@@ -157,7 +158,7 @@ export const ENGINE = (() => {
     const fails = o.gate(s, h), gate = fails.length ? 0 : 1, q = s.q_dc_mw;
     const cap = clip(o.cap(s), 0, 1);
     const raw = demand(o, tamb);
-    const qsrc = raw.map(u => q * u * cap);
+    const qsrc = raw.map(u => q * u * cap * C.availability);
     let qdel, whp, cop = null, direct = null, meanEta = null, pThermo;
     if (o.key === "orc") {
       qdel = new Float64Array(HOURS); whp = new Float64Array(HOURS);
@@ -186,9 +187,9 @@ export const ENGINE = (() => {
     const pf = s.p_fuel_usd_kwh * 1000, pe = s.p_elec_usd_kwh * 1000, ciF = s.ci_fuel_g_kwh, ciG = s.ci_grid_g_kwh;
     let qty = Qd, unit = "MWh_th", value, abated;
     switch (o.product) {
-      case "heat": value = Qd * pf; abated = Qd * ciF; break;
-      case "stored_heat": { const dl = Qd * C.btes_round_trip; value = dl * pf; abated = dl * ciF; qty = dl; break; }
-      case "steam": value = Qd * s.p_steam_usd_mwh; abated = Qd * ciF; break;
+      case "heat": value = Qd * pf / C.boiler_eff; abated = Qd * ciF / C.boiler_eff; break;
+      case "stored_heat": { const dl = Qd * C.btes_round_trip; value = dl * pf / C.boiler_eff; abated = dl * ciF / C.boiler_eff; qty = dl; break; }
+      case "steam": value = Qd * s.p_steam_usd_mwh; abated = Qd * ciF / C.boiler_eff; break;
       case "cooling": { const cool = Qd * C.absorption_cop, es = cool / C.chiller_cop; value = es * pe; abated = es * ciG; qty = cool; unit = "MWh_cool"; break; }
       case "power": value = Qd * pe; abated = Qd * ciG; unit = "MWh_e"; break;
       case "water": { const m3 = Qd * 1000 / C.med_kwh_th_m3; value = m3 * s.p_water_usd_m3; abated = m3 * C.ro_kwh_e_m3 / 1000 * ciG; qty = m3; unit = "m3"; break; }
@@ -208,10 +209,12 @@ export const ENGINE = (() => {
     const rawV = 0.35 * pThermo + 0.30 * pClimate + 0.25 * pEcon + 0.10 * pUtil;
     const viability = r(gate * rawV, 2);
 
-    const intensity = Qs > 0 ? netAbated * 1000 / Qs : 0;
-    const eGhg = intensity <= 0 ? 1 : 1 + 4 * lin(intensity, 0, C.ghg_ref_kg_mwh);
+    const intensity = Qd > 0 ? netAbated * 1000 / Qd : 0;
+    const ghgRef = s.ci_fuel_g_kwh / C.boiler_eff;
+    const eGhg = intensity <= 0 || ghgRef <= 0 ? 1 : 1 + 4 * lin(intensity, 0, ghgRef);
     const mit = C.mit_mult[s.mit_tier];
-    const eWater = clip(5 - 0.8 * s.wsi_index * o.water_factor * mit, 1, 5);
+    const waterCredit = 0.8 * s.wsi_index * Math.min(util, 1) * (s.baseline_evaporative || 0);
+    const eWater = clip(5 - 0.8 * s.wsi_index * o.water_factor * mit + waterCredit, 1, 5);
     const eLocal = clip(5 - o.local_impact * (s.eco_sens_index - 1) * mit, 1, 5);
     const eco = r(0.40 * eGhg + 0.30 * eWater + 0.30 * eLocal, 2);
 

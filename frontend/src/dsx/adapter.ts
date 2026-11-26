@@ -1,5 +1,5 @@
 /**
- * Plugs the DSX Waste-Heat Recovery Evaluator (v3.1.1) into Heat Beat as a third model.
+ * Plugs the DSX Waste-Heat Recovery Evaluator (v3.2.0) into Heat Beat as a third model.
  * Runs entirely in the browser: it takes the 31 site inputs the backend already serves (same keys as the
  * Team Excel ranking), loads a 365-day climate for the site, runs the evaluator and returns a ModelResult,
  * so every existing panel (ranking, KPIs, calculation popup, tornado) works unchanged.
@@ -112,7 +112,7 @@ function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
   const opt = ENGINE.OPTIONS.find((x) => x.key === o.key)!;
   const climateFlag = ctx.climate.synthetic ? 'synthetic' : 'real';
   const productFormula: Record<string, string> = {
-    MWh_th: 'value = Q_del × fuel price; CO2 avoided = Q_del × fuel carbon intensity − W × grid carbon intensity',
+    MWh_th: 'value = Q_del / 0.90 boiler efficiency × fuel price; CO2 avoided = Q_del / 0.90 × fuel carbon intensity − W × grid carbon intensity',
     MWh_cool: 'cooling = 0.70 × Q_del; electricity saved = cooling / 5 (chiller COP); value = saved × electricity price',
     MWh_e: 'electricity = Q_src × 0.45 × Carnot(T_dc, T_amb + 10 C); value = electricity × electricity price',
     m3: 'water = Q_del / 60 kWh_th per m3; value = water × water price; CO2 avoided = 3.5 kWh/m3 of RO × grid carbon',
@@ -143,7 +143,7 @@ function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
     },
     {
       title: 'Heat drawn from the data center',
-      formula: 'Q_src(t) = q_dc × demand(T_amb) × cap  (demand follows heating or cooling need, or is constant for process loads)',
+      formula: 'Q_src(t) = q_dc × demand(T_amb) × cap × 0.998 uptime  (demand follows heating or cooling need, or is constant for process loads)',
       terms: [term(ctx, 'q_dc_mw'), calc('cap', 'Off-taker size cap', a.cap_fraction, '-'), calc('util', 'Utilisation of DC heat', a.utilisation, '-')],
       result: a.q_src_mwh, unit: 'MWh/yr',
     },
@@ -180,7 +180,7 @@ function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
     },
     {
       title: 'Eco grade (independent of viability)',
-      formula: 'E = 0.40·e_GHG + 0.30·e_water + 0.30·e_local;  A ≥ 4.2, B ≥ 3.4, C ≥ 2.6, D ≥ 1.8, else F',
+      formula: 'E = 0.40·e_GHG + 0.30·e_water + 0.30·e_local;  e_GHG scores CO2 avoided per MWh delivered against a fully displaced gas boiler (fuel CI / 0.90); e_water adds a credit for cooling-tower water saved;  A ≥ 4.2, B ≥ 3.4, C ≥ 2.6, D ≥ 1.8, else F',
       terms: [calc('e_ghg', 'e GHG', e.e_ghg, '1-5'), calc('e_water', 'e water', e.e_water, '1-5'), calc('e_local', 'e local habitat', e.e_local, '1-5'),
         term(ctx, 'wsi_index'), term(ctx, 'eco_sens_index'), term(ctx, 'mit_tier')],
       result: o.eco_score, unit: `grade ${o.eco_grade}`,
@@ -252,6 +252,7 @@ function tornado(site: DsxSite, inputs: InputValue[], climate: DailyClimate, bes
     if (!KEYS.includes(k) || iv.sens_low == null || iv.sens_high == null || typeof site[k] !== 'number') continue;
     const at = (v: number) => {
       const { site: s2 } = toDsxSite({ ...site, [k]: v });
+      (s2 as Record<string, unknown>).baseline_evaporative = (site as Record<string, unknown>).baseline_evaporative;
       return ENGINE.evaluate(s2, climate.t_min, climate.t_max).options.find((x) => x.key === best.key)!.annual.net_annual_usd;
     };
     try {
@@ -281,12 +282,13 @@ export interface DsxRunArgs {
 export async function runDsx(a: DsxRunArgs): Promise<ModelResult> {
   const mode = a.mode && DSX_MODEL.modes.includes(a.mode) ? a.mode : DSX_MODEL.default_mode;
   const { site, notes } = toDsxSite(a.inputsUsed);
+  const evaporative = a.inputsUsed.baseline_cooling_evaporative !== false;
+  (site as Record<string, unknown>).baseline_evaporative = evaporative ? 1 : 0;
   const climate = await dailyClimate(a.lat, a.lon, a.weather);
   const base = ENGINE.evaluate(site, climate.t_min, climate.t_max);
   const shown = base;
   const shownSite = site;
   const inputs = new Map(a.inputs.map((i) => [i.key, i]));
-  const evaporative = a.inputsUsed.baseline_cooling_evaporative !== false;
   const ctx: Ctx = { site: shownSite, eval: shown, climate, inputs, baseline: a.baseline, evaporative };
   let rank = 0;
   const options = shown.options.map((o) => toOption(ctx, o, o.ko_pass ? ++rank : null));

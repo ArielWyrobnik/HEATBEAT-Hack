@@ -135,7 +135,7 @@ const WINDOWS: Window[] = [
 
 // The four DSX cooling presets of the evaluator
 const SOURCES = [
-  { t: 35, label: 'Legacy air', sub: 'air cooled' },
+  { t: 28, label: 'Legacy air', sub: 'air cooled' },
   { t: 60, label: 'Cold plate', sub: 'direct to chip' },
   { t: 65, label: 'Immersion', sub: 'single phase' },
   { t: 70, label: 'Two-phase DLC', sub: 'DSX design' },
@@ -293,7 +293,7 @@ export default function HowItWorks() {
           <h3>Temperature decides what is possible</h3>
           <p>
             The hotter the coolant leaving the chips, the more pathways can use the heat directly. Pick a cooling
-            technology to see which pathways its coolant reaches. Air cooling at 35 C only serves fish farms
+            technology to see which pathways its coolant reaches. Air cooling at about 28 C only serves fish farms
             without a heat pump; 70 C two-phase direct liquid cooling also reaches storage, feedwater preheat,
             district heating and biomass processing directly. Desalination, drying, absorption cooling, carbon
             capture and ORC still need a heat pump or hotter coolant.
