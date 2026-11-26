@@ -40,6 +40,7 @@ weather and of planned sites. Neither needs an API key. Set `HEATBEAT_LIVE=0` to
 |---|---|---|
 | `PORT` | 8000 | Port uvicorn listens on (Render sets it). |
 | `HEATBEAT_LIVE` | 1 | 0 = never fetch weather from the internet. |
+| `HEATBEAT_SITES` | verified | `all` = list every site on the map, not only those with documented cooling. |
 | `FEEDBACK_URL` | empty | Link behind the "Give feedback" button. Empty hides the button. |
 | `HEATBEAT_STATIC` | `frontend/dist` | Folder with the built frontend. |
 

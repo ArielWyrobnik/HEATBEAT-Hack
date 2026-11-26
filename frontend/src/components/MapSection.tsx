@@ -183,6 +183,8 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
     listRef.current?.querySelector('li.active')?.scrollIntoView({ block: 'nearest' });
   }, [active]);
 
+  const showsAll = dataCenters.some((d) => (d as DataCenter & { setup_status?: string | null }).setup_status !== 'verified');
+
   return (
     <section className="map-section" id="map">
       <div className="map-head">
@@ -192,6 +194,9 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
           {dataCenters.length > 0 && (fromApi
             ? ' · click a pin for its ranking'
             : ' · backend offline, start it with ./scripts/dev.sh to see rankings')}
+          {fromApi && dataCenters.length > 0 && (showsAll
+            ? <> · all sites, including those without documented cooling (<a href="?sites=verified#map">only verified</a>)</>
+            : <> · only sites with documented cooling (<a href="?sites=all#map">show all</a>)</>)}
         </p>
       </div>
 

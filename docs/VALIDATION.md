@@ -52,7 +52,7 @@ loader as the current setup thread, `heatbeat_data.current_setup`), sources in
 | Retail electricity price | ND and HI from EIA Table 2.10 (2024); NO and other non-US: rough fallback (flagged) |
 | Grid CO2 | eGRID 2023 (US), Ember (non-US) |
 | GIS, ecology, water, industry | HAND ESTIMATES (confidence low): the cloud container could not reach the GIS APIs. Rerun `fetch_gis.py`, `ecology/fetch_features.py`, `fetch_aqueduct.py`, `fetch_industry.py` with internet to replace them |
-| Heat price outside the US | model default 50 USD/MWh (no European heat price in the database yet) |
+| Heat price outside the US | Eurostat non-household gas price per country / boiler efficiency 0.85, same definition as the US value (`data_pipeline/heat_prices_intl.csv`): FI, SE, DE, NL own value, other European countries the EU average (flagged estimate), EUR to USD 1.10 is a team estimate. Outside Europe still the 50 USD/MWh default. |
 
 Project specific inputs that are known from the project itself are set per case in
 `heatbeat_validation/cases.py` (for example the digester is co-located at Arklow, the CHP plant is next
@@ -118,8 +118,7 @@ not with data center heat, and both models reject absorption on data center heat
    PA10, NorthC, Amsterdam) is unprofitable in the model at the default 50 USD/MWh heat price. They
    become profitable at 80 to 230 USD/MWh. Real European projects are often driven by regulation (for example
    the German Energy Efficiency Act, EnEfG, not cited here), free heat deals (PA10 gives the heat away for 15 years)
-   or municipal utilities, which the NPV does not capture. Next step: per country heat prices (sourced)
-   in the database.
+   or municipal utilities, which the NPV does not capture. Per country heat prices from Eurostat are in since 2026-11-26 (see table above).
 3. Missing options: ATES for cooling (not only seasonal heat storage), gas to power / stranded energy
    (Crusoe), CHP trigeneration (Syracuse).
 4. ORC rule was too lax: the engineering model offered an ORC from 45 C. Vertiv found net losses even at

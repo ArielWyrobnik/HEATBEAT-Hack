@@ -12,6 +12,7 @@ Every value carries a status (data / estimate / assumption) so outputs can be fl
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -156,6 +157,10 @@ def load_site(site_id: str, live: bool = True, weather: pd.DataFrame | None = No
     x["p_wholesale_usd_mwh"] = put("p_wholesale_usd_mwh", pr.mean() if len(pr) else None, 0.6 * x["p_elec_usd_mwh"],
                                    "data" if len(pr) and not site.prices["is_synthetic"].astype(bool).all() else "synthetic",
                                    "mean hourly day-ahead price of the grid region (location database)")
+    if prov["p_heat_usd_mwh"]["status"] == "assumption":  # outside the US: Eurostat gas price per country
+        intl = intl_heat_price(m.get("country_iso2"))
+        if intl:
+            x["p_heat_usd_mwh"], prov["p_heat_usd_mwh"] = intl
     x["has_lcfs"] = m["region"] in LCFS_STATES
     x["pp_name"] = ind.get("pp_name")
     x["bio_name"] = ind.get("bio_name")
@@ -231,6 +236,31 @@ def set_input(case: SiteCase, key: str, value) -> None:
     else:
         raise KeyError(key)
     case.prov[key] = {"status": "user", "source": "set in the UI"}
+
+
+# Non-US heat value, same definition as the US value: commercial gas price / boiler efficiency.
+INTL_HEAT_FILE = Path(__file__).resolve().parents[1] / "data_pipeline" / "heat_prices_intl.csv"
+EUROPE_PROXY = {"FR", "IE", "DK", "NO", "GB", "BE", "AT", "IT", "ES", "PT", "PL", "CH"}
+BOILER_EFF = 0.85       # as in data_pipeline/build_market_prices.py (US heat cost)
+EUR_USD = 1.10          # ASSUMPTION, not sourced: round EUR to USD rate, check against the ECB reference rate
+
+
+def intl_heat_price(country: str | None):
+    """(USD/MWh_th, provenance) from heat_prices_intl.csv, or None (then the 50 USD/MWh default stays)."""
+    if not country or not INTL_HEAT_FILE.exists():
+        return None
+    t = pd.read_csv(INTL_HEAT_FILE).set_index("country_iso2")
+    key = country if country in t.index else "EU" if country in EUROPE_PROXY else None
+    if key is None:
+        return None
+    r = t.loc[key]
+    usd = 1000 * float(r["gas_eur_kwh"]) * EUR_USD / BOILER_EFF
+    proxy = key != country
+    return round(usd, 1), {
+        "status": "estimate" if proxy else "data",
+        "source": (f"Eurostat non-household gas {r['period']} ({'EU average as proxy for ' + country if proxy else country}), "
+                   f"{r['gas_eur_kwh']} EUR/kWh x {EUR_USD} USD/EUR (FX rate is a team estimate) / boiler eff {BOILER_EFF}; "
+                   f"{r['source_url']}")}
 
 
 def synthetic_site(it_mw=100.0, t_mean=15.0, swing=12.0, liquid_share=0.9, t_sup=45.0, t_ret=55.0,

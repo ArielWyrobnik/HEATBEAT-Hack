@@ -10,10 +10,16 @@ export interface LoadResult {
   fromApi: boolean;
 }
 
+/** ?sites=all or ?sites=verified in the browser address overrides the server default. */
+export function siteScope(): string | undefined {
+  const v = new URLSearchParams(window.location.search).get('sites');
+  return v === 'all' || v === 'verified' ? v : undefined;
+}
+
 /** Pins from the backend (GET /api/sites); falls back to public/datacenters.json without a backend. */
 export async function loadDataCenters(): Promise<LoadResult> {
   try {
-    const sites = await api.sites();
+    const sites = await api.sites(siteScope());
     return {
       fromApi: true,
       dataCenters: sites.map((s) => ({
