@@ -1,0 +1,306 @@
+"""Everything the heat chain model needs to know about one data center, with provenance.
+
+`load_site(site_id)` collects:
+- the heat source: IT load and two cooling loops (liquid loop and air side loop) with supply and
+  return temperatures, from `heatbeat_data.heat_profile` (data center profiles, mostly estimates)
+- hourly weather (dry bulb, wet bulb), 8760 local hours
+- prices: electricity (EIA retail), gas heat cost, water + sewer tariff, RNG / RIN / LCFS, CO2
+- distances and neighbours: district heating, power plant, biomass, coast, geology score
+
+Every value carries a status (data / estimate / assumption) so outputs can be flagged.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+import numpy as np
+import pandas as pd
+
+LCFS_STATES = {"CA", "OR", "WA"}  # state low carbon fuel standards with tradeable credits (2025)
+
+# Baseline heat rejection per cooling profile (what an operating site of that type most likely uses).
+# Team assumption from typical designs; operators rarely publish it.
+BASELINE_REJECTION = {
+    "air_chilled_legacy": "tower", "air_chilled_elevated": "tower", "air_economizer": "adiabatic",
+    "tpu_dlc": "tower", "dlc_cold": "tower", "dlc_warm": "adiabatic", "dlc_hot": "dry",
+}
+
+
+@dataclass
+class Loop:
+    """A cooling loop that collects heat at t_return_c and must be cooled back to t_supply_c."""
+    name: str
+    q_mw: float
+    t_supply_c: float
+    t_return_c: float
+
+
+@dataclass
+class SiteCase:
+    site_id: str
+    name: str
+    state: str
+    it_mw: float
+    loops: list[Loop]
+    cooling_profile: str
+    baseline_rejection: str
+    pue_reported: float
+    t_db: np.ndarray
+    t_wb: np.ndarray
+    x: dict  # scalar site inputs (prices, distances, scores)
+    prov: dict = field(default_factory=dict)
+
+    @property
+    def t_mean(self) -> float:
+        return float(np.mean(self.t_db))
+
+
+def _to_8760(s: pd.Series, tz: str) -> np.ndarray:
+    from heatbeat_ranking.climate import to_8760
+    return to_8760(s, tz)
+
+
+def _num(v, default):
+    try:
+        f = float(v)
+        return default if np.isnan(f) else f
+    except (TypeError, ValueError):
+        return default
+
+
+def _row(df: pd.DataFrame):
+    t = df.drop_duplicates("site_id").set_index("site_id")
+    return lambda sid: t.loc[sid].to_dict() if sid in t.index else {}
+
+
+def load_site(site_id: str, live: bool = True, weather: pd.DataFrame | None = None,
+              is_greenfield: int | None = None, overrides: dict | None = None) -> SiteCase:
+    """Site case from the database. `weather` (hourly, UTC index, columns t_db_c and t_wb_c) replaces
+    the stored weather (custom coordinates). `overrides` set site inputs (keys of SiteCase.x or it_mw)."""
+    import heatbeat_data as hd
+
+    prov: dict[str, dict] = {}
+
+    def put(k, v, default, status, source):
+        val = _num(v, None)
+        if val is None:
+            prov[k] = {"status": "assumption", "source": f"default {default} (no data)"}
+            return default
+        prov[k] = {"status": status, "source": source}
+        return val
+
+    site = hd.get_site(site_id, live=live and weather is None)
+    m = site.meta
+    hp = hd.heat_profile(site_id)
+    it = float(hp["it_load_mw"])
+    prof = hp.get("cooling_profile_id") or "air_chilled_elevated"
+    liq_share = _num(hp.get("liquid_heat_share"), 0.0)
+    loops = []
+    if liq_share > 0:
+        loops.append(Loop("liquid", it * liq_share, _num(hp.get("facility_supply_temp_c"), 32.0),
+                          _num(hp.get("facility_return_temp_c"), 42.0)))
+    if liq_share < 1:
+        if prof == "air_economizer":
+            # direct air side economizer: supply air 24 C, hot aisle exhaust (ASHRAE A1 recommended band)
+            air = Loop("air", it * (1 - liq_share), 24.0, _num(hp.get("exhaust_air_temp_c"), 32.0))
+        elif prof.startswith("air_chilled"):
+            air = Loop("air", it * (1 - liq_share), _num(hp.get("facility_supply_temp_c"), 18.0),
+                       _num(hp.get("facility_return_temp_c"), 26.0))
+        else:  # residual air heat of a liquid cooled hall, chilled water to the CRAHs at 18/26 C
+            air = Loop("air", it * (1 - liq_share), 18.0, 26.0)
+        loops.append(air)
+    prov["loops"] = {"status": "estimate", "source": f"cooling profile {prof}, site_profiles.csv "
+                                                     f"(confidence {hp.get('confidence')})"}
+
+    w = weather if weather is not None else site.weather
+    t_db = _to_8760(w["t_db_c"], site.tz)
+    t_wb = _to_8760(w["t_wb_c"], site.tz)
+    prov["weather"] = {"status": "data", "source": str(w["source"].iloc[0]) if "source" in w else "heatbeat_data"}
+
+    mk = hd.site_market(site_id)
+    wat, gis, ind = (_row(hd.site_water()), _row(hd.site_gis()), _row(hd.site_industry()))
+    wat, gis, ind = wat(site_id), gis(site_id), ind(site_id)
+    eco = hd.excel_ecology_inputs(site_id) if hasattr(hd, "excel_ecology_inputs") else {}
+
+    x = {
+        "p_elec_usd_mwh": put("p_elec_usd_mwh", site.grid.get("retail_industrial_usd_mwh"), 80.0, "data",
+                              "EIA retail industrial price of the grid region (location database)"),
+        "ci_grid_kg_mwh": put("ci_grid_kg_mwh", site.grid.get("co2_kg_mwh"), 400.0, "data",
+                              "grid region CO2 intensity (location database)"),
+        "p_heat_usd_mwh": put("p_heat_usd_mwh", 1000 * _num(mk.get("heat_cost_gas_commercial_usd_kwh_th"), np.nan),
+                              50.0, "data", "EIA commercial gas price / boiler efficiency (market_prices.csv)"),
+        "p_gas_usd_mwh": put("p_gas_usd_mwh", _num(mk.get("ng_citygate_usd_mmbtu"), np.nan) * 3.412, 12.5, "data",
+                             "EIA citygate gas price, USD/MMBtu x 3.412 (market_prices.csv)"),
+        "rin_usd_mmbtu": put("rin_usd_mmbtu", mk.get("rng_d3_value_usd_mmbtu"), 25.0, "data",
+                             "D3 RIN value per MMBtu RNG (market_prices.csv)"),
+        "lcfs_usd_t": put("lcfs_usd_t", mk.get("lcfs_credit_usd_t") if m["region"] in LCFS_STATES else 0.0, 0.0,
+                          "data", "LCFS credit price, only CA/OR/WA (market_prices.csv)"),
+        "p_co2_usd_t": put("p_co2_usd_t", mk.get("p_co2_usd_ton"), 0.0, "data", "state carbon market (market_prices.csv)"),
+        "p_water_usd_m3": put("p_water_usd_m3", wat.get("p_water_effective_usd_m3"), 3.0, "data",
+                              "water + sewer tariff (site_water.csv)"),
+        "wsi": put("wsi", wat.get("wsi_index"), 2.0, "data", "WRI Aqueduct 4.0 baseline water stress 0 to 5"),
+        "d_dh_m": put("d_dh_m", gis.get("d_dh_m"), 5000.0, "data", "site_gis.csv (distance to dense heat demand)"),
+        "rho_heat_mwh_m": put("rho_heat_mwh_m", gis.get("rho_heat_mwh_m"), 1.0, "estimate",
+                              "site_gis.csv linear heat density (low confidence)"),
+        "d_coast_m": put("d_coast_m", gis.get("d_coast_m"), 1e6, "data", "site_gis.csv"),
+        "d_pp_m": put("d_pp_m", ind.get("d_pp_m"), 1e6, "data", "site_industry.csv (EIA-860 thermal plant)"),
+        "q_fw_mw": put("q_fw_mw", ind.get("q_fw_mw"), 0.0, "estimate", "site_industry.csv feedwater heat (engineering estimate)"),
+        "d_bio_m": put("d_bio_m", ind.get("d_bio_m"), 1e6, "data", "site_industry.csv nearest biomass / digester feedstock"),
+        "geo_storage_score": put("geo_storage_score", eco.get("geo_storage_score"), 3.0, "estimate",
+                                 "site_ecology.csv (team thresholds)"),
+    }
+    pr = site.prices["price_usd_mwh"] if len(site.prices) else pd.Series(dtype=float)
+    x["p_wholesale_usd_mwh"] = put("p_wholesale_usd_mwh", pr.mean() if len(pr) else None, 0.6 * x["p_elec_usd_mwh"],
+                                   "data" if len(pr) and not site.prices["is_synthetic"].astype(bool).all() else "synthetic",
+                                   "mean hourly day-ahead price of the grid region (location database)")
+    x["has_lcfs"] = m["region"] in LCFS_STATES
+    x["pp_name"] = ind.get("pp_name")
+    x["bio_name"] = ind.get("bio_name")
+    x["bio_kind"] = ind.get("bio_kind")
+    x["is_greenfield"] = bool(int(m.get("is_hypothetical") or 0))
+    prov["is_greenfield"] = {"status": "assumption", "source": "is_hypothetical flag in sites.csv"}
+    if is_greenfield is not None:
+        x["is_greenfield"] = bool(int(is_greenfield))
+        prov["is_greenfield"] = {"status": "user", "source": "UI toggle"}
+    case = SiteCase(site_id=site_id, name=m["name"], state=m["region"], it_mw=it, loops=loops,
+                    cooling_profile=prof, baseline_rejection=BASELINE_REJECTION.get(prof, "tower"),
+                    pue_reported=_num(hp.get("pue_assumed"), 1.4), t_db=t_db, t_wb=t_wb, x=x, prov=prov)
+    prov["it_mw"] = {"status": "estimate", "source": f"site_profiles.csv it_load_mw (confidence {hp.get('confidence')})"}
+    for k, v in (overrides or {}).items():
+        set_input(case, k, v)
+    return case
+
+
+def set_input(case: SiteCase, key: str, value) -> None:
+    """Change one site input in place (UI override)."""
+    import dataclasses
+    if key == "it_mw":
+        f = float(value) / case.it_mw
+        case.it_mw = float(value)
+        case.loops = [dataclasses.replace(l, q_mw=l.q_mw * f) for l in case.loops]
+    elif key in case.x:
+        old = case.x[key]
+        if isinstance(old, bool):
+            value = str(value).strip().lower() in ("1", "true", "yes")
+        elif isinstance(old, (int, float)):
+            value = float(value)
+        case.x[key] = value
+    else:
+        raise KeyError(key)
+    case.prov[key] = {"status": "user", "source": "set in the UI"}
+
+
+def synthetic_site(it_mw=100.0, t_mean=15.0, swing=12.0, liquid_share=0.9, t_sup=45.0, t_ret=55.0,
+                   **x_over) -> SiteCase:
+    """A synthetic site for tests and examples (SYNTHETIC, not a real location)."""
+    h = np.arange(8760)
+    t_db = t_mean - swing * np.cos(2 * np.pi * h / 8760) - 4 * np.cos(2 * np.pi * (h % 24 - 4) / 24)
+    t_wb = t_db - 4 - 0.15 * np.clip(t_db, 0, None)
+    loops = [Loop("liquid", it_mw * liquid_share, t_sup, t_ret)]
+    if liquid_share < 1:
+        loops.append(Loop("air", it_mw * (1 - liquid_share), 18.0, 26.0))
+    x = dict(p_elec_usd_mwh=80.0, ci_grid_kg_mwh=400.0, p_heat_usd_mwh=50.0, p_gas_usd_mwh=12.5,
+             rin_usd_mmbtu=25.0, lcfs_usd_t=0.0, p_co2_usd_t=0.0, p_water_usd_m3=3.0, wsi=2.0, d_dh_m=2000.0,
+             rho_heat_mwh_m=2.0, d_coast_m=1e6, d_pp_m=8000.0, q_fw_mw=10.0, d_bio_m=10000.0,
+             geo_storage_score=4.0, p_wholesale_usd_mwh=45.0, has_lcfs=False, is_greenfield=False, pp_name="synthetic", bio_name="synthetic",
+             bio_kind="food processing (synthetic)")
+    x.update(x_over)
+    return SiteCase("synthetic", "Synthetic site", "XX", it_mw, loops, "dlc_hot", "dry", 1.2, t_db, t_wb, x,
+                    {"all": {"status": "synthetic", "source": "synthetic_site()"}})
+
+
+# ---- planned data centers: any location, any size ------------------------------------------------
+
+def _haversine_m(lat1, lon1, lat2, lon2):
+    r = 6371000.0
+    p1, p2 = np.radians(lat1), np.radians(lat2)
+    dp, dl = p2 - p1, np.radians(np.asarray(lon2) - lon1)
+    a = np.sin(dp / 2) ** 2 + np.cos(p1) * np.cos(p2) * np.sin(dl / 2) ** 2
+    return 2 * r * np.arcsin(np.sqrt(a))
+
+
+def nearest_site(lat: float, lon: float, country: str | None = "US") -> tuple[str, float]:
+    import heatbeat_data as hd
+    s = hd.list_sites()
+    if country:
+        s = s[s["country_iso2"] == country]
+    d = _haversine_m(lat, lon, s["lat"].to_numpy(), s["lon"].to_numpy())
+    i = int(np.argmin(d))
+    return s["site_id"].iloc[i], float(d[i])
+
+
+def loops_for_profile(profile_id: str, it_mw: float) -> list[Loop]:
+    import heatbeat_data as hd
+    cp = hd.cooling_profiles().set_index("cooling_profile_id")
+    if profile_id not in cp.index:
+        raise KeyError(f"cooling profile {profile_id!r}; one of {list(cp.index)}")
+    r = cp.loc[profile_id]
+    liq = _num(r.get("liquid_heat_share"), 0.0)
+    out = []
+    if liq > 0:
+        out.append(Loop("liquid", it_mw * liq, _num(r["facility_supply_temp_c"], 32.0), _num(r["facility_return_temp_c"], 42.0)))
+    if liq < 1:
+        if profile_id == "air_economizer":
+            out.append(Loop("air", it_mw * (1 - liq), 24.0, _num(r.get("exhaust_air_temp_c"), 32.0)))
+        elif profile_id.startswith("air_chilled"):
+            out.append(Loop("air", it_mw * (1 - liq), _num(r["facility_supply_temp_c"], 18.0), _num(r["facility_return_temp_c"], 26.0)))
+        else:
+            out.append(Loop("air", it_mw * (1 - liq), 18.0, 26.0))
+    return out
+
+
+def load_location(lat: float, lon: float, it_mw: float, cooling_profile: str = "dlc_warm",
+                  is_greenfield: bool = True, weather: pd.DataFrame | None = None, live: bool = True,
+                  overrides: dict | None = None) -> SiteCase:
+    """Case for a planned data center at any point (lat, lon) with IT load it_mw (MW; 1 GW = 1000).
+
+    Weather: `weather` if given, else a live fetch for the point (Open-Meteo, fallback NASA POWER);
+    if that fails (no internet), the nearest database site's weather, flagged.
+    Prices, water tariff, water stress, gas, RIN/LCFS: the nearest database site (same region in most
+    cases), flagged "estimate". Distances to community, power plant, feedstock and coast: the nearest
+    site's value plus the distance between both points (an upper bound), flagged "estimate".
+    """
+    tpl, dist = nearest_site(lat, lon)
+    w, wsrc = weather, "given"
+    if w is None and live:
+        try:
+            from data_pipeline.fetch_weather import fetch_nasa_power, fetch_open_meteo
+            for name, fn in (("open_meteo_era5", fetch_open_meteo), ("nasa_power", fetch_nasa_power)):
+                try:
+                    w = fn(lat, lon)
+                    w.index = pd.to_datetime(w.index, utc=True)
+                    wsrc = name
+                    break
+                except Exception:  # noqa: BLE001
+                    continue
+        except ImportError:
+            w = None
+    case = load_site(tpl, live=live, weather=w)
+    if w is None:
+        case.prov["weather"] = {"status": "synthetic", "source": f"no weather for the point: weather of {tpl} "
+                                                                 f"({dist / 1000:.0f} km away) used"}
+    else:
+        case.prov["weather"] = {"status": "data", "source": f"{wsrc} for {lat:.3f}, {lon:.3f}"}
+    case.site_id = f"custom:{lat:.4f},{lon:.4f}"
+    case.name = f"Planned {it_mw:,.0f} MW data center ({lat:.3f}, {lon:.3f})"
+    case.it_mw = float(it_mw)
+    case.loops = loops_for_profile(cooling_profile, it_mw)
+    case.cooling_profile = cooling_profile
+    case.baseline_rejection = BASELINE_REJECTION.get(cooling_profile, "tower")
+    case.prov["loops"] = {"status": "estimate", "source": f"cooling profile {cooling_profile} (cooling_profiles.csv)"}
+    case.prov["it_mw"] = {"status": "user", "source": "planned size"}
+    for k in ("d_dh_m", "d_pp_m", "d_bio_m", "d_coast_m"):
+        case.x[k] = case.x[k] + dist
+        case.prov[k] = {"status": "estimate", "source": f"{tpl} value + {dist / 1000:.1f} km offset (upper bound)"}
+    for k in ("p_elec_usd_mwh", "ci_grid_kg_mwh", "p_heat_usd_mwh", "p_gas_usd_mwh", "p_water_usd_m3", "wsi",
+              "rho_heat_mwh_m", "q_fw_mw", "geo_storage_score", "rin_usd_mmbtu", "lcfs_usd_t", "p_co2_usd_t",
+              "p_wholesale_usd_mwh"):
+        st = case.prov.get(k, {}).get("source", "")
+        case.prov[k] = {"status": "estimate", "source": f"nearest database site {tpl} ({dist / 1000:.0f} km): {st}"}
+    case.x["is_greenfield"] = bool(is_greenfield)
+    case.prov["is_greenfield"] = {"status": "user", "source": "planned site"}
+    case.x["template_site_id"] = tpl
+    case.x["template_distance_m"] = dist
+    for k, v in (overrides or {}).items():
+        set_input(case, k, v)
+    return case
