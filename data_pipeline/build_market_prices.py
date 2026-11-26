@@ -267,9 +267,13 @@ def build_us() -> None:
     add("US", "*", "credit_45q_dac_usd_t", 180, "USD/tCO2", 2025, "carbon", "gccsi_45q_2025", note="DAC with geologic storage")
     for st in US_STATES + ["*"]:
         lcfs = 53.37 if st == "CA" else 0.0
-        add("US", st, "p_co2_usd_ton", 180.0, "USD/tCO2", 2025, "excel_key", "gccsi_45q_2025",
+        add("US", st, "p_dac_credit_usd_ton", 180.0, "USD/tCO2", 2025, "excel_key", "gccsi_45q_2025",
             low=0.0, high=_r(180 + lcfs, 2), is_estimate=1,
-            note="team Excel input 26 (only used by DAC). 45Q DAC credit; low = no storage access; high CA = 45Q + LCFS credit")
+            note="45Q credit for DAC with geologic storage; low = no storage access; high CA = 45Q + LCFS credit")
+        v, lo, hi, src, note = compliance.get(st, (0.0, 0.0, 0.0, "estimate", "no state carbon market"))
+        add("US", st, "p_co2_usd_ton", _r(v, 2), "USD/tCO2", 2026, "excel_key", src, low=_r(lo, 2), high=_r(hi, 2),
+            is_estimate=1, note="team Excel input 26, used as value of avoided emissions = state compliance carbon price "
+            "(0 without a state market). Partly embedded in fuel and power prices already")
 
     # Fuel credits (biogas / RNG) ----------------------------------------------------------------------
     add("US", "*", "rin_d3_usd", 2.452, "USD/RIN", 2025, "credits", "aegis_2025_12", low=2.40, high=2.452,

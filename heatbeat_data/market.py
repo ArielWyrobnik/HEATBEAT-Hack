@@ -13,7 +13,8 @@ market sources; see docs/MARKET.md for every item, unit and source.
 Team Excel keys (sheet 1, economics block) returned by site_market():
     p_fuel_usd_kwh   displaced heating fuel price, USD per kWh_th (commercial gas boiler)
     p_steam_usd_mwh  value of displaced bleed steam, USD per MWh_th
-    p_co2_usd_ton    carbon value for DAC (45Q), USD per tCO2
+    p_co2_usd_ton    value of avoided emissions: state compliance carbon price (0 if none), USD per tCO2
+    p_dac_credit_usd_ton  45Q credit for DAC with geologic storage (180), USD per tCO2
     ci_fuel_g_kwh    carbon intensity of displaced heat, gCO2 per kWh_th (gas boiler)
 p_elec_usd_kwh and ci_grid_g_kwh come from the location database (site.grid); p_water_usd_m3 from
 the water data.
@@ -26,7 +27,7 @@ from pathlib import Path
 import pandas as pd
 
 _DIR = Path(__file__).resolve().parents[1] / "data_pipeline"
-EXCEL_KEYS = ("p_fuel_usd_kwh", "p_steam_usd_mwh", "p_co2_usd_ton", "ci_fuel_g_kwh")
+EXCEL_KEYS = ("p_fuel_usd_kwh", "p_steam_usd_mwh", "p_co2_usd_ton", "p_dac_credit_usd_ton", "ci_fuel_g_kwh")
 _DETAIL = ("value", "low", "high", "unit", "year", "category", "is_estimate", "source_id", "source_url", "note")
 
 
@@ -93,6 +94,6 @@ def _mix_ci(m: dict, grid_g_kwh: float, cop: float = 1.5) -> dict:
 
 
 def excel_inputs(site_id: str) -> dict:
-    """Just the four team Excel economics keys for a site."""
+    """The team Excel economics keys for a site (plus p_dac_credit_usd_ton)."""
     m = site_market(site_id)
     return {k: m.get(k) for k in EXCEL_KEYS}
