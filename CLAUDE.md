@@ -31,24 +31,26 @@ Local context: Israel has low heating demand, high cooling demand, water scarcit
 
 Focus: US sites first. Israel is set aside for now (Ariel, 2026-11-26).
 
-PRs #1 and #3 to #10 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020, shorter Open-Meteo timeout; #8: free cooling capped by site supply temperature; #10: demo works without stored weather). What is on `main`:
+PRs #1 and #3 to #15 are merged into `main`, no PR is open (#7: US retail prices from EIA 2024 instead of 2020; #8: free cooling capped by site supply temperature; #10: demo works without stored weather; #13: DAC credit split from avoided emission carbon value). What is on `main`:
 
 | Part | Where | Docs | Status |
 |---|---|---|---|
 | Location database: 59 sites, electricity prices, carbon intensity, `heatbeat_data` access module, GitHub Actions build. Weather is fetched live on first use (Open-Meteo, fallback NASA POWER) and cached. | `data_pipeline/`, `heatbeat_data/` | `docs/DATA.md` | Merged. `data/parquet/` (hourly prices, carbon) is not committed yet; the `Build location database` workflow on `main` commits it when it finishes. Until then the 4 data tests in `tests/test_database.py` fail with FileNotFoundError. |
 | Heat source per site: IT load, cooling type, chip generation, coolant temperatures, `hd.site_heat_profiles()` | `data_pipeline/cooling_profiles.csv`, `site_profiles.csv`, `heat_sources.csv`, `heatbeat_data/heat_profiles.py` | `docs/HEAT_PROFILES.md` | Merged. Most site MW and chip values are team estimates (low confidence). |
-| Solution catalogue: 21 solutions with ideal parameters, schema validation, `screen()` first pass ranking | `heatbeat_solutions/` | `docs/SOLUTIONS.md` | Merged. Market prices not included yet. |
+| Solution catalogue: 21 solutions with ideal parameters, schema validation, `screen()` first pass ranking | `heatbeat_solutions/` | `docs/SOLUTIONS.md` | Merged. |
+| US market prices per state: gas, propane, heating oil, carbon markets, 45Q, RINs, LCFS, fish, tomatoes, pellets; `hd.excel_inputs(site_id)` | `data_pipeline/market_prices.csv`, `heatbeat_data/market.py` | `docs/MARKET.md` | Merged (#12, #13). Transcribed from published tables, synthetic rows flagged. |
+| US water: tariffs and sewer per site, baseline WUE model, WRI Aqueduct lookup | `data_pipeline/site_water.csv`, `wue_profiles.csv`, `heatbeat_data/water.py`, `fetch_aqueduct.py` | `docs/WATER.md` | Merged (#15). `wsi_index` still empty: `fetch_aqueduct.py` must run once on a laptop (files.wri.org blocked in the cloud). |
 | Demo: Streamlit input overview with live API calls and pipeline checks, every input labelled real / estimated / synthetic | `demo/` (`streamlit run demo/app.py`) | `demo/README.md` | Merged. The `Demo pipeline check` workflow runs the live calls in CI. |
 | Frontend: landing page, "How it works" section, world map (React, TypeScript, Vite, Leaflet) | `frontend/` | | Merged. Map pins load from `frontend/public/datacenters.json`. |
-| Ranking engine: port of the team Excel "Hack data.xlsx" (13 options, KO gates, score 0 to 5, eco grade A to F), modes `excel` (tested against the Excel) and `corrected`. Data threads hand missing site inputs over as `data_pipeline/site_ranking_inputs_<topic>.csv`. | `heatbeat_ranking/` | `docs/RANKING.md`, `heatbeat_ranking/AUDIT.md` | Branch `claude/project-thread-v4cogf`, PR open. |
+| Ranking engine: port of the team Excel "Hack data.xlsx" (13 options, KO gates, score 0 to 5, eco grade A to F), modes `excel` (tested against the Excel) and `corrected`. Data threads hand missing site inputs over as `data_pipeline/site_ranking_inputs_<topic>.csv`. | `heatbeat_ranking/` | `docs/RANKING.md`, `heatbeat_ranking/AUDIT.md` | Merged (#14). CAPEX per option is a placeholder, heat sink not sized yet (upper bounds). |
 
 Next steps:
 
-- Shortlist solutions and collect economic and regional market data per solution (plan in the Claude Doc "Lösungs-Ranking: Datenschema und Aufgabenverteilung"). Regional values go into a planned `data_pipeline/market_prices.csv` keyed by `country_iso2` + `region` like `sites.csv`.
-- Water prices for US regions (separate thread).
+- Shortlist solutions and fill the per solution economics (plan in the Claude Doc "Lösungs-Ranking: Datenschema und Aufgabenverteilung").
+- Run `fetch_aqueduct.py` locally to fill `wsi_index`.
 - Connect map, database and ranking engine (`heatbeat_ranking.rank_site`).
 
-Known gaps: PJM prices need a `PJM_API_KEY` secret, non-US retail prices and the Israel tariff mapping are unverified placeholders, no water (WUE, water price) or heat demand data yet.
+Known gaps: PJM prices need a `PJM_API_KEY` secret, non-US retail prices and the Israel tariff mapping are unverified placeholders, no heat demand data yet.
 
 ## Working rules
 
