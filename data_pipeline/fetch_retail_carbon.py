@@ -1,6 +1,6 @@
 """Annual retail electricity prices and grid carbon intensity per grid region.
 
-US retail: EIA "Average Price by State by Provider" (avgprice_annual.xlsx), public domain.
+US retail: EIA Electric Power Annual Table 2.10 (2024 values, transcribed), public domain.
 US carbon: EPA eGRID2023 rev2 subregion total output CO2 emission rates (lb/MWh), public domain,
            transcribed from https://www.epa.gov/egrid/summary-data (fetched 2026-11-26).
 Non-US carbon: Ember yearly electricity data (global), CC BY 4.0.
@@ -13,7 +13,7 @@ import pandas as pd
 
 from .common import CACHE_DIR, http_get, log
 
-EIA_AVGPRICE_URL = "https://www.eia.gov/electricity/data/state/avgprice_annual.xlsx"
+EIA_AVGPRICE_URL = "https://www.eia.gov/electricity/annual/html/epa_02_10.html"
 EMBER_GLOBAL_URL = "https://files.ember-energy.org/public-downloads/generation/outputs/release_generation_yearly_global.csv"
 
 LB_TO_KG = 0.45359237
@@ -28,25 +28,23 @@ EGRID2023_CO2_LB_MWH = {
 }
 
 
+# EIA Electric Power Annual, Table 2.10 "Average Price of Electricity to Ultimate Customers by End-Use
+# Sector, by State, 2025 and 2024", year 2024 columns, cents/kWh (Form EIA-861, final). Transcribed
+# 2026-11-26 from https://www.eia.gov/electricity/annual/html/epa_02_10.html. (commercial, industrial)
+EIA_EPA_2_10_2024_CENTS = {
+    "VA": (8.72, 8.99), "TX": (8.55, 6.12), "AZ": (12.23, 7.90), "IL": (11.81, 8.83), "GA": (10.87, 7.21),
+    "CA": (25.54, 21.53), "OR": (10.11, 8.05), "WA": (9.99, 6.61), "IA": (10.22, 6.80), "NE": (8.39, 7.66),
+    "OK": (8.92, 5.84), "OH": (10.66, 7.10), "WI": (12.63, 8.54), "LA": (10.46, 5.61), "TN": (12.05, 6.21),
+    "NV": (10.19, 8.64), "UT": (9.39, 7.86), "NC": (10.56, 7.77), "SC": (10.64, 6.84), "NY": (18.77, 9.17),
+    "NJ": (14.64, 11.93), "MA": (20.90, 18.19), "WY": (9.27, 7.96), "FL": (10.99, 8.50),
+}
+
+
 def fetch_eia_retail(fetch: bool = True) -> tuple[pd.DataFrame, int]:
-    """Return DataFrame indexed by state with industrial and commercial price (USD/MWh) for the latest year."""
-    cache = CACHE_DIR / "eia_avgprice_annual.xlsx"
-    if not cache.exists() and not fetch:
-        raise FileNotFoundError(f"{cache} not cached (run --stage regions)")
-    if not cache.exists():
-        cache.parent.mkdir(parents=True, exist_ok=True)
-        cache.write_bytes(http_get(EIA_AVGPRICE_URL).content)
-    raw = pd.read_excel(cache, header=None)
-    header_row = next(i for i in range(10) if raw.iloc[i].astype(str).str.contains("Industrial", case=False).any())
-    df = pd.read_excel(cache, header=header_row)
-    df.columns = [str(c).strip() for c in df.columns]
-    sector_col = next(c for c in df.columns if "sector" in c.lower() or "provider" in c.lower())
-    df = df[df[sector_col].astype(str).str.contains("Total Electric Industry", case=False)]
-    year = int(df["Year"].max())
-    df = df[df["Year"] == year].set_index("State")
-    out = pd.DataFrame({"industrial_usd_mwh": pd.to_numeric(df["Industrial"], errors="coerce") * 10,
-                        "commercial_usd_mwh": pd.to_numeric(df["Commercial"], errors="coerce") * 10})
-    return out, year
+    """Industrial and commercial price (USD/MWh) per state for 2024 (transcribed EIA Table 2.10)."""
+    df = pd.DataFrame.from_dict(EIA_EPA_2_10_2024_CENTS, orient="index", columns=["commercial", "industrial"])
+    out = pd.DataFrame({"industrial_usd_mwh": df["industrial"] * 10, "commercial_usd_mwh": df["commercial"] * 10})
+    return out, 2024
 
 
 def fetch_ember_intensity(fetch: bool = True) -> tuple[dict[str, float], dict[str, int]]:
