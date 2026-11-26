@@ -153,6 +153,7 @@ class OptionResult(BaseModel):
     rank: int | None = Field(None, description="1 = best. None = knocked out")
     feasible: bool
     score: float | None = Field(None, description="Higher is better. Scale given by ModelResult.score_scale")
+    reuse_npv_usd: float | None = Field(None, description="Incremental NPV versus the same cooling design without heat reuse")
     eco_grade: str | None = None
     components: list[str] = Field(default_factory=list, description="Heat chain parts, e.g. ['dry_cooler', 'heat_pump', 'district_heating']")
     product: str | None = Field(None, description="What it delivers, e.g. '65,961 MWh heat at 38 C'")

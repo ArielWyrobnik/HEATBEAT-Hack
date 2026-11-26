@@ -123,6 +123,7 @@ export interface OptionResult {
   rank?: number | null;
   feasible: boolean;
   score?: number | null;
+  reuse_npv_usd?: number | null;
   eco_grade?: string | null;
   components: string[];
   product?: string | null;

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { num } from '../format';
 import type { CoolingProfile, ModelResult, OptionResult } from '../types/api';
-import { heatFirst, HeatOrderSelect, reuseShare, type HeatOrder } from './HeatFlow';
+import { HeatOrderSelect, PROFIT_FALLBACK, rankHeatOptions, reuseShare, totalNpv, type HeatOrder } from './HeatFlow';
 import { coolingOnly, Details, money, Vendors } from './Results';
 
 export interface PlanPoint { lat: number; lng: number }
@@ -45,7 +45,7 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
   const [greenfield, setGreenfield] = useState(1);
   const [path, setPath] = useState('any');
   const [selected, setSelected] = useState('');
-  const [order, setOrder] = useState<HeatOrder>('heat');
+  const [order, setOrder] = useState<HeatOrder>('profitableHeat');
   const request = useRef(0);
   const [state, setState] = useState<
     { status: 'idle' | 'loading' } | { status: 'error'; error: string } | { status: 'ready'; result: ModelResult }
@@ -89,9 +89,10 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
 
   const result = state.status === 'ready' ? state.result : null;
   const matches = result ? matchingOptions(result, path) : [];
-  const designs = matches.filter((o) => o.feasible);
+  const feasible = matches.filter((o) => o.feasible);
   const rankByHeat = result?.model === 'heat_chain' && path !== 'cooling';
-  if (rankByHeat && order === 'heat') designs.sort(heatFirst);
+  const comparison = rankByHeat ? rankHeatOptions(feasible, order) : { options: feasible, fallback: false };
+  const designs = comparison.options;
   const design = designs.find((o) => o.option_id === selected) ?? designs[0];
 
   return (
@@ -149,17 +150,18 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
             {screening && <p className="muted">Concept screening uses regional estimates and default site distances. Verify local demand and infrastructure before sizing.</p>}
             {design ? (
               <>
+                {rankByHeat && feasible.length > 1 &&
+                  <HeatOrderSelect order={order} onChange={(next) => { setOrder(next); setSelected(''); }} />}
+                {comparison.fallback && <p className="muted">{PROFIT_FALLBACK}</p>}
                 {designs.length > 1 && (
-                  <>
-                    {rankByHeat && <HeatOrderSelect order={order} onChange={(next) => { setOrder(next); setSelected(''); }} />}
                     <label className="plan-alternatives">Compare designs
                       <select value={design.option_id} onChange={(e) => setSelected(e.target.value)}>
                         {designs.map((o) => <option key={o.option_id} value={o.option_id}>
-                          {o.name}{rankByHeat ? ` · ${reuseShare(o, result.baseline.it_energy_mwh_yr)} to reuse` : ''} · {money((o.score ?? 0) * 1e6)} NPV
+                          {o.name}{rankByHeat ? ` · ${reuseShare(o, result.baseline.it_energy_mwh_yr)} to reuse` : ''}
+                          {rankByHeat && order !== 'value' ? ` · ${money(o.reuse_npv_usd)} reuse NPV` : ` · ${money(totalNpv(o))} NPV`}
                         </option>)}
                       </select>
                     </label>
-                  </>
                 )}
                 <h4>{design.name}</h4>
                 <Details o={design} r={result} planned />

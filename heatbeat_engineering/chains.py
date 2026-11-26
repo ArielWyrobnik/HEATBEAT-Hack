@@ -35,6 +35,10 @@ from .sinks import H, SinkPlan, annuity
 
 TECH_LABEL = {"dry": "Dry cooler", "adiabatic": "Adiabatic cooler", "tower": "Cooling tower"}
 DH_NETWORK_KM = (5.0, 20.0, 60.0)
+DH_PEAK_SHARES = (35, 65)
+DH_FULL_PLANS = tuple(f"dh_{km:.0f}km" for km in DH_NETWORK_KM)
+DH_SIZED_PLANS = {f"dh_{km:.0f}km_peak{share}": (km, share)
+                  for km in DH_NETWORK_KM for share in DH_PEAK_SHARES}
 STORAGE_KINDS = ("tank", "ates", "btes")
 
 
@@ -53,6 +57,8 @@ def build_plans(site, P: dict) -> dict[str, SinkPlan]:
     }
     for km in DH_NETWORK_KM:
         plans[f"dh_{km:.0f}km"] = dh.plan(site, P, km)
+    for key, (km, share) in DH_SIZED_PLANS.items():
+        plans[key] = dh.plan(site, P, km, peak_share=share)
     return plans
 
 
@@ -76,7 +82,7 @@ GROUPS = {
     "biogas": ("biogas_meso", "biogas_thermo"),
     "feedwater": ("feedwater",),
     "adsorption": ("adsorption",),
-    "dh": tuple(f"dh_{k:.0f}km" for k in DH_NETWORK_KM),
+    "dh": (*DH_FULL_PLANS, *DH_SIZED_PLANS),
     "desal": ("desal_med", "desal_md"),
     "orc": ("orc",),
 }
@@ -85,7 +91,7 @@ ORDER = ["adsorption", "biogas", "feedwater", "dh", "desal", "orc"]  # fixed dem
 
 def enumerate_chains(plans: dict[str, SinkPlan], max_uses: int = 2):
     """All feasible (tech, uses, storage) combinations. KO uses are left out."""
-    ok = {g: [n for n in names if plans[n].ko is None] for g, names in GROUPS.items()}
+    ok = {g: [n for n in names if n in plans and plans[n].ko is None] for g, names in GROUPS.items()}
     groups = [g for g in ORDER if ok[g]]
     combos = [()]
     for k in range(1, max_uses + 1):
@@ -97,7 +103,7 @@ def enumerate_chains(plans: dict[str, SinkPlan], max_uses: int = 2):
     for tech in TECHS:
         for uses in combos:
             stores = [None]
-            if any(u.startswith("dh_") for u in uses):
+            if any(u in DH_FULL_PLANS for u in uses):
                 stores += list(STORAGE_KINDS)
             for st in stores:
                 out.append((tech, tuple(uses), st))
@@ -443,7 +449,7 @@ def evaluate_site(site, P: dict | None = None, max_uses: int = 2) -> tuple[pd.Da
     for cid, v in zip(df["chain_id"], df["reuse_npv_usd"]):
         results[cid]["reuse_npv_usd"] = v
     df.insert(0, "rank", np.arange(1, len(df) + 1))
-    ko = {n: p.ko for n, p in plans.items() if p.ko}
+    ko = {n: p.ko for n, p in plans.items() if p.ko and n not in DH_SIZED_PLANS}
     df.attrs.update(site_id=site.site_id, ko=ko)
     return df, base, results
 
@@ -454,5 +460,5 @@ def chain_id(tech, uses, storage) -> str:
 
 def best_per_use(df: pd.DataFrame) -> pd.DataFrame:
     """Best chain for each heat use family (plus heat rejection only), for presentation."""
-    fam = df["uses"].str.split("+").str[0].str.replace(r"_(meso|thermo|med|md|\d+km)$", "", regex=True)
+    fam = df["uses"].str.split("+").str[0].str.replace(r"_(meso|thermo|med|md|\d+km(?:_peak\d+)?)$", "", regex=True)
     return df.assign(family=fam).sort_values("npv_usd", ascending=False).drop_duplicates("family")

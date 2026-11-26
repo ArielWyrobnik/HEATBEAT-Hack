@@ -67,6 +67,39 @@ def test_district_heating_labels_screening_distance_and_user_override():
     assert "60 km modeled network, 4.2 km specified line" in build_plans(site, P)["dh_60km"].label
 
 
+def test_district_heating_uses_smaller_equipment_to_cover_part_of_peak():
+    site = synthetic_site()
+    plans = build_plans(site, P)
+    full = simulate(site, P, "dry", ("dh_20km",), plans=plans)
+    sized = simulate(site, P, "dry", ("dh_20km_peak35",), plans=plans)
+    full_dh = full["details"]["dh_20km"]
+    sized_dh = sized["details"]["dh_20km_peak35"]
+    assert sized_dh["peak_mw"] == pytest.approx(full_dh["peak_mw"] * 0.35, abs=0.01)
+    assert sized_dh["dn_mm"] < full_dh["dn_mm"]
+    assert sized["capex"]["heat_pump"] < full["capex"]["heat_pump"]
+    assert sized_dh["community_demand_mwh"] == full_dh["community_demand_mwh"]
+    assert 0 < sized_dh["served_share"] < full_dh["served_share"]
+
+
+def test_site_ranking_includes_the_profitable_heat_and_reuse_value_winners():
+    pytest.importorskip("pyarrow")
+    pytest.importorskip("fastapi")
+    from heatbeat_engineering.api_model import MODEL
+    from heatbeat_engineering.site import load_site
+
+    site_id = "us-ok-pryor-google"
+    _, _, results = evaluate_site(load_site(site_id, live=False))
+    reuse = [r for r in results.values() if r["heat_recovered_mwh"] > 0]
+    by_value = max(reuse, key=lambda r: r["reuse_npv_usd"])
+    profitable = [r for r in reuse if r["reuse_npv_usd"] > 0 and r["npv_usd"] > 0]
+    by_heat = max(profitable, key=lambda r: r["heat_recovered_mwh"])
+    options = {o.option_id: o for o in MODEL.run(site_id, tornado=False).options}
+    for winner in (by_value, by_heat):
+        option = options[winner["chain_id"]]
+        assert option.reuse_npv_usd == pytest.approx(winner["reuse_npv_usd"])
+        assert option.kpis.heat_recovered_mwh_yr == pytest.approx(winner["heat_recovered_mwh"])
+
+
 def test_heat_pump_below_carnot_and_falls_with_lift():
     c1, c2 = float(hp.cop(45, 70, P)), float(hp.cop(45, 90, P))
     assert c1 > c2 > 1

@@ -26,7 +26,7 @@ def demand_profile(site, P: dict, network_km: float) -> np.ndarray:
     return sh + dhw
 
 
-def plan(site, P: dict, network_km: float | None = None) -> SinkPlan:
+def plan(site, P: dict, network_km: float | None = None, peak_share: int = 100) -> SinkPlan:
     km = network_km if network_km is not None else P["dh_network_km"]
     distance = site.x["d_dh_m"] / 1000
     distance_prov = site.prov.get("d_dh_m", {})
@@ -37,10 +37,13 @@ def plan(site, P: dict, network_km: float | None = None) -> SinkPlan:
     else:
         line = f"{distance:.1f} km estimated line"
     label = f"District heating ({km:.0f} km modeled network, {line})"
+    if peak_share < 100:
+        label += f" at {peak_share}% peak demand"
     L = max(site.x["d_dh_m"], 300.0)
     if L > P["dh_max_transmission_km"] * 1000:
         return ko_plan("district_heating", label, f"community {L / 1000:.0f} km away (> {P['dh_max_transmission_km']:.0f} km)")
-    dem = demand_profile(site, P, km)
+    network_demand = demand_profile(site, P, km)
+    dem = np.minimum(network_demand, network_demand.max() * peak_share / 100)
     peak = float(dem.max() * (1 + P["dh_dist_loss_share"]))
     tg = float(np.clip(site.t_mean, 5, 20))
     pp = pipe(L, peak, P["dh_supply_c"], P["dh_return_c"], tg, P)
@@ -55,8 +58,9 @@ def plan(site, P: dict, network_km: float | None = None) -> SinkPlan:
                 "co2_avoided_t": e * gas_ef, "capex_usd": capex,
                 "detail": {"dn_mm": round(pp["dn_mm"]), "pipe_loss_mw": round(pp["loss_mw"], 3),
                            "pipe_u_w_mk": round(pp["u_w_mk"], 3), "pump_design_kw": round(pp["pump_design_mw"] * 1000, 1),
-                           "community_demand_mwh": round(float(dem.sum())), "peak_mw": round(peak, 2),
-                           "served_share": round(e / max(float(dem.sum()), 1e-9), 3)}}
+                           "community_demand_mwh": round(float(network_demand.sum())),
+                           "peak_share": peak_share, "peak_mw": round(peak, 2),
+                           "served_share": round(e / max(float(network_demand.sum()), 1e-9), 3)}}
 
     return SinkPlan("district_heating", label, P["dh_supply_c"], dem, loss, aux, settle=settle,
                     notes=[f"transmission DN{pp['dn_mm']:.0f}, U' {pp['u_w_mk']:.2f} W/mK, "
