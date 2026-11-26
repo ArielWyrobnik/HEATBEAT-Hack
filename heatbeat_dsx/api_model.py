@@ -146,8 +146,7 @@ class DsxModel(ExcelRankingModel):
             server = base.it_energy_mwh_yr
             loops = [HeatLoop(name=str(s["cooling_type"]), mwh_yr=server, return_c=float(s["t_dc_base_c"]),
                               routes=[HeatRoute(name=o["name"], mwh_yr=min(qs, server), kind="reuse"),
-                                      HeatRoute(name="Cooling plant (rejected to air)" if not s["baseline_evaporative"]
-                                                else "Cooling plant (cooling tower)",
+                                      HeatRoute(name="Cooling tower" if s["baseline_evaporative"] else "Dry cooler",
                                                 mwh_yr=max(0.0, server - qs), kind="cooling")])]
         kpis = Kpis(heat_recovered_mwh_yr=qs, heat_delivered_mwh_yr=qd, electricity_used_mwh_yr=w,
                     co2_avoided_t_yr=a["net_abated_tco2"], water_saved_m3_yr=round(saved, 1), net_value_usd_yr=net,
