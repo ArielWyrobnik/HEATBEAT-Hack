@@ -269,7 +269,7 @@ def stage_agstar() -> None:
 # OpenStreetMap (Overpass API): cold storage, seafood, produce wholesale near each site
 # --------------------------------------------------------------------------------------------------
 OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
-OSM_RADIUS_M = 100_000
+OSM_RADIUS_M = 60_000
 _OSM_FILTERS = [
     '["industrial"~"^(cold_storage|refrigerated_warehouse|fish_processing|seafood|food|food_processing|slaughterhouse|meat|dairy)$"]',
     '["building"~"^(cold_storage|refrigerated_warehouse)$"]',
@@ -277,7 +277,7 @@ _OSM_FILTERS = [
     '["product"~"fish|seafood|frozen|produce|vegetable|fruit",i]',
     '["amenity"="marketplace"]["wholesale"]',
     '["shop"="wholesale"]',
-    '["name"~"cold storage|refrigerated|seafood|produce market|produce terminal|terminal market|lineage logistics|americold|us cold|united states cold",i]',
+    '["building"]["name"~"cold storage|refrigerated|seafood|produce market|produce terminal|terminal market|lineage|americold",i]',
 ]
 
 
@@ -292,27 +292,54 @@ def _osm_kind(tags: dict) -> str:
     return "food processing"
 
 
+def _overpass(q: str, label: str, tries: int = 4, timeout: int = 150) -> dict | None:
+    for attempt in range(tries):
+        url = OVERPASS[attempt % len(OVERPASS)]
+        try:
+            r = requests.post(url, data={"data": q}, timeout=timeout, headers={"User-Agent": USER_AGENT})
+            if r.status_code == 200:
+                return r.json()
+            log.warning("Overpass %s HTTP %s for %s", url, r.status_code, label)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("Overpass %s failed for %s: %s", url, label, exc)
+        time.sleep(10 * (attempt + 1))
+    return None
+
+
+ZONING_RADIUS_M = 3_000
+
+
+def stage_osm_zoning() -> None:
+    """Proxy for ind_zoning: is there OSM landuse=industrial within 3 km of the site coordinate?"""
+    rows = []
+    for _, s in _us_sites().iterrows():
+        q = (f'[out:json][timeout:90];(way(around:{ZONING_RADIUS_M},{s.lat},{s.lon})["landuse"="industrial"];'
+             f'relation(around:{ZONING_RADIUS_M},{s.lat},{s.lon})["landuse"="industrial"];);out ids;')
+        data = _overpass(q, s.site_id + " zoning")
+        if data is None:
+            continue
+        rows.append({"site_id": s.site_id, "n_industrial_landuse_3km": len(data.get("elements", []))})
+        time.sleep(2)
+    if not rows:
+        raise RuntimeError("Overpass zoning query returned nothing")
+    out = pd.DataFrame(rows)
+    out["source"] = "OpenStreetMap landuse=industrial via Overpass API (ODbL), queried " + time.strftime("%Y-%m-%d")
+    _write_layer(out, "osm_industrial_landuse.csv")
+
+
 def stage_osm() -> None:
+    """One small Overpass query per site and filter (a single combined query timed out on GitHub runners)."""
     sites = _us_sites()
     rows = []
     for _, s in sites.iterrows():
-        parts = "".join(f"nwr(around:{OSM_RADIUS_M},{s.lat},{s.lon}){f};" for f in _OSM_FILTERS)
-        q = f"[out:json][timeout:180];({parts});out center tags;"
-        data = None
-        for attempt in range(6):
-            url = OVERPASS[attempt % len(OVERPASS)]
-            try:
-                r = requests.post(url, data={"data": q}, timeout=240, headers={"User-Agent": USER_AGENT})
-                if r.status_code == 200:
-                    data = r.json()
-                    break
-                log.warning("Overpass %s HTTP %s for %s", url, r.status_code, s.site_id)
-            except Exception as exc:  # noqa: BLE001
-                log.warning("Overpass %s failed for %s: %s", url, s.site_id, exc)
-            time.sleep(15 * (attempt + 1))
-        if data is None:
-            log.error("Overpass gave up for %s", s.site_id)
-            continue
+        elements = []
+        for f in _OSM_FILTERS:
+            q = f"[out:json][timeout:90];nwr(around:{OSM_RADIUS_M},{s.lat},{s.lon}){f};out center tags;"
+            data = _overpass(q, f"{s.site_id} {f[:30]}", tries=2, timeout=120)
+            if data is not None:
+                elements += data.get("elements", [])
+            time.sleep(1)
+        data = {"elements": elements}
         n = 0
         for el in data.get("elements", []):
             lat = el.get("lat", el.get("center", {}).get("lat"))
@@ -327,7 +354,10 @@ def stage_osm() -> None:
                          "lat": lat, "lon": lon, "kind": _osm_kind(tags), "query_site": s.site_id})
             n += 1
         log.info("OSM %s: %d features", s.site_id, n)
-        time.sleep(3)
+        if rows:  # write after every site, so a step timeout keeps what arrived
+            part = pd.DataFrame(rows).drop_duplicates("osm_id")
+            part["source"] = "OpenStreetMap contributors via Overpass API (ODbL), queried " + time.strftime("%Y-%m-%d")
+            _write_layer(part, "osm_market.csv")
     if not rows:
         raise RuntimeError("Overpass returned nothing for any site")
     out = pd.DataFrame(rows).drop_duplicates("osm_id")
@@ -400,6 +430,7 @@ def stage_assemble() -> pd.DataFrame:
     food = _layer("ghgrp_food.csv")
     agstar = _layer("agstar_digesters.csv")
     osm = _layer("osm_market.csv")
+    zoning = _layer("osm_industrial_landuse.csv")
 
     bio_main = _concat(bio_eia[bio_eia["layer"] == "biomass"] if bio_eia is not None else None,
                        agstar,
@@ -461,10 +492,16 @@ def stage_assemble() -> pd.DataFrame:
                      market_kind=p.kind, market_source=p.source, market_confidence=_confidence(base, s, d))
         elif osm is not None:
             r.update(d_market_m=round(OSM_RADIUS_M * CIRCUITY), market_kind="none found within search radius",
-                     market_source="OpenStreetMap (lower bound: nothing tagged within 100 km)",
+                     market_source=f"OpenStreetMap (lower bound: nothing tagged within {OSM_RADIUS_M // 1000} km)",
                      market_confidence="low")
         else:
             r.update(market_confidence="low", market_source="no market layer available")
+        # Industrial zoning proxy
+        if zoning is not None and s.site_id in set(zoning["site_id"]):
+            n = int(zoning.set_index("site_id").loc[s.site_id, "n_industrial_landuse_3km"])
+            r.update(ind_zoning=int(n > 0), n_industrial_landuse_3km=n,
+                     zoning_source=zoning["source"].iloc[0] + "; proxy, not a zoning map",
+                     zoning_confidence="low")
         rows.append(r)
 
     out = pd.DataFrame(rows)
@@ -475,10 +512,44 @@ def stage_assemble() -> pd.DataFrame:
     out = out[lead + [c for c in out.columns if c not in lead]]
     out.to_csv(OUT_PATH, index=False)
     log.info("wrote %s (%d sites)", OUT_PATH, len(out))
+    _write_ranking_inputs(out)
     return out
 
 
+RANKING_PATH = PIPELINE_DIR / "site_ranking_inputs_industry.csv"
+
+
+def _write_ranking_inputs(t: pd.DataFrame) -> None:
+    """Long format for the ranking engine (heatbeat_ranking): site_id,key,value,status,source,note."""
+    spec = [  # key, block, note builder
+        ("d_pp_m", "pp", lambda r: f"{r.get('pp_name')} ({r.get('pp_fuels')}, {r.get('pp_steam_mw')} MW steam); "
+                                   f"routing = straight line x {CIRCUITY}; confidence {r.get('pp_confidence')}"),
+        ("q_fw_mw", "pp", lambda r: f"engineering estimate for {r.get('pp_name')}: steam MW x k x 2025 capacity "
+                                    f"factor (docs/INDUSTRY.md); full load {r.get('q_fw_full_load_mw')} MW"),
+        ("d_co2_m", "co2", lambda r: f"{r.get('co2_name')}: {r.get('co2_kind')}; no pipeline routes; "
+                                     f"confidence {r.get('co2_confidence')}"),
+        ("d_bio_m", "bio", lambda r: f"{r.get('bio_name')}: {r.get('bio_kind')}; confidence {r.get('bio_confidence')}"),
+        ("ind_zoning", "zoning", lambda r: f"proxy: {r.get('n_industrial_landuse_3km')} OSM landuse=industrial "
+                                           f"areas within 3 km of the (approximate) site coordinate"),
+        ("d_market_m", "market", lambda r: f"{r.get('market_name')}: {r.get('market_kind')}; "
+                                           f"confidence {r.get('market_confidence')}"),
+    ]
+    rows = []
+    for r in t.to_dict("records"):
+        for key, block, note in spec:
+            v = r.get(key)
+            if v is None or (isinstance(v, float) and math.isnan(v)):
+                continue
+            assumption = key in ("q_fw_mw", "ind_zoning") or "none found" in str(r.get("market_kind", "")) and key == "d_market_m"
+            rows.append({"site_id": r["site_id"], "key": key, "value": v,
+                         "status": "assumption" if assumption else "data",
+                         "source": r.get(f"{block}_source"), "note": note(r)})
+    pd.DataFrame(rows).to_csv(RANKING_PATH, index=False)
+    log.info("wrote %s (%d rows)", RANKING_PATH, len(rows))
+
+
 STAGES = {"eia": stage_eia, "ghgrp": stage_ghgrp, "agstar": stage_agstar, "osm": stage_osm,
+          "osm_zoning": stage_osm_zoning,
           "assemble": stage_assemble}
 
 
