@@ -74,6 +74,13 @@ export interface EnergyFlow {
   kind: 'heat' | 'electricity' | 'cooling' | 'fuel' | 'loss' | 'other';
 }
 
+export interface HeatLoop {
+  name: string;
+  mwh_yr: number;
+  return_c: number;
+  routes: { name: string; mwh_yr: number; kind: 'reuse' | 'cooling' }[];
+}
+
 export interface CalcTerm {
   key: string;
   label?: string | null;
@@ -116,6 +123,7 @@ export interface OptionResult {
   rank?: number | null;
   feasible: boolean;
   score?: number | null;
+  reuse_npv_usd?: number | null;
   eco_grade?: string | null;
   components: string[];
   product?: string | null;
@@ -126,6 +134,7 @@ export interface OptionResult {
   capex_breakdown: Record<string, number>;
   kpis: Kpis;
   energy_balance: EnergyFlow[];
+  heat_loops?: HeatLoop[];
   details: Record<string, unknown>;
   /** Step by step calculation trace with sources (engineering model) */
   calculation?: CalcStep[];

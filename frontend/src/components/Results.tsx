@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { compact, num, usd, value } from '../format';
 import type { CalcStep, Flag, InputValue, ModelResult, OptionResult, Vendor } from '../types/api';
+import HeatFlow, { HeatOrderSelect, PROFIT_FALLBACK, rankHeatOptions, reuseShare, totalNpv, type HeatOrder } from './HeatFlow';
 import Tornado from './Tornado';
 
 /**
@@ -169,8 +170,17 @@ export function Details({ o, r, planned = false }: { o: OptionResult; r: ModelRe
     : k.capex_usd;
   const inputs = o.calculation_inputs?.length ? o.calculation_inputs : r.inputs;
   const nReal = inputs.filter((i) => i.flag === 'real' || i.flag === 'user').length;
+  const hasHeatFlow = Boolean(o.heat_loops?.length);
+  const recoveredHeat = k.heat_recovered_mwh_yr ?? 0;
   return (
     <div className="opt-body">
+      <HeatFlow option={o} />
+      {o.reuse_npv_usd != null && (
+        <p className="impl-line" title="Modeled NPV includes the value assigned to water scarcity.">
+          <b>Reuse NPV {money(o.reuse_npv_usd)}</b> compared with the same cooling design alone.
+          {' '}<b>Total NPV {money(totalNpv(o))}</b> compared with the baseline.
+        </p>
+      )}
       <div className="kpis">
         <Kpi label="Saved per year" v={`${money(k.cash_value_usd_yr ?? k.net_value_usd_yr)}`} def={DEFS.cash}
              neg={(k.cash_value_usd_yr ?? 0) < 0} />
@@ -179,9 +189,9 @@ export function Details({ o, r, planned = false }: { o: OptionResult; r: ModelRe
         <Kpi label="Water saved" v={`${compact(k.water_saved_m3_yr)} m3/yr`} def={DEFS.water} neg={(k.water_saved_m3_yr ?? 0) < 0} />
       </div>
 
-      {(k.heat_recovered_mwh_yr ?? 0) > 0 && (
-        <p className="impl-line"><b>Heat recovered</b> {compact(k.heat_recovered_mwh_yr)} MWh/yr{o.product && <> · {o.product}</>}</p>
-      )}
+      {recoveredHeat > 0 && (hasHeatFlow
+        ? o.product && <p className="impl-line"><b>Annual output</b> {o.product}</p>
+        : <p className="impl-line"><b>Heat recovered</b> {compact(recoveredHeat)} MWh/yr{o.product && <> · {o.product}</>}</p>)}
       {o.already_in_place?.map((t) => <p key={t} className="already-line"><span className="already">already in place</span> {t}</p>)}
       {o.implementation && <p className="impl-line"><b>How it is built.</b> {o.implementation}</p>}
       <Vendors vendors={o.vendors} />
@@ -227,12 +237,18 @@ export const coolingOnly = (o: OptionResult) =>
   o.components.length === 1 && COOLING_COMPONENTS.includes(o.components[0]);
 
 export default function Results({ r }: { r: ModelResult }) {
-  const [reuse, setReuse] = useState(false);
+  const [palette, setPalette] = useState<'cooling' | 'reuse' | null>(null);
+  const [order, setOrder] = useState<HeatOrder>('profitableHeat');
   const engineering = r.model === 'heat_chain';
-  const top = r.options.filter((o) => o.feasible && !o.is_today &&
-    (!engineering || coolingOnly(o) !== reuse)).slice(0, 3);
+  const feasible = r.options.filter((o) => o.feasible && !o.is_today);
+  const reuse = engineering && (palette === null ? feasible.some((o) => !coolingOnly(o)) : palette === 'reuse');
+  const options = feasible.filter((o) => !engineering || coolingOnly(o) !== reuse);
+  const comparison = reuse ? rankHeatOptions(options, order) : { options, fallback: false };
+  const top = comparison.options.slice(0, 3);
+  const firstOption = top[0]?.option_id;
   const [open, setOpen] = useState<string | null>(null);
-  useEffect(() => setOpen(r.verdict_level === 'no_gain' ? null : top[0]?.option_id ?? null), [r, reuse]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => setOpen(!reuse && r.verdict_level === 'no_gain' ? null : firstOption ?? null),
+    [r, reuse, order, firstOption]);
   const b = r.baseline;
   return (
     <div className="results">
@@ -242,16 +258,20 @@ export default function Results({ r }: { r: ModelResult }) {
       </p>
 
       {engineering && <div className="seg" role="group" aria-label="Solution palette">
-        <button type="button" aria-pressed={!reuse} className={!reuse ? 'on' : ''} onClick={() => setReuse(false)}>Cooling</button>
-        <button type="button" aria-pressed={reuse} className={reuse ? 'on' : ''} onClick={() => setReuse(true)}>Heat reuse</button>
+        <button type="button" aria-pressed={!reuse} className={!reuse ? 'on' : ''} onClick={() => setPalette('cooling')}>Cooling</button>
+        <button type="button" aria-pressed={reuse} className={reuse ? 'on' : ''} onClick={() => setPalette('reuse')}>Heat reuse</button>
       </div>}
-      <h4>Best options <small title={DEFS.npv}>ranked by value over 20 years (NPV) ⓘ</small></h4>
-      {top.length === 0 && <p className="muted">No option passes the technical checks at this site.</p>}
+      {reuse && <HeatOrderSelect order={order} onChange={setOrder} />}
+      {comparison.fallback && <p className="muted">{PROFIT_FALLBACK}</p>}
+      <h4>Best options {!reuse && <small title={DEFS.npv}>ranked by value over 20 years (NPV) ⓘ</small>}</h4>
+      {top.length === 0 && <p className="muted">{reuse ? 'No tested design recovers heat at this site.' : 'No option passes the technical checks at this site.'}</p>}
       <ol className="options">
         {top.map((o, i) => {
           const on = open === o.option_id;
           const k = o.kpis;
-          const npv = o.score;
+          const projectNpv = o.score == null ? null : totalNpv(o);
+          const showingReuseNpv = reuse && order !== 'value';
+          const npv = showingReuseNpv ? o.reuse_npv_usd : projectNpv;
           return (
             <li key={o.option_id} className={on ? 'open' : ''}>
               <button className="opt-head" onClick={() => setOpen(on ? null : o.option_id)} aria-expanded={on}>
@@ -259,14 +279,15 @@ export default function Results({ r }: { r: ModelResult }) {
                 <span className="opt-name">
                   {o.name}
                   <small>
-                    {(npv ?? 0) < 0 ? 'loses money here'
+                    {reuse && <>{reuseShare(o, b.it_energy_mwh_yr)} to reuse · </>}
+                    {(projectNpv ?? 0) < 0 ? 'loses money here'
                       : (k.cash_value_usd_yr ?? 0) < 0 ? `costs ${money(-(k.cash_value_usd_yr ?? 0))}/yr more, pays off through water saved`
                       : `saves ${money(k.cash_value_usd_yr ?? k.net_value_usd_yr)}/yr · ${k.payback_yr === 0 ? 'no extra investment' : `payback ${payback(k.payback_yr)}`}`}
                   </small>
                 </span>
                 <span className={`opt-npv${(npv ?? 0) < 0 ? ' neg' : ''}`}>
-                  {npv == null ? 'n/a' : `${npv < 0 ? '-' : '+'}$${num(Math.abs(npv), 1)} M`}
-                  <small>NPV</small>
+                  {npv == null ? 'n/a' : `${npv > 0 ? '+' : ''}${money(npv)}`}
+                  <small>{showingReuseNpv ? 'Reuse NPV' : reuse ? 'Total NPV' : 'NPV'}</small>
                 </span>
                 <span className="chev" aria-hidden>{on ? '−' : '+'}</span>
               </button>

@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import math
 
-from heatbeat_api.schemas import (Baseline, EnergyFlow, InputValue, Kpis, ModelInfo, ModelResult, OptionResult,
+from heatbeat_api.schemas import (Baseline, EnergyFlow, HeatLoop, InputValue, Kpis, ModelInfo, ModelResult, OptionResult,
                                   SetupFact, Tornado, TornadoBar)
 
 from . import calc_trace
-from .chains import best_per_use, evaluate_site
+from .chains import DH_SIZED_PLANS, best_per_use, evaluate_site
 from .params import PARAMS, defaults
 from .sensitivity import tornado as tornado_fn
 from .site import load_location, load_site
@@ -112,17 +112,32 @@ class HeatChainModel:
         df, base, results = evaluate_site(s, P)
         if mode == "reuse_only":
             df = df[df["uses"] != "none"].reset_index(drop=True)
-        pick = list(dict.fromkeys(list(df["chain_id"].head(10)) + list(best_per_use(df)["chain_id"])))
-        pick = list(dict.fromkeys([*pick, *df.loc[df["uses"] == "none", "chain_id"]]))
+        pick = [*df["chain_id"].head(10), *best_per_use(df)["chain_id"], *df.loc[df["uses"] == "none", "chain_id"]]
+        # Every objective sees all simulated chains before the response is shortlisted.
+        by_heat = sorted((cid for cid in df["chain_id"] if results[cid]["heat_recovered_mwh"] > 0),
+                         key=lambda cid: results[cid]["heat_recovered_mwh"], reverse=True)
+        by_reuse_npv = sorted(by_heat, key=lambda cid: results[cid]["reuse_npv_usd"], reverse=True)
+        by_profitable_heat = [cid for cid in by_heat
+                              if results[cid]["reuse_npv_usd"] > 0 and results[cid]["npv_usd"] > 0]
+        for objective in (by_heat, by_reuse_npv, by_profitable_heat):
+            pick.extend(objective[:3])
         if planned:
             # Keep standalone designs for every use and every heat rejection technology.
             # A high-ranking combined chain should not hide its standalone alternatives.
             standalone = df[~df["uses"].str.contains("+", regex=False)]
             standalone = standalone.drop_duplicates(["uses", "tech", "storage"])
-            pick = list(dict.fromkeys([*pick, *standalone["chain_id"]]))
+            pick.extend(standalone.loc[~standalone["uses"].isin(DH_SIZED_PLANS), "chain_id"])
+            for objective in (by_heat, by_reuse_npv, by_profitable_heat, df["chain_id"]):
+                best_by_use = {}
+                for cid in objective:
+                    chain = results[cid]
+                    for use in (*chain["uses"], chain["storage"]):
+                        if use:
+                            best_by_use.setdefault(use, cid)
+                pick.extend(best_by_use.values())
         rank = {cid: i + 1 for i, cid in enumerate(df["chain_id"])}
         options = []
-        for cid in sorted(pick, key=lambda c: rank[c]):
+        for cid in sorted(set(pick), key=lambda c: rank[c]):
             r = results[cid]
             options.append(self._option(cid, r, rank[cid], base, s, P, planned=planned))
         for name, why in df.attrs.get("ko", {}).items():
@@ -227,7 +242,9 @@ class HeatChainModel:
             extra["is_today"] = today and not planned
         return OptionResult(**extra, option_id=cid, name=name, rank=rank, feasible=True,
                             score=round(r["npv_usd"] / 1e6, 2), components=r["components"],
+                            reuse_npv_usd=r["reuse_npv_usd"] if r["uses"] else None,
                             product=", ".join(prod) or "cooling only", kpis=k, energy_balance=flows,
+                            heat_loops=[HeatLoop(**loop) for loop in r["heat_loops"]],
                             details={"capex_breakdown_usd": {a: round(b) for a, b in r["capex"].items()},
                                      "cost_usd_yr": {a: round(b) for a, b in r["cost"].items()},
                                      "npv_usd": r["npv_usd"], "reuse_npv_usd": r.get("reuse_npv_usd"),
@@ -288,13 +305,23 @@ def implementation(r: dict, s, P: dict) -> str:
     for u in r["uses"]:
         x = d.get(u, {})
         if u.startswith("dh_"):
+            distance_note = ""
+            if s.prov.get("d_dh_m", {}).get("lower_bound"):
+                distance_note = (
+                    " The GIS search found no qualifying heat-demand area or mapped network within its search limits. "
+                    "The model uses the distance lower bound to price this screening scenario."
+                )
+            sizing_note = ""
+            if x.get("peak_share", 100) < 100:
+                sizing_note = (f" The reuse equipment is sized for {x['peak_share']}% of the community peak. "
+                               "Other heat sources cover the remaining demand.")
             parts.append(f"District heating: DN{x.get('dn_mm')} twin transmission line {s.x['d_dh_m'] / 1000:.1f} km "
                          f"(U' {x.get('pipe_u_w_mk')} W/mK, {x.get('pipe_loss_mw', 0) * 1000:.0f} kW loss, pumps "
                          f"{x.get('pump_design_kw')} kW), {P['dh_supply_c']:.0f}/{P['dh_return_c']:.0f} C, community "
                          f"network demand {x.get('community_demand_mwh', 0):,} MWh/yr, peak {x.get('peak_mw')} MW, "
                          f"{x.get('served_share', 0) * 100:.0f} % served. Heat sold at "
                          f"{s.x['p_heat_usd_mwh'] * P['dh_heat_price_share']:.0f} USD/MWh "
-                         f"({P['dh_heat_price_share'] * 100:.0f} % of local gas heat cost).")
+                         f"({P['dh_heat_price_share'] * 100:.0f} % of local gas heat cost)." + distance_note + sizing_note)
         elif u.startswith("biogas"):
             parts.append(f"Digester heating: {x.get('volume_m3', 0):,} m3 digester (D {x.get('diameter_m')} m), "
                          f"{x.get('delivered_mwh', 0):,} MWh/yr heat ({x.get('feed_mwh', 0):,} feed, {x.get('wall_mwh', 0):,} walls), "

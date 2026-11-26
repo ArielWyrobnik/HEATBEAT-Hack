@@ -23,7 +23,81 @@ def test_energy_balance_closes_for_every_chain():
             continue
         n += 1
         assert abs(r["balance_residual_mwh"]) < 1e-3 * r["balance_in_mwh"] / 1e6 + 1e-3, (tech, uses, st)
+        assert sum(loop["mwh_yr"] for loop in r["heat_loops"]) == pytest.approx(r["it_mwh"])
+        assert sum(route["mwh_yr"] for loop in r["heat_loops"] for route in loop["routes"]
+                   if route["kind"] == "reuse") == pytest.approx(r["heat_recovered_mwh"])
+        for loop in r["heat_loops"]:
+            assert sum(route["mwh_yr"] for route in loop["routes"]) == pytest.approx(loop["mwh_yr"])
     assert n > 50
+
+
+def test_adsorption_counts_drive_heat_as_reuse_and_air_load_as_cooling():
+    s = synthetic_site(t_mean=18, liquid_share=0.6)
+    r = simulate(s, P, "tower", ("adsorption",))
+    liquid, air = r["heat_loops"]
+    drive = next(route for route in liquid["routes"] if route["kind"] == "reuse")
+    air_cooling = next(route for route in air["routes"] if route["name"].startswith("Adsorption chiller"))
+    assert air_cooling["kind"] == "cooling"
+    assert air_cooling["mwh_yr"] == pytest.approx(drive["mwh_yr"] * P["ads_cop"])
+    assert r["heat_recovered_mwh"] == pytest.approx(drive["mwh_yr"])
+
+
+def test_site_ranking_includes_the_most_heat_intensive_options():
+    pytest.importorskip("pyarrow")
+    pytest.importorskip("fastapi")
+    from heatbeat_engineering.api_model import MODEL
+    from heatbeat_engineering.site import load_site
+
+    site_id = "us-ga-atlanta-qts"
+    table, _, chains = evaluate_site(load_site(site_id, live=False))
+    most_heat = sorted(table["chain_id"], key=lambda cid: chains[cid]["heat_recovered_mwh"], reverse=True)[:3]
+    assert set(most_heat) - set(table["chain_id"].head(10))
+    result = MODEL.run(site_id, tornado=False)
+    assert set(most_heat) <= {o.option_id for o in result.options}
+
+
+def test_district_heating_labels_screening_distance_and_user_override():
+    pytest.importorskip("pyarrow")
+    from heatbeat_engineering.site import load_site, set_input
+
+    site = load_site("us-ok-pryor-google", live=False)
+    assert site.prov["d_dh_m"]["status"] == "estimate"
+    assert "60 km modeled network, 7.2 km line lower bound" in build_plans(site, P)["dh_60km"].label
+    set_input(site, "d_dh_m", 4200)
+    assert "60 km modeled network, 4.2 km specified line" in build_plans(site, P)["dh_60km"].label
+
+
+def test_district_heating_uses_smaller_equipment_to_cover_part_of_peak():
+    site = synthetic_site()
+    plans = build_plans(site, P)
+    full = simulate(site, P, "dry", ("dh_20km",), plans=plans)
+    sized = simulate(site, P, "dry", ("dh_20km_peak35",), plans=plans)
+    full_dh = full["details"]["dh_20km"]
+    sized_dh = sized["details"]["dh_20km_peak35"]
+    assert sized_dh["peak_mw"] == pytest.approx(full_dh["peak_mw"] * 0.35, abs=0.01)
+    assert sized_dh["dn_mm"] < full_dh["dn_mm"]
+    assert sized["capex"]["heat_pump"] < full["capex"]["heat_pump"]
+    assert sized_dh["community_demand_mwh"] == full_dh["community_demand_mwh"]
+    assert 0 < sized_dh["served_share"] < full_dh["served_share"]
+
+
+def test_site_ranking_includes_the_profitable_heat_and_reuse_value_winners():
+    pytest.importorskip("pyarrow")
+    pytest.importorskip("fastapi")
+    from heatbeat_engineering.api_model import MODEL
+    from heatbeat_engineering.site import load_site
+
+    site_id = "us-ok-pryor-google"
+    _, _, results = evaluate_site(load_site(site_id, live=False))
+    reuse = [r for r in results.values() if r["heat_recovered_mwh"] > 0]
+    by_value = max(reuse, key=lambda r: r["reuse_npv_usd"])
+    profitable = [r for r in reuse if r["reuse_npv_usd"] > 0 and r["npv_usd"] > 0]
+    by_heat = max(profitable, key=lambda r: r["heat_recovered_mwh"])
+    options = {o.option_id: o for o in MODEL.run(site_id, tornado=False).options}
+    for winner in (by_value, by_heat):
+        option = options[winner["chain_id"]]
+        assert option.reuse_npv_usd == pytest.approx(winner["reuse_npv_usd"])
+        assert option.kpis.heat_recovered_mwh_yr == pytest.approx(winner["heat_recovered_mwh"])
 
 
 def test_heat_pump_below_carnot_and_falls_with_lift():

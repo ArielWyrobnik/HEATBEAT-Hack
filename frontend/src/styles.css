@@ -417,3 +417,37 @@ button.link { background: none; border: 0; color: #6bb8ff; cursor: pointer; font
 .plan-form .with-unit select { width: auto; }
 .plan-alternatives { display: grid; gap: 4px; color: var(--muted); font-size: 12px; }
 .plan-alternatives select { width: 100%; padding: 8px; background: var(--surface); color: var(--text); border: 1px solid var(--border); font: inherit; }
+
+.heat-order { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; color: var(--muted); font-size: 12px; }
+.heat-order select { max-width: 100%; padding: 6px 8px; border: 1px solid var(--border); color: var(--text); background: var(--surface); font: inherit; }
+.heat-flow { margin: 0; padding: 12px; border: 1px solid var(--border); background: var(--bg); font-size: 12px; }
+.heat-flow figcaption, .heat-flow-totals, .heat-flow-source, .heat-flow-loop, .heat-flow-route {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.heat-flow figcaption { flex-wrap: wrap; margin-bottom: 8px; }
+.heat-flow figcaption strong { font-size: 14px; }
+.heat-flow figcaption span, .heat-flow-totals, .heat-flow p { color: var(--muted); }
+.heat-flow figcaption b, .heat-flow-route.reuse small { color: var(--green-bright); }
+.heat-flow-meter { height: 6px; overflow: hidden; background: #5b7895; }
+.heat-flow-meter div { height: 100%; background: var(--green-bright); }
+.heat-flow-totals { flex-wrap: wrap; margin: 6px 0 13px; }
+.heat-flow-totals b { color: var(--text); font-weight: 600; }
+.heat-flow-source, .heat-flow-loop, .heat-flow-route { padding: 7px 9px; background: var(--surface); border: 1px solid var(--border); }
+.heat-flow-source { border-color: #5c676e; }
+.heat-flow-source span, .heat-flow-loop span, .heat-flow-route span { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.heat-flow-loop small, .heat-flow-route small { display: block; margin-bottom: 2px; color: var(--muted); }
+.heat-flow-loop small { margin: 2px 0 0; }
+.heat-flow-loops, .heat-flow-routes { list-style: none; margin: 0 0 0 8px; padding: 7px 0 0 12px; border-left: 1px solid #5c676e; }
+.heat-flow-loops > li { border: 0; background: none; }
+.heat-flow-loops > li, .heat-flow-routes > li { position: relative; }
+.heat-flow-loops > li + li, .heat-flow-routes > li + li { margin-top: 6px; }
+.heat-flow-loops > li::before, .heat-flow-routes > li::before {
+  content: ''; position: absolute; left: -13px; top: 16px; width: 12px; border-top: 1px solid #5c676e;
+}
+.heat-flow-loops > li::after, .heat-flow-routes > li::after {
+  content: ''; position: absolute; left: -5px; top: 14px; width: 4px; height: 4px; border-top: 1px solid #5c676e;
+  border-right: 1px solid #5c676e; transform: rotate(45deg);
+}
+.heat-flow-routes > .heat-flow-route { border-left-color: #5b7895; }
+.heat-flow-route.reuse { border-left-color: var(--green-bright); }
+.heat-flow p { margin: 9px 0 0; line-height: 1.4; }

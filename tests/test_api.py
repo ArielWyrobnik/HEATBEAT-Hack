@@ -177,7 +177,14 @@ def test_every_model_fulfils_the_contract(model):
         r = c.post("/api/plan", json={"model": model, "lat": 41.6, "lon": -93.6, "it_mw": 300,
                                       "cooling_profile": "dlc_warm", "tornado": False})
         assert r.status_code == 200, (model, r.text[:300])
-        assert ModelResult.model_validate(r.json()).baseline.it_load_mw == pytest.approx(300, rel=0.01)
+        planned = ModelResult.model_validate(r.json())
+        assert planned.baseline.it_load_mw == pytest.approx(300, rel=0.01)
+        if model == "heat_chain":
+            reuse = max((o for o in planned.options if o.feasible), key=lambda o: o.kpis.heat_recovered_mwh_yr)
+            assert {loop.name for loop in reuse.heat_loops} == {"air", "liquid"}
+            assert sum(loop.mwh_yr for loop in reuse.heat_loops) == pytest.approx(planned.baseline.it_energy_mwh_yr)
+            routes = [route for loop in reuse.heat_loops for route in loop.routes if route.kind == "reuse"]
+            assert routes and sum(route.mwh_yr for route in routes) == pytest.approx(reuse.kpis.heat_recovered_mwh_yr)
 
 
 def test_adapter_is_a_site_model():
