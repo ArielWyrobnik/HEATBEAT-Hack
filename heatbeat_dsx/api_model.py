@@ -1,4 +1,7 @@
-"""DSX evaluator behind the heatbeat_api model interface (default model for site rankings).
+"""DSX evaluator behind the heatbeat_api model interface: the Heat waste perspective.
+
+The engineering heat chain stays the default model (today's setup and the Cooling perspective). The
+site panel's Heat waste tab and the leaderboard's heat columns use this model (`?model=dsx`).
 
 Inputs: the same 31 site inputs as the Excel ranking (heatbeat_ranking.site_inputs: database,
 GIS, industry, water, ecology and market threads, each with status and source), plus pue, wue,
@@ -62,7 +65,7 @@ class DsxModel(ExcelRankingModel):
     """DSX evaluator v3.3 on database inputs and real hourly weather."""
 
     info = ModelInfo(
-        name="dsx", label="DSX heat reuse evaluator", modes=["as_built"], default_mode="as_built", default=True,
+        name="dsx", label="DSX heat reuse evaluator", modes=["as_built"], default_mode="as_built", default=False,
         description="13 heat reuse pathways on the site's real hourly weather. Knock-out gates name the site value "
                     "and the limit; viability 0 to 5 = 0.30 thermodynamics + 0.30 climate fit + 0.25 economics + "
                     "0.15 utilisation; separate eco grade A to F (0.40 CO2, 0.30 water, 0.30 local impact). docs/DSX.md")

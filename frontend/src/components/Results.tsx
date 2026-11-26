@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { api } from '../api';
 import { compact, num, usd, value } from '../format';
 import { PERSPECTIVES } from '../perspectives';
 import type { CalcStep, Flag, InputValue, ModelResult, OptionResult, Vendor } from '../types/api';
@@ -237,6 +238,60 @@ export const COOLING_COMPONENTS = ['dry_cooler', 'adiabatic_cooler', 'cooling_to
 export const coolingOnly = (o: OptionResult) =>
   o.components.length === 1 && COOLING_COMPONENTS.includes(o.components[0]);
 
+/**
+ * Heat waste perspective, scored by the DSX heat reuse evaluator (heatbeat_dsx): the most viable
+ * pathways with viability 0 to 5, eco grade, where the server heat goes, and why the others are out.
+ */
+export function DsxHeat({ r }: { r: ModelResult }) {
+  const feasible = r.options.filter((o) => o.feasible);
+  const top = feasible.slice(0, 3);
+  const out = r.options.filter((o) => !o.feasible);
+  const [open, setOpen] = useState<string | null>(top[0]?.option_id ?? null);
+  useEffect(() => setOpen(top[0]?.option_id ?? null), [r]); // eslint-disable-line react-hooks/exhaustive-deps
+  const b = r.baseline;
+  return (
+    <>
+      {r.verdict && <p className="muted">{r.verdict}</p>}
+      <h4>Best heat reuse <small title="DSX: 0.30 thermodynamics + 0.30 climate fit + 0.25 economics + 0.15 utilisation, after the knock-out gates. Eco grade A to F is scored separately (CO2, water, local impact).">ranked by viability (0 to 5) ⓘ</small></h4>
+      {top.length === 0 && <p className="muted">No heat reuse pathway passes the knock-out gates at this site.</p>}
+      <ol className="options">
+        {top.map((o, i) => {
+          const on = open === o.option_id;
+          const k = o.kpis;
+          const npv = o.reuse_npv_usd;
+          return (
+            <li key={o.option_id} className={on ? 'open' : ''}>
+              <button className="opt-head" onClick={() => setOpen(on ? null : o.option_id)} aria-expanded={on}>
+                <span className="opt-rank">{i + 1}</span>
+                <span className="opt-name">
+                  {o.name}
+                  <small>
+                    viability {num(o.score, 2)} of 5 · eco {o.eco_grade} · {reuseShare(o, b.it_energy_mwh_yr)} to reuse ·{' '}
+                    {(npv ?? 0) < 0 ? 'loses money here'
+                      : `saves ${money(k.cash_value_usd_yr ?? k.net_value_usd_yr)}/yr · payback ${payback(k.payback_yr)}`}
+                  </small>
+                </span>
+                <span className={`opt-npv${(npv ?? 0) < 0 ? ' neg' : ''}`}>
+                  {npv == null ? 'n/a' : `${npv > 0 ? '+' : ''}${money(npv)}`}
+                  <small>Reuse NPV</small>
+                </span>
+                <span className="chev" aria-hidden>{on ? '−' : '+'}</span>
+              </button>
+              {on && <Details o={o} r={r} />}
+            </li>
+          );
+        })}
+      </ol>
+      {out.length > 0 && (
+        <details className="notes">
+          <summary>{out.length} pathways knocked out, and why</summary>
+          <ul>{out.map((o) => <li key={o.option_id}><b>{o.name}:</b> {o.ko_reasons.join('; ')}</li>)}</ul>
+        </details>
+      )}
+    </>
+  );
+}
+
 export default function Results({ r }: { r: ModelResult }) {
   const [palette, setPalette] = useState<'cooling' | 'reuse' | null>(null);
   const [order, setOrder] = useState<HeatOrder>('profitableHeat');
@@ -252,6 +307,16 @@ export default function Results({ r }: { r: ModelResult }) {
   useEffect(() => setOpen(!reuse && r.verdict_level === 'no_gain' ? null : firstOption ?? null),
     [r, reuse, order, firstOption]);
   const b = r.baseline;
+  // Heat waste tab of a database site: scored by DSX (falls back to the engineering list if DSX is unavailable)
+  const [heat, setHeat] = useState<{ site: string; r: ModelResult | null } | null>(null);
+  const wantDsx = engineering && reuse && r.site_id !== 'planned';
+  useEffect(() => {
+    if (!wantDsx || heat?.site === r.site_id) return;
+    api.ranking(r.site_id, { model: 'dsx' }).then((x) => setHeat({ site: r.site_id, r: x }))
+      .catch(() => setHeat({ site: r.site_id, r: null }));
+  }, [wantDsx, r.site_id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const dsxHeat = wantDsx && heat?.site === r.site_id ? heat.r : null;
+  const heatLoading = wantDsx && heat?.site !== r.site_id;
   return (
     <div className="results">
       <Verdict r={r} />
@@ -265,6 +330,9 @@ export default function Results({ r }: { r: ModelResult }) {
         <button type="button" aria-pressed={reuse} className={reuse ? 'on' : ''} onClick={() => setPalette('reuse')}
                 title={PERSPECTIVES.heat.def}>{PERSPECTIVES.heat.label}</button>
       </div>}
+      {heatLoading && <p className="muted">Scoring heat reuse pathways…</p>}
+      {dsxHeat && <DsxHeat r={dsxHeat} />}
+      {!dsxHeat && !heatLoading && <>
       {reuse && <HeatOrderSelect order={order} onChange={setOrder} />}
       {comparison.fallback && <p className="muted">{PROFIT_FALLBACK}</p>}
       <h4>Best options {dsx
@@ -303,6 +371,7 @@ export default function Results({ r }: { r: ModelResult }) {
           );
         })}
       </ol>
+      </>}
 
       {dsx && r.options.some((o) => !o.feasible) && (
         <details className="notes">

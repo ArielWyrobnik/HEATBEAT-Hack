@@ -1,10 +1,16 @@
-# DSX heat reuse evaluator (default ranking model)
+# DSX heat reuse evaluator (Heat waste perspective)
 
-`heatbeat_dsx` answers "which heat reuse pathway fits this data center best?" for every database site.
-It is the default model of `/api/sites/{id}/ranking`, `/api/evaluate` and `/api/leaderboard`. The
-engineering heat chain (`?model=heat_chain`) and the Excel ranking (`?model=excel_ranking`) stay
-available, and the planner (`/api/plan`, `/api/plan/defaults`) keeps the heat chain as its default
-because it sizes the whole design (budget, Vera Rubin racks).
+`heatbeat_dsx` answers "which heat reuse pathway fits this data center best?". HEATBEAT shows every site
+from two perspectives (frontend/src/perspectives.ts):
+
+- **Cooling**: the engineering heat chain (default model) and its heat rejection options, unchanged.
+- **Heat waste**: scored by DSX. The site panel's Heat waste tab calls `/api/sites/{id}/ranking?model=dsx`
+  and lists the most viable pathways with viability 0 to 5, eco grade, "Where the server heat goes"
+  (heat loops) and every knocked-out pathway with its reason. The leaderboard's heat columns
+  (`heat_option_name`, `heat_reused_mwh_yr`, `heat_pays_off`, ...) come from the DSX rank 1 pathway;
+  it pays off when its NPV is positive.
+
+The planner keeps the engineering model (budget sizing, Vera Rubin racks); `?model=dsx` also plans.
 
 ## What goes in (closest to reality available)
 

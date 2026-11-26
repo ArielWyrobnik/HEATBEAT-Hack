@@ -39,14 +39,11 @@ api = APIRouter(prefix="/api")
 
 MODELS = load_models()
 DEFAULT_MODEL = default_model(MODELS)
-# The planner (/plan, /plan/defaults) keeps the engineering heat chain as default: it sizes the whole
-# design (cooling plant, budget, Vera Rubin racks). Site rankings default to DEFAULT_MODEL (DSX).
-PLAN_MODEL = next((n for n, m in MODELS.items() if hasattr(m, "plan_defaults")), DEFAULT_MODEL)
 _lock = threading.Lock()  # heatbeat_data opens SQLite per query; serialize model runs to keep it simple
 
 
-def _model(name: str | None, default: str | None = None):
-    name = name or default or DEFAULT_MODEL
+def _model(name: str | None):
+    name = name or DEFAULT_MODEL
     if name not in MODELS:
         raise HTTPException(404, f"unknown model {name!r}; available: {list(MODELS)}")
     return MODELS[name]
@@ -120,8 +117,7 @@ def _cached_run(model_name, site_id, mode, is_greenfield) -> ModelResult:
 
 @api.get("/health")
 def health() -> dict:
-    return {"status": "ok", "models": list(MODELS), "default_model": DEFAULT_MODEL, "plan_model": PLAN_MODEL,
-            "live_weather": LIVE}
+    return {"status": "ok", "models": list(MODELS), "default_model": DEFAULT_MODEL, "live_weather": LIVE}
 
 
 @api.get("/config")
@@ -256,21 +252,41 @@ def _leaderboard(model_name: str, scope: str) -> tuple[LeaderboardRow, ...]:
             option_id=o.option_id if o else None, option_name=o.name if o else None, npv_usd=npv,
             cash_value_usd_yr=k.cash_value_usd_yr if k else None, co2_avoided_t_yr=k.co2_avoided_t_yr if k else None,
             water_saved_m3_yr=k.water_saved_m3_yr if k else None, payback_yr=k.payback_yr if k else None,
-            **_perspectives(r)))
+            **_perspectives(r, _heat_result(model_name, s.site_id))))
     rows.sort(key=lambda x: -(x.npv_usd if x.npv_usd is not None else -1e18))
     return tuple(rows)
 
 
-def _perspectives(r: ModelResult) -> dict:
+HEAT_MODEL = "dsx"  # Heat waste perspective: the DSX heat reuse evaluator (heatbeat_dsx, docs/DSX.md)
+
+
+def _heat_result(model_name: str, site_id: str) -> ModelResult | None:
+    """DSX result for the heat columns, when DSX is registered and the ranking runs on another model."""
+    if HEAT_MODEL not in MODELS or model_name == HEAT_MODEL:
+        return None
+    try:
+        return _cached_run(HEAT_MODEL, site_id, MODELS[HEAT_MODEL].info.default_mode, None)
+    except HTTPException:
+        return None
+
+
+def best_heat_dsx(r: ModelResult):
+    """Heat waste perspective with DSX: the most viable pathway (rank 1), pays off when its NPV > 0."""
+    h = next((o for o in r.options if o.feasible), None)
+    return (h, (h.reuse_npv_usd or 0) > 0) if h else (None, None)
+
+
+def _perspectives(r: ModelResult, heat_r: ModelResult | None = None) -> dict:
     c = best_cooling(r)
-    h, pays = best_heat(r)
+    h, pays = best_heat_dsx(heat_r) if heat_r is not None else best_heat(r)
+    hr = heat_r or r
     it = r.baseline.it_energy_mwh_yr or 0
     heat = h.kpis.heat_recovered_mwh_yr if h else None
     return {"cooling_option_name": c.name if c else None, "cooling_npv_usd": _npv(c, r) if c else None,
             "cooling_cash_usd_yr": c.kpis.cash_value_usd_yr if c else None,
             "heat_option_name": h.name if h else None, "heat_reused_mwh_yr": heat,
             "heat_reused_share": (heat / it) if (heat is not None and it > 0) else None,
-            "heat_reuse_npv_usd": h.reuse_npv_usd if h else None, "heat_npv_usd": _npv(h, r) if h else None,
+            "heat_reuse_npv_usd": h.reuse_npv_usd if h else None, "heat_npv_usd": _npv(h, hr) if h else None,
             "heat_pays_off": pays}
 
 
@@ -322,7 +338,7 @@ def _point_weather(lat: float, lon: float) -> pd.DataFrame | None:
 def plan_defaults(lat: float = Query(..., ge=-90, le=90), lon: float = Query(..., ge=-180, le=180),
                   model: str | None = None) -> PlanDefaults:
     """Regional default inputs for any map point so the planning UI can pre-fill customizable parameters."""
-    m = _model(model, PLAN_MODEL)
+    m = _model(model)
     if not hasattr(m, "plan_defaults"):
         raise HTTPException(501, f"model {m.info.name!r} does not expose plan defaults")
     with _lock:
@@ -332,7 +348,7 @@ def plan_defaults(lat: float = Query(..., ge=-90, le=90), lon: float = Query(...
 @api.post("/plan", response_model=ModelResult)
 def plan(req: PlanRequest) -> ModelResult:
     """A future data center anywhere on the map: location + IT size (MW) + cooling -> ranked options."""
-    m = _model(req.model, PLAN_MODEL)
+    m = _model(req.model)
     if not hasattr(m, "plan"):
         raise HTTPException(501, f"model {m.info.name!r} cannot plan new sites")
     if req.cooling_profile not in {c.cooling_profile_id for c in _cooling()}:
