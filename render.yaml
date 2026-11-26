@@ -1,0 +1,14 @@
+# Render Blueprint: one free web service that runs the whole HEATBEAT app (see docs/DEPLOY.md).
+services:
+  - type: web
+    name: heatbeat
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true          # every merge into main updates the public site
+    envVars:
+      - key: HEATBEAT_LIVE    # 1 = fetch weather from Open-Meteo for planned sites (no API key needed)
+        value: "1"
+      - key: FEEDBACK_URL     # optional: link behind the "Give feedback" button (e.g. a Google Form)
+        sync: false

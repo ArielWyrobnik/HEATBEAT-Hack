@@ -11,6 +11,12 @@ Planned pieces:
    solution such as heat reuse, free cooling or load shifting (MWh, tCO2, m3, money, payback).
 3. **Map frontend**: shows all sites; clicking one runs the models and ranks the solutions.
 
+## Try it online
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/ArielWyrobnik/HEATBEAT-Hack)
+
+One free web service runs the whole app (map, API, models). Setup and limits: [docs/DEPLOY.md](docs/DEPLOY.md).
+
 ## Use the data
 
 ```python

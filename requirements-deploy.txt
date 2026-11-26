@@ -1,0 +1,9 @@
+# Runtime packages for the hosted app (Dockerfile). The data pipeline (gridstatus, openpyxl) is not needed
+# because the deployed app only reads the committed data (data/parquet, data_pipeline/*.csv).
+pandas>=2.1
+pyarrow>=14
+numpy>=1.26
+requests>=2.31
+pyyaml>=6
+fastapi>=0.110
+uvicorn>=0.29
