@@ -17,7 +17,7 @@ interface Props {
   onMapClick?: (lat: number, lng: number) => void;
 }
 
-const planIcon = L.divIcon({ className: 'dc-pin dc-pin-plan', html: '<span class="dc-pin-core"></span>', iconSize: [22, 22], iconAnchor: [11, 11] });
+const planIcon = () => L.divIcon({ className: 'dc-pin dc-pin-plan', html: '<span class="dc-pin-core"></span>', iconSize: [22, 22], iconAnchor: [11, 11] });
 
 const makeIcon = (selected: boolean, reference = false) => L.divIcon({
   className: `dc-pin${reference ? ' dc-pin-ref' : ''}${selected ? ' dc-pin-selected' : ''}`,
@@ -46,7 +46,7 @@ function popupHtml(d: DataCenter) {
 
 interface PlaceResult { display_name: string; lat: string; lon: string }
 
-export default function MapSection({ dataCenters, fromApi = false, selectedId = null, onSelect, children,
+function MapInner({ dataCenters, fromApi = false, selectedId = null, onSelect, children,
   planning = false, onPlanToggle, planPoint = null, onMapClick }: Props) {
   const clickRef = useRef(onMapClick);
   clickRef.current = planning ? onMapClick : undefined;
@@ -111,7 +111,7 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
     m.getContainer().classList.toggle('planning', planning);
     planMarker.current?.remove();
     planMarker.current = null;
-    if (planPoint) planMarker.current = L.marker([planPoint.lat, planPoint.lng], { icon: planIcon, zIndexOffset: 2000 }).addTo(m);
+    if (planPoint) planMarker.current = L.marker([planPoint.lat, planPoint.lng], { icon: planIcon(), zIndexOffset: 2000 }).addTo(m);
   }, [planning, planPoint]);
 
   const label = (d: DataCenter) => [d.city, (d.region as string | undefined), d.country].filter(Boolean).join(', ');
@@ -256,6 +256,22 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
         )}
         {children}
       </div>
+    </section>
+  );
+}
+
+/** Leaflet is loaded by index.html (local copy first, then CDNs). Without it, show a notice instead of a blank page. */
+export default function MapSection(props: Props) {
+  if (typeof L !== 'undefined' && L && typeof (L as any).map === 'function') return <MapInner {...props} />;
+  return (
+    <section className="map-section" id="map">
+      <div className="map-head">
+        <h2>Data centers worldwide</h2>
+        <p>The map library (Leaflet) could not be loaded, so the map is hidden. Close the black window and start
+          Start Heat Beat.bat again while online: it saves a local copy of the map library the first time.
+          The rest of the page still works.</p>
+      </div>
+      {props.children}
     </section>
   );
 }
