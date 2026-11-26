@@ -62,7 +62,8 @@ key with `status` = `data`, `assumption` or `user`. The UI should show the statu
 Already wired to real data: `cooling_type`, `t_dc_base_c`, `q_dc_mw`, `pue` (data center profiles,
 mostly estimates), `p_elec_usd_kwh`, `ci_grid_g_kwh` (location database), and, once PR 12 is on the
 branch, `p_fuel_usd_kwh`, `p_steam_usd_mwh`, `p_co2_usd_ton`, `ci_fuel_g_kwh` from
-`heatbeat_data.excel_inputs`.
+`heatbeat_data.excel_inputs`, and `eco_sens_index`, `geo_storage_score`, `mit_tier` from
+`heatbeat_data.excel_ecology_inputs` (PR 17; `mit_tier` is a rule based default and stays flagged).
 
 Data threads hand over the rest as `data_pipeline/site_ranking_inputs_<topic>.csv`, long format:
 
