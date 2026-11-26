@@ -260,7 +260,7 @@ def load_location(lat: float, lon: float, it_mw: float, cooling_profile: str = "
     cases), flagged "estimate". Distances to community, power plant, feedstock and coast: the nearest
     site's value plus the distance between both points (an upper bound), flagged "estimate".
     """
-    tpl, dist = nearest_site(lat, lon)
+    tpl, dist = nearest_site(lat, lon, country=None)  # nearest site of any country: right market and jurisdiction
     w, wsrc = weather, "given"
     if w is None and live:
         try:
@@ -299,6 +299,9 @@ def load_location(lat: float, lon: float, it_mw: float, cooling_profile: str = "
         case.prov[k] = {"status": "estimate", "source": f"nearest database site {tpl} ({dist / 1000:.0f} km): {st}"}
     case.x["is_greenfield"] = bool(is_greenfield)
     case.prov["is_greenfield"] = {"status": "user", "source": "planned site"}
+    if not tpl.startswith("us-"):
+        case.prov["template"] = {"status": "estimate", "source": f"template {tpl} is outside the US: most site data "
+                                 "(water, GIS, industry) are US only, so defaults are used (flagged)"}
     case.x["template_site_id"] = tpl
     case.x["template_distance_m"] = dist
     for k, v in (overrides or {}).items():

@@ -261,7 +261,7 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
     plant = float(hp_work.sum()) + sum(float(a.sum()) for a in aux.values())
 
     # value of each use
-    rev = co2_av = water_prod = gen = orc_cond = orc_aux = 0.0
+    rev = co2_av = water_prod = gen = exported = orc_cond = orc_aux = 0.0
     det = res.setdefault("details", {})
     for u in uses:
         pl = plans[u]
@@ -272,6 +272,7 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
         co2_av += s.get("co2_avoided_t", 0.0)
         water_prod += s.get("water_produced_m3", 0.0)
         gen += s.get("elec_generated_mwh", 0.0)
+        exported += s.get("elec_exported_mwh", 0.0)
         orc_cond += s.get("orc_condenser_mwh", 0.0)
         orc_aux += s.get("aux_extra_mwh", 0.0)
         capex[u] = s.get("capex_usd", 0.0)
@@ -302,7 +303,9 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
         "revenue_usd": -rev,
     }
     net_cost = sum(cost.values())
-    useful_heat = sum(float(delivered[u].sum()) for u in uses if plans[u].kind == "heat")
+    # ORC input is not delivered heat: it leaves as electricity (gen) and condenser heat (orc_cond)
+    useful_heat = sum(float(delivered[u].sum()) for u in uses if plans[u].kind == "heat" and u != "orc")
+    orc_in = float(delivered["orc"].sum()) if "orc" in uses else 0.0
     # ERE counts energy reused outside the data center: delivered heat, but for ORC its electricity
     reused = sum(float(delivered[u].sum()) for u in uses if plans[u].kind == "heat" and u != "orc") + gen
     total_fac = e_it + cooling + other
@@ -312,15 +315,16 @@ def simulate(site, P: dict, tech: str, uses: tuple = (), storage: str | None = N
     w_chill = chill
     e_in = e_it + float(hp_work.sum()) + w_chill
     ads_out = ads_rej["q_rejected_mwh"] if ads_rej else 0.0
-    e_out = q_rej + useful_heat + sum(float(v.sum()) for v in losses.values()) + float(store_loss.sum()) + ads_out
+    e_out = q_rej + useful_heat + orc_in + sum(float(v.sum()) for v in losses.values()) + float(store_loss.sum()) + ads_out
     # adsorption: the cold removed from the air loop leaves through the adsorber recooler (in ads_out)
     res.update({
         "label": chain_label(site, tech, uses, storage, plans),
         "components": components(tech, uses, storage, plans, site, P),
         "it_mwh": e_it, "cooling_mwh": cooling, "fan_mwh": fan, "pump_mwh": pump, "chiller_mwh": chill,
         "other_mwh": other, "plant_mwh": plant, "hp_work_mwh": float(hp_work.sum()),
-        "elec_generated_mwh": gen, "water_m3": water, "water_produced_m3": water_prod,
-        "heat_rejected_mwh": q_rej + ads_out, "heat_delivered_mwh": useful_heat,
+        "elec_generated_mwh": gen, "elec_exported_mwh": exported, "orc_condenser_mwh": orc_cond,
+        "heat_rejected_mwh": q_rej + ads_out + orc_cond, "water_m3": water, "water_produced_m3": water_prod,
+        "heat_delivered_mwh": useful_heat,
         "cold_delivered_mwh": float(sum(delivered[u].sum() for u in uses if plans[u].kind == "cold")),
         "heat_recovered_mwh": float(sum(l.q_mw * H - rem[l.name].sum() for l in loops)),
         "losses_mwh": sum(float(v.sum()) for v in losses.values()) + float(store_loss.sum()),
