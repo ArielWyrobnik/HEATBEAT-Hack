@@ -138,14 +138,17 @@ class DsxModel(ExcelRankingModel):
                 flows.append(EnergyFlow(source="Heat recovery", target="Heat pump", mwh_yr=qs))
             flows.append(EnergyFlow(source="Heat pump" if w > 0 else "Heat recovery", target=o["name"], mwh_yr=qd))
             flows.append(EnergyFlow(source="Data center", target="Cooling (rejected)",
-                                    mwh_yr=max(0.0, base.heat_rejected_mwh_yr - qs), kind="loss"))
+                                    mwh_yr=max(0.0, base.it_energy_mwh_yr - qs), kind="loss"))
+        # where the server heat goes (HeatFlow in the UI): all IT energy ends up as heat in the cooling
+        # loop; the pathway takes Q_src of it, the cooling plant rejects the rest
         loops = []
         if feasible:
-            loops = [HeatLoop(name=str(s["cooling_type"]), mwh_yr=base.heat_rejected_mwh_yr,
-                              return_c=float(s["t_dc_base_c"]),
-                              routes=[HeatRoute(name=o["name"], mwh_yr=qs, kind="reuse"),
-                                      HeatRoute(name="Cooling plant", mwh_yr=max(0.0, base.heat_rejected_mwh_yr - qs),
-                                                kind="cooling")])]
+            server = base.it_energy_mwh_yr
+            loops = [HeatLoop(name=str(s["cooling_type"]), mwh_yr=server, return_c=float(s["t_dc_base_c"]),
+                              routes=[HeatRoute(name=o["name"], mwh_yr=min(qs, server), kind="reuse"),
+                                      HeatRoute(name="Cooling plant (rejected to air)" if not s["baseline_evaporative"]
+                                                else "Cooling plant (cooling tower)",
+                                                mwh_yr=max(0.0, server - qs), kind="cooling")])]
         kpis = Kpis(heat_recovered_mwh_yr=qs, heat_delivered_mwh_yr=qd, electricity_used_mwh_yr=w,
                     co2_avoided_t_yr=a["net_abated_tco2"], water_saved_m3_yr=round(saved, 1), net_value_usd_yr=net,
                     cash_value_usd_yr=net, capex_usd=a["capex_usd"],

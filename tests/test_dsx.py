@@ -87,5 +87,10 @@ def test_api_model_contract():
         assert sum(o.capex_breakdown.values()) == pytest.approx(k.capex_usd, abs=2)
         assert o.details["npv_usd"] == pytest.approx(-k.capex_usd + k.net_value_usd_yr * ANNUITY, abs=2)
         assert o.heat_loops and o.calculation and o.implementation
+        # where the server heat goes: loops hold all server heat, the reuse route is the heat recovered
+        assert sum(lp.mwh_yr for lp in o.heat_loops) == pytest.approx(r.baseline.it_energy_mwh_yr)
+        reuse = [rt for lp in o.heat_loops for rt in lp.routes if rt.kind == "reuse"]
+        assert sum(rt.mwh_yr for rt in reuse) == pytest.approx(k.heat_recovered_mwh_yr)
+        assert sum(rt.mwh_yr for lp in o.heat_loops for rt in lp.routes) == pytest.approx(r.baseline.it_energy_mwh_yr)
     assert r.tornado and r.tornado.option_id == feas[0].option_id
     assert math.isclose(r.baseline.it_load_mw, x["q_dc_mw"] / 0.9, rel_tol=1e-3)

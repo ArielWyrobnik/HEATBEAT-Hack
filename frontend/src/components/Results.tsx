@@ -283,7 +283,7 @@ export default function Results({ r }: { r: ModelResult }) {
                   {o.name}
                   <small>
                     {dsx && <>viability {num(o.score, 2)} of 5 · eco {o.eco_grade} · </>}
-                    {reuse && <>{reuseShare(o, b.it_energy_mwh_yr)} to reuse · </>}
+                    {(reuse || dsx) && <>{reuseShare(o, b.it_energy_mwh_yr)} to reuse · </>}
                     {(projectNpv ?? 0) < 0 ? 'loses money here'
                       : (k.cash_value_usd_yr ?? 0) < 0 ? `costs ${money(-(k.cash_value_usd_yr ?? 0))}/yr more, pays off through water saved`
                       : `saves ${money(k.cash_value_usd_yr ?? k.net_value_usd_yr)}/yr · ${k.payback_yr === 0 ? 'no extra investment' : `payback ${payback(k.payback_yr)}`}`}
