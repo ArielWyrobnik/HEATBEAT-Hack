@@ -3,6 +3,7 @@ import { api } from '../api';
 import { compact, num } from '../format';
 import type { CoolingProfile, InputValue, ModelResult, OptionResult, PlanDefaults } from '../types/api';
 import { HeatOrderSelect, PROFIT_FALLBACK, rankHeatOptions, reuseShare, totalNpv, type HeatOrder } from './HeatFlow';
+import { PERSPECTIVES } from '../perspectives';
 import { COOLING_COMPONENTS, coolingOnly, Details, money, Vendors } from './Results';
 
 export interface PlanPoint { lat: number; lng: number }
@@ -89,6 +90,16 @@ interface Proposal {
 
 function pickTwoProposals(feasible: OptionResult[], path: string): Proposal[] {
   if (feasible.length === 0) return [];
+  if (path === 'any') {
+    // two perspectives: cooling (most money saved) and heat waste (most heat reused that pays off)
+    const cooling = feasible.filter(coolingOnly).sort((a, b) => totalNpv(b) - totalNpv(a))[0];
+    const heat = rankHeatOptions(feasible, 'profitableHeat');
+    const out: Proposal[] = [];
+    if (cooling) out.push({ badge: PERSPECTIVES.cooling.label, subtitle: 'Most money saved through cooling', option: cooling });
+    if (heat.options[0]) out.push({ badge: PERSPECTIVES.heat.label,
+      subtitle: heat.fallback ? 'Best heat reuse here (does not pay off)' : 'Most heat reused that pays off', option: heat.options[0] });
+    if (out.length) return out;
+  }
   const byTotalNpv = [...feasible].sort((a, b) => totalNpv(b) - totalNpv(a));
   const first = byTotalNpv[0];
 
@@ -400,7 +411,7 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
 
             {proposals.length > 0 ? (
               <div className="plan-proposals">
-                <h4>2 recommended proposals</h4>
+                <h4>{path === 'any' ? 'Two perspectives' : '2 recommended proposals'}</h4>
                 {proposals.map((prop, idx) => {
                   const o = prop.option;
                   const on = openProposal === idx;

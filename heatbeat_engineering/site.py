@@ -171,6 +171,7 @@ def load_site(site_id: str, live: bool = True, weather: pd.DataFrame | None = No
     x["pp_name"] = ind.get("pp_name")
     x["bio_name"] = ind.get("bio_name")
     x["bio_kind"] = ind.get("bio_kind")
+    x["bio_capacity_mw"] = bio_capacity_mw(ind.get("bio_name"), ind.get("bio_kind"))
     x["is_greenfield"] = bool(int(m.get("is_hypothetical") or 0))
     prov["is_greenfield"] = {"status": "assumption", "source": "is_hypothetical flag in sites.csv"}
     if is_greenfield is not None:
@@ -315,6 +316,19 @@ def intl_heat_price(country: str | None):
         "source": (f"Eurostat non-household gas {r['period']} ({'EU average as proxy for ' + country if proxy else country}), "
                    f"{r['gas_eur_kwh']} EUR/kWh x {EUR_USD} USD/EUR (FX rate is a team estimate) / boiler eff {BOILER_EFF}; "
                    f"{r['source_url']}")}
+
+
+def bio_capacity_mw(name, kind) -> float | None:
+    """Electrical capacity (MW) of an existing digester gas plant (EIA-860 via PUDL), None if not a digester."""
+    if not name or not str(kind or "").startswith("biogas"):
+        return None
+    from pathlib import Path
+    f = Path(__file__).resolve().parents[1] / "data_pipeline" / "industry" / "eia_biomass_plants.csv"
+    if not f.exists():
+        return None
+    t = pd.read_csv(f)
+    hit = t[t["name"] == name]
+    return float(hit["capacity_mw"].max()) if len(hit) else None
 
 
 def synthetic_site(it_mw=100.0, t_mean=15.0, swing=12.0, liquid_share=0.9, t_sup=45.0, t_ret=55.0,

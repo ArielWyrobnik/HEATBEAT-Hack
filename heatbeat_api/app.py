@@ -198,6 +198,40 @@ def best_change(r: ModelResult):
     return next((o for o in r.options if o.feasible and not o.is_today), None)
 
 
+COOLING_COMPONENTS = {"dry_cooler", "adiabatic_cooler", "cooling_tower"}
+
+
+def _npv(o, r: ModelResult) -> float | None:
+    """NPV in USD, or None when the model scores options on another scale (e.g. the Excel 0 to 5 score)."""
+    v = o.details.get("npv_usd")
+    if v is not None:
+        return float(v)
+    if o.score is not None and r.score_scale.startswith("NPV"):
+        return float(o.score) * 1e6
+    return None
+
+
+def best_cooling(r: ModelResult):
+    """Cooling perspective: the heat rejection change (no heat use) with the highest NPV, or None."""
+    opts = [o for o in r.options if o.feasible and not o.is_today and _npv(o, r) is not None
+            and len(o.components) == 1 and o.components[0] in COOLING_COMPONENTS]
+    return max(opts, key=lambda o: _npv(o, r), default=None)
+
+
+def best_heat(r: ModelResult):
+    """Heat waste perspective: most reused heat among designs that pay off, else the best reuse NPV.
+
+    Same rule as the site panel ("most heat with positive NPV"). Returns (option, pays_off) or (None, None).
+    """
+    reuse = [o for o in r.options if o.feasible and (o.kpis.heat_recovered_mwh_yr or 0) > 0]
+    if not reuse:
+        return None, None
+    good = [o for o in reuse if (o.reuse_npv_usd or 0) > 0 and (_npv(o, r) or 0) > 0]
+    if good:
+        return max(good, key=lambda o: o.kpis.heat_recovered_mwh_yr or 0), True
+    return max(reuse, key=lambda o: o.reuse_npv_usd if o.reuse_npv_usd is not None else -1e18), False
+
+
 @lru_cache(maxsize=4)
 def _leaderboard(model_name: str, scope: str) -> tuple[LeaderboardRow, ...]:
     m = MODELS[model_name]
@@ -217,9 +251,23 @@ def _leaderboard(model_name: str, scope: str) -> tuple[LeaderboardRow, ...]:
             it_load_mw=r.baseline.it_load_mw, verdict_level=r.verdict_level,
             option_id=o.option_id if o else None, option_name=o.name if o else None, npv_usd=npv,
             cash_value_usd_yr=k.cash_value_usd_yr if k else None, co2_avoided_t_yr=k.co2_avoided_t_yr if k else None,
-            water_saved_m3_yr=k.water_saved_m3_yr if k else None, payback_yr=k.payback_yr if k else None))
+            water_saved_m3_yr=k.water_saved_m3_yr if k else None, payback_yr=k.payback_yr if k else None,
+            **_perspectives(r)))
     rows.sort(key=lambda x: -(x.npv_usd if x.npv_usd is not None else -1e18))
     return tuple(rows)
+
+
+def _perspectives(r: ModelResult) -> dict:
+    c = best_cooling(r)
+    h, pays = best_heat(r)
+    it = r.baseline.it_energy_mwh_yr or 0
+    heat = h.kpis.heat_recovered_mwh_yr if h else None
+    return {"cooling_option_name": c.name if c else None, "cooling_npv_usd": _npv(c, r) if c else None,
+            "cooling_cash_usd_yr": c.kpis.cash_value_usd_yr if c else None,
+            "heat_option_name": h.name if h else None, "heat_reused_mwh_yr": heat,
+            "heat_reused_share": (heat / it) if (heat is not None and it > 0) else None,
+            "heat_reuse_npv_usd": h.reuse_npv_usd if h else None, "heat_npv_usd": _npv(h, r) if h else None,
+            "heat_pays_off": pays}
 
 
 @api.get("/leaderboard", response_model=list[LeaderboardRow])

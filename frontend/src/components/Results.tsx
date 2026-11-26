@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { compact, num, usd, value } from '../format';
+import { PERSPECTIVES } from '../perspectives';
 import type { CalcStep, Flag, InputValue, ModelResult, OptionResult, Vendor } from '../types/api';
 import HeatFlow, { HeatOrderSelect, PROFIT_FALLBACK, rankHeatOptions, reuseShare, totalNpv, type HeatOrder } from './HeatFlow';
 import Tornado from './Tornado';
@@ -257,9 +258,11 @@ export default function Results({ r }: { r: ModelResult }) {
         <b>Today</b> PUE {num(b.pue, 2)} · water {compact(b.water_use_m3_yr)} m3/yr · {tonnes(b.co2_t_yr)} CO2/yr · power {money(b.electricity_cost_usd_yr)}/yr
       </p>
 
-      {engineering && <div className="seg" role="group" aria-label="Solution palette">
-        <button type="button" aria-pressed={!reuse} className={!reuse ? 'on' : ''} onClick={() => setPalette('cooling')}>Cooling</button>
-        <button type="button" aria-pressed={reuse} className={reuse ? 'on' : ''} onClick={() => setPalette('reuse')}>Heat reuse</button>
+      {engineering && <div className="seg" role="group" aria-label="Perspective">
+        <button type="button" aria-pressed={!reuse} className={!reuse ? 'on' : ''} onClick={() => setPalette('cooling')}
+                title={PERSPECTIVES.cooling.def}>{PERSPECTIVES.cooling.label}</button>
+        <button type="button" aria-pressed={reuse} className={reuse ? 'on' : ''} onClick={() => setPalette('reuse')}
+                title={PERSPECTIVES.heat.def}>{PERSPECTIVES.heat.label}</button>
       </div>}
       {reuse && <HeatOrderSelect order={order} onChange={setOrder} />}
       {comparison.fallback && <p className="muted">{PROFIT_FALLBACK}</p>}

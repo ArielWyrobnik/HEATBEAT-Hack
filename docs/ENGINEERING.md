@@ -80,7 +80,7 @@ A plain heat exchanger is used when `T_source - 3 K >= T_sink`.
 |---|---|---|---|
 | District heating (`district_heating.py`) | Demand = linear heat density x network length (5, 20 or 60 km), split over heating degree hours (base 16 C) plus 20 % flat hot water. Twin pre-insulated line: DN from 2 m/s, `U' = 0.12 + 0.0008 DN` W/mK per pipe, loss `U' L (T_s + T_r - 2 T_g)`, pumps `V dp / eta` with 100 Pa/m, distribution loss 12 %. 70/40 C (4GDH). | `d_dh_m`, `rho_heat_mwh_m`, local gas heat cost | line > 20 km |
 | Storage (`district_heating.shift`) | Daily tank (eta 0.95) or seasonal ATES (0.75) / BTES (0.55): heat pump output in hours with spare source heat goes to hours with unmet demand, charge rate limited by the heat pump size. | `geo_storage_score` | score < 3 for ATES/BTES; no unmet demand |
-| Biogas digester (`biogas.py`) | `Q = m cp (T_dig - T_feed) + U A (T_dig - T_air)`, hourly, mesophilic 38 C or thermophilic 55 C. Baseline burns biogas in a boiler (85 %); DC heat frees it as RNG valued at gas + D3 RIN + LCFS (CA, OR, WA). CAPEX includes an upgrading unit for the freed biogas (4000 USD per Nm3/h, 0.25 kWh/Nm3, UNVERIFIED). Heat line to the existing digester vs feedstock trucked to a new digester at the DC (600 USD/m3, UNVERIFIED), the cheaper wins. | `d_bio_m`, feedstock kind, RIN/LCFS, climate | > 50 km; forestry feedstock |
+| Biogas digester (`biogas.py`) | `Q = m cp (T_dig - T_feed) + U A (T_dig - T_air)`, hourly, mesophilic 38 C or thermophilic 55 C. Two cases. **Existing digester** (EIA digester gas plant): size from its generator capacity (CF 0.7, 35 % electrical), heat line, DC heat frees the biogas its boiler burns, sold as RNG (gas + D3 RIN + LCFS in CA, OR, WA). **New plant** (food processing waste, manure): size optimised per site over 50 to 3000 t/day and heat line vs trucking, by plant NPV with DC heat. Economies of scale: digester CAPEX ~ size^0.7, upgrading ~ size^0.6 (Bauer et al. 2013). Limit: feed beyond the 300 t/day anchor is collected regionally (0.1 t/day per km2), so trucking grows with size and the radius must stay below 50 km. The chain counts only what the DC heat adds: the counterfactual is the same plant heating itself, so digester CAPEX cancels; plant NPV with and without DC is in the details. All sizing inputs UNVERIFIED. | `d_bio_m`, feedstock kind and EIA capacity, RIN/LCFS, climate | > 50 km; forestry feedstock |
 | Adsorption chiller (in `chains.py`) | Liquid loop drives silica gel adsorption (COP 0.55, drive >= 50 C), cold replaces trim chiller load of the air loop, recooler must stay below 29 C. LiBr needs 75 C: the model shows that a heat pump driven LiBr gives less cold per kWh than an electric chiller. | loop temperatures, climate | drive < 53 C, no air side load |
 | Boiler feedwater (`industry.py`) | Preheats condensate to 50 C, replaces LP extraction steam: +0.15 MWh_e per MWh_th turbine output at the hourly market price. | `d_pp_m`, `q_fw_mw` (EIA-860) | > 15 km |
 | Desalination MED / MD (`industry.py`) | MED effects `n = (T_steam - T_sea - 5)/3 K`, GOR 0.85 n, heat `647 kWh/m3 / GOR`; MD GOR 2. Counterfactual SWRO 3.5 kWh_e/m3. | `d_coast_m`, water tariff | coast > 10 km; < 2 effects |
@@ -147,8 +147,12 @@ the edition was not re-checked in this session, so they are marked "check editio
 ## Known limits
 
 - Data center loads, cooling profiles and coolant temperatures are mostly estimates (low confidence).
-- Biogas uses a reference plant of 300 t/day; the feedstock quantity per site is not in the data. The heat
-  line case assumes the feedstock site already runs a digester (baseline burns its own biogas).
+- Biogas: the feedstock quantity per site is not in the data. New plants are sized from an assumed anchor
+  supply (300 t/day) plus regional collection (0.1 t/day per km2); with these defaults every new plant ends
+  at 800 t/day, the largest size whose collection radius stays below 50 km. The size is set by feedstock,
+  not by the data center: a 800 t/day digester needs only about 2 MW of heat at peak. Existing digesters
+  are sized from EIA capacity and assumed to be heated by a biogas boiler today (if they use CHP waste
+  heat, the DC heat is worth less). A site with an existing digester is not offered a second, new plant.
 - Planned sites take prices, water, distances and storage geology from the nearest database site
   (distances plus the offset, an upper bound), flagged "estimate". Weather is fetched live for the
   point; without internet the nearest site's weather is used and flagged "synthetic".
