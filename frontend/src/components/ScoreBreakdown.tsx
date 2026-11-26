@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ENGINE } from '../dsx/types';
 import Pie from './Pie';
 
@@ -90,7 +91,19 @@ function Breakdown({ title, parts, details, total, gate }: { title: string; part
 
 /** Full breakdown of viability and eco score for one option. */
 export function ScoreBreakdown({ details, score, ecoScore, feasible, pies = true }: { details: Record<string, unknown>; score: number | null | undefined; ecoScore?: unknown; feasible: boolean; pies?: boolean }) {
+  const [open, setOpen] = useState(false);
   if (!hasSubscores(details)) return null;
+  return (
+    <div className="breakdown-toggle">
+      <button type="button" className={`details-btn${open ? ' on' : ''}`} aria-expanded={open} onClick={() => setOpen(!open)}>
+        {open ? 'Hide score details' : 'Show score details'} <span className="chev" aria-hidden="true">{open ? '\u25B4' : '\u25BE'}</span>
+      </button>
+      {open && <ScoreDetails details={details} score={score} ecoScore={ecoScore} feasible={feasible} pies={pies} />}
+    </div>
+  );
+}
+
+function ScoreDetails({ details, score, ecoScore, feasible, pies }: { details: Record<string, unknown>; score: number | null | undefined; ecoScore?: unknown; feasible: boolean; pies: boolean }) {
   return (
     <div className="breakdowns">
       {pies && <ScorePies details={details} score={score} ecoScore={ecoScore} />}
