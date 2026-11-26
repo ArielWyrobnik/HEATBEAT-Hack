@@ -1,0 +1,5 @@
+[
+  { "id": "fra-1", "name": "Example DC Frankfurt", "lat": 50.1109, "lng": 8.6821, "operator": "ExampleCorp", "city": "Frankfurt", "country": "Germany", "capacityMW": 60, "pue": 1.35 },
+  { "id": "ash-1", "name": "Example DC Ashburn", "lat": 39.0438, "lng": -77.4874, "operator": "ExampleCorp", "city": "Ashburn", "country": "USA", "capacityMW": 120, "pue": 1.5 },
+  { "id": "sin-1", "name": "Example DC Singapore", "lat": 1.3521, "lng": 103.8198, "operator": "ExampleCorp", "city": "Singapore", "country": "Singapore", "capacityMW": 40, "pue": 1.6 }
+]
