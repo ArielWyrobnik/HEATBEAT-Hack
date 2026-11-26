@@ -31,7 +31,7 @@ Local context: Israel has low heating demand, high cooling demand, water scarcit
 
 Focus: US sites first. Israel is set aside for now (Ariel, 2026-11-26).
 
-PRs #1, #3, #4, #5 and #6 are merged into `main`. What is on `main`:
+PRs #1, #3, #4, #5, #6 and #7 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020, shorter Open-Meteo timeout). What is on `main`:
 
 | Part | Where | Docs | Status |
 |---|---|---|---|
