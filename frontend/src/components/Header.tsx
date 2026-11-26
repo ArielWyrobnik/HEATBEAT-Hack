@@ -1,4 +1,11 @@
+import { useEffect, useState } from 'react';
+import { api } from '../api';
+
 export default function Header() {
+  // Feedback link is set on the host (FEEDBACK_URL), so it can change without a new build.
+  const [feedback, setFeedback] = useState<string | null>(null);
+  useEffect(() => { api.config().then((c) => setFeedback(c.feedback_url)).catch(() => undefined); }, []);
+
   return (
     <header className="header">
       <a href="#top" className="brand">
@@ -8,8 +15,13 @@ export default function Header() {
         </svg>
         Heat Beat
       </a>
-      <div className="event">
-        <span className="event-dot" /> NVIDIA Hackathon
+      <div className="header-right">
+        {feedback && (
+          <a className="feedback-link" href={feedback} target="_blank" rel="noreferrer">Give feedback</a>
+        )}
+        <div className="event">
+          <span className="event-dot" /> NVIDIA Hackathon
+        </div>
       </div>
     </header>
   );

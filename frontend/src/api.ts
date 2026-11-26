@@ -28,6 +28,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 }
 
 export const api = {
+  config: () => get<{ feedback_url: string | null }>('/config'),
   coolingProfiles: () => get<CoolingProfile[]>('/cooling-profiles'),
   plan: (req: PlanRequest) => post<ModelResult>('/plan', req),
   sites: () => get<SiteSummary[]>('/sites'),

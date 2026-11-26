@@ -11,6 +11,7 @@ import math
 import os
 import threading
 from functools import lru_cache
+from pathlib import Path
 
 import pandas as pd
 from fastapi import APIRouter, FastAPI, HTTPException, Query
@@ -104,6 +105,12 @@ def _cached_run(model_name, site_id, mode, is_greenfield) -> ModelResult:
 @api.get("/health")
 def health() -> dict:
     return {"status": "ok", "models": list(MODELS), "default_model": DEFAULT_MODEL, "live_weather": LIVE}
+
+
+@api.get("/config")
+def config() -> dict:
+    """Settings the frontend reads at runtime (set as environment variables on the host)."""
+    return {"feedback_url": os.getenv("FEEDBACK_URL") or None}
 
 
 @api.get("/models", response_model=list[ModelInfo])
@@ -226,3 +233,18 @@ def nearest_site(lat: float, lon: float, with_weather: bool = False) -> tuple[Si
 
 
 app.include_router(api)
+
+# Production: serve the built frontend (frontend/dist) from the same process, so one free web service
+# hosts the whole app. Set HEATBEAT_STATIC to another folder, or leave dist/ unbuilt for API only.
+_STATIC = Path(os.getenv("HEATBEAT_STATIC", Path(__file__).resolve().parents[1] / "frontend" / "dist"))
+if (_STATIC / "index.html").exists():
+    from fastapi.responses import FileResponse
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def frontend(path: str):
+        f = (_STATIC / path).resolve()
+        if path and f.is_file() and _STATIC.resolve() in f.parents:
+            return FileResponse(f)
+        if path.startswith("api/"):
+            raise HTTPException(404, "unknown API route")
+        return FileResponse(_STATIC / "index.html")
