@@ -99,3 +99,23 @@ def test_real_site_and_planned_site_offline():
     assert len(df) > 10 and df["balance_residual_mwh"].abs().max() < 1e-3
     df2, _, _, c2 = evaluate(32.9, -96.9, 500, "dlc_warm", live=False)
     assert c2.it_mw == 500 and c2.x["is_greenfield"] and len(df2) > 10
+
+
+def test_calculation_trace_restates_the_results():
+    """Every option carries a step by step calculation whose results match its KPIs, with sourced inputs."""
+    pytest.importorskip("pyarrow")
+    pytest.importorskip("fastapi")
+    import heatbeat_data as hd
+    from heatbeat_engineering.api_model import MODEL
+    try:
+        hd.get_site("us-tx-dallas-infomart", live=False).weather.iloc[8759]
+    except (IndexError, FileNotFoundError):
+        pytest.skip("no stored weather for the test site")
+    r = MODEL.run("us-tx-dallas-infomart", tornado=False)
+    for o in (o for o in r.options if o.feasible):
+        steps = {s.title: s for s in o.calculation}
+        assert steps["NPV and payback"].result == pytest.approx(o.score * 1e6, abs=1e4)
+        assert steps["Net value per year"].result == pytest.approx(o.kpis.net_value_usd_yr)
+        assert steps["PUE with this solution"].result == pytest.approx(o.kpis.pue_with)
+        assert abs(steps["Energy balance check"].result) < 1e-3
+        assert o.calculation_inputs and all(i.source for i in o.calculation_inputs if i.flag == "real")

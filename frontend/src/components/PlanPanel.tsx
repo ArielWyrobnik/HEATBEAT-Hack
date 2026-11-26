@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { num } from '../format';
 import type { CoolingProfile, ModelInfo, ModelResult, SiteInputs } from '../types/api';
-import { Inputs, Results } from './SitePanel';
+import { ExpandButton, FullResults, Inputs, Results, useExpand } from './SitePanel';
 
 export interface PlanPoint { lat: number; lng: number }
 
@@ -20,6 +20,7 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
   const [greenfield, setGreenfield] = useState(1);
   const [mode, setMode] = useState<string | undefined>();
   const [tab, setTab] = useState<'results' | 'inputs'>('results');
+  const [expanded, setExpanded] = useExpand();
   const [state, setState] = useState<{ s: 'idle' | 'loading' } | { s: 'error'; e: string } | { s: 'ok'; r: ModelResult }>({ s: 'idle' });
 
   const [models, setModels] = useState<ModelInfo[]>([]);
@@ -50,14 +51,18 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
   } : null;
 
   return (
-    <aside className="site-panel plan-panel" aria-label="Plan a new data center">
+    <aside className={`site-panel plan-panel${expanded ? ' expanded' : ''}`} aria-label="Plan a new data center">
       <header>
-        <div>
+        {expanded && <ExpandButton expanded onToggle={() => setExpanded(false)} />}
+        <div className="panel-title">
           <p className="eyebrow-sm">Plan a new data center</p>
           <h3>{name || 'New site'}</h3>
-          <p className="muted">{num(point.lat, 3)}, {num(point.lng, 3)} · click the map to move it</p>
+          <p className="muted">{num(point.lat, 3)}, {num(point.lng, 3)}{expanded ? '' : ' · click the map to move it'}</p>
         </div>
-        <button className="close" onClick={onClose} aria-label="Close">×</button>
+        <div className="panel-actions">
+          {!expanded && <ExpandButton expanded={false} onToggle={() => setExpanded(true)} />}
+          <button className="close" onClick={onClose} aria-label="Close">×</button>
+        </div>
       </header>
 
       <form className="plan-form" onSubmit={(e) => { e.preventDefault(); run(); }}>
@@ -97,7 +102,7 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
         {profile?.description && <p className="muted small full">{profile.description}</p>}
       </form>
 
-      {r && (
+      {r && !expanded && (
         <nav className="tabs">
           <button className={tab === 'results' ? 'on' : ''} onClick={() => setTab('results')}>Results</button>
           <button className={tab === 'inputs' ? 'on' : ''} onClick={() => setTab('inputs')}>Inputs <small>{r.inputs.length}</small></button>
@@ -118,12 +123,16 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
           </span>
         </nav>
       )}
-      <div className="panel-body">
+      <div className={`panel-body${expanded ? ' panel-body-full' : ''}`}>
         {state.s === 'idle' && <p className="muted">Enter the size and cooling, then rank the options for this location. 1 GW = 1000 MW.</p>}
         {state.s === 'loading' && <p className="muted">Fetching weather and running the model…</p>}
         {state.s === 'error' && <p className="error">{state.e}</p>}
-        {r && tab === 'results' && <Results r={r} />}
-        {r && tab === 'inputs' && inputs && <Inputs d={inputs} />}
+        {r && !expanded && tab === 'results' && <Results r={r} />}
+        {r && !expanded && tab === 'inputs' && inputs && <Inputs d={inputs} />}
+        {r && expanded && <FullResults r={r} />}
+        {r && expanded && inputs && (
+          <section className="full-inputs"><h4>Inputs</h4><Inputs d={inputs} /></section>
+        )}
       </div>
     </aside>
   );

@@ -90,6 +90,26 @@ class EnergyFlow(BaseModel):
     kind: Literal["heat", "electricity", "cooling", "fuel", "loss", "other"] = "heat"
 
 
+class CalcTerm(BaseModel):
+    """One number that goes into a calculation step, with where it comes from."""
+    key: str
+    label: str | None = None
+    value: float | str | None = None
+    unit: str | None = None
+    flag: Flag | None = Field(None, description="None = computed by the model in an earlier step")
+    source: str | None = None
+
+
+class CalcStep(BaseModel):
+    """One step of an option's calculation: formula, the numbers put in, the result."""
+    title: str
+    formula: str = Field(..., description="Plain text formula, e.g. 'PUE = (IT + cooling + other) / IT'")
+    terms: list[CalcTerm] = Field(default_factory=list)
+    result: float | None = None
+    unit: str | None = None
+    note: str | None = None
+
+
 class OptionResult(BaseModel):
     """One candidate: a single option (ranking engine) or a heat chain of components (engineering)."""
     option_id: str
@@ -106,6 +126,9 @@ class OptionResult(BaseModel):
     kpis: Kpis = Field(default_factory=Kpis)
     energy_balance: list[EnergyFlow] = Field(default_factory=list)
     details: dict[str, Any] = Field(default_factory=dict, description="Model specific extra columns")
+    calculation: list[CalcStep] = Field(default_factory=list, description="Step by step calculation trace with sources")
+    calculation_inputs: list[InputValue] = Field(default_factory=list,
+                                                 description="Every input this option uses, with flag and source")
 
 
 class Baseline(BaseModel):
