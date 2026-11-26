@@ -91,18 +91,27 @@ def _normalise(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _fetch_iso_month(client, iso: str, start: pd.Timestamp, end: pd.Timestamp, locations: list[str]) -> pd.DataFrame:
-    fn = getattr(client, "get_lmp_day_ahead_hourly", None)
+    """One month of day-ahead hourly prices. gridstatus' get_lmp_day_ahead_hourly() takes no `locations`
+    (it returns all nodes, we filter afterwards); CAISO and PJM support a location filter via get_lmp(),
+    which keeps those downloads small. gridstatus logs per-day errors and then raises on an empty result,
+    so every call form is tried in turn on any exception."""
     attempts = []
+    if iso in ("CAISO", "PJM"):
+        locs = "hubs" if iso == "PJM" else locations
+        attempts.append(lambda: client.get_lmp(date=start, end=end, market="DAY_AHEAD_HOURLY", locations=locs))
+    fn = getattr(client, "get_lmp_day_ahead_hourly", None)
     if fn is not None:
-        attempts += [lambda: fn(date=start, end=end, locations=locations), lambda: fn(date=start, end=end)]
-    attempts += [lambda: client.get_lmp(date=start, end=end, market="DAY_AHEAD_HOURLY", locations=locations)]
-    last = None
+        attempts.append(lambda: fn(date=start, end=end))
+    errors = []
     for a in attempts:
         try:
-            return _normalise(a())
-        except TypeError as exc:  # signature mismatch, try the next form
-            last = exc
-    raise RuntimeError(f"{iso}: no working call form ({last})")
+            df = _normalise(a())
+            if len(df):
+                return df
+            errors.append("empty result")
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"{type(exc).__name__}: {str(exc)[:200]}")
+    raise RuntimeError(f"{iso}: no working call form ({'; '.join(errors)})")
 
 
 def _match(df: pd.DataFrame, location: str) -> pd.Series:
