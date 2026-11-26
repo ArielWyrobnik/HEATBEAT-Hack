@@ -182,6 +182,8 @@ export interface ModelResult {
   options: OptionResult[];
   tornado?: Tornado | null;
   warnings: string[];
+  verdict?: string | null;
+  verdict_level?: 'no_gain' | 'small_gain' | 'gain' | null;
   inputs_used: Record<string, unknown>;
   /** Inputs with flags, filled for planned sites */
   inputs: InputValue[];

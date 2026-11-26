@@ -201,6 +201,8 @@ class ModelResult(BaseModel):
     options: list[OptionResult] = Field(description="Sorted, best first; knocked out options last")
     tornado: Tornado | None = None
     warnings: list[str] = Field(default_factory=list, description="Shown above the results, e.g. unverified CAPEX")
+    verdict: str | None = Field(None, description="Plain answer: does anything beat today's setup, and by how much")
+    verdict_level: str | None = Field(None, description="no_gain, small_gain or gain (heatbeat_engineering.verdict)")
     inputs_used: dict[str, Any] = Field(default_factory=dict)
     inputs: list["InputValue"] = Field(default_factory=list, description="Inputs with flags (filled for planned sites)")
     planned_site: "PlanRequest | dict[str, Any] | None" = Field(

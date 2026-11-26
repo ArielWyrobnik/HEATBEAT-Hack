@@ -1,0 +1,972 @@
+site_id,input,label,value,unit,class,confidence,source,note
+us-az-chandler,it_mw,IT load,60.0,MW,team_estimate,low,team_assumption,Desert climate: chillers or evaporative assist run most of the year.
+us-az-chandler,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
+us-az-chandler,loop_air,air loop temperatures and heat,"26/18 C, 60 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-az-chandler,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-az-chandler,pue_reported,PUE used for comparison,1.35,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-az-chandler,coordinates,Location,"33.3, -111.9",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-az-chandler,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-az-chandler,p_elec_usd_mwh,Electricity price (retail industrial),79.0,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-az-chandler,ci_grid_kg_mwh,Grid carbon intensity,319.2,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (AZNM),"annual average, not hourly"
+us-az-chandler,p_wholesale_usd_mwh,Hourly wholesale price,79.0,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-az-chandler,p_gas_usd_mwh,Gas citygate price,10.84,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-az-chandler,p_heat_usd_mwh,Heat price (gas boiler),46.1,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-az-chandler,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-az-chandler,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-az-chandler,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-az-chandler,p_water_usd_m3,Water + sewer tariff,1.052,USD/m3,sourced_region,high,City of Chandler (chandler_2026),
+us-az-chandler,wsi,Water stress (WRI Aqueduct),5.0,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-az-chandler,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-az-chandler,rho_heat_mwh_m,Linear heat density of that area,0.84,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-az-chandler,d_coast_m,Distance to coast,307200.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-az-chandler,d_pp_m,Distance to thermal power plant,8398.0,m,derived,low,Kyrene: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-az-chandler,q_fw_mw,Feedwater heat that plant could take,9.86,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-az-chandler,d_bio_m,Distance to digester / feedstock,15450.0,m,derived,medium,UNITED DAIRYMEN OF ARIZONA - DAIRY: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-az-chandler,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-az-mesa,it_mw,IT load,60.0,MW,team_estimate,low,team_assumption,Desert climate: chillers or evaporative assist run most of the year.
+us-az-mesa,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
+us-az-mesa,loop_air,air loop temperatures and heat,"26/18 C, 60 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-az-mesa,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-az-mesa,pue_reported,PUE used for comparison,1.35,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-az-mesa,coordinates,Location,"33.4, -111.65",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-az-mesa,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-az-mesa,p_elec_usd_mwh,Electricity price (retail industrial),79.0,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-az-mesa,ci_grid_kg_mwh,Grid carbon intensity,319.2,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (AZNM),"annual average, not hourly"
+us-az-mesa,p_wholesale_usd_mwh,Hourly wholesale price,79.0,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-az-mesa,p_gas_usd_mwh,Gas citygate price,10.84,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-az-mesa,p_heat_usd_mwh,Heat price (gas boiler),46.1,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-az-mesa,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-az-mesa,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-az-mesa,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-az-mesa,p_water_usd_m3,Water + sewer tariff,1.3,USD/m3,team_estimate,low,City of Mesa (rate book sections not readable) (team_assumption;chandler_2026;phoenix_sewer_2025;mlgw_survey_2026),estimated part flagged in site_water.csv
+us-az-mesa,wsi,Water stress (WRI Aqueduct),5.0,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-az-mesa,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-az-mesa,rho_heat_mwh_m,Linear heat density of that area,1.06,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-az-mesa,d_coast_m,Distance to coast,333090.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-az-mesa,d_pp_m,Distance to thermal power plant,14355.0,m,derived,medium,Santan: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-az-mesa,q_fw_mw,Feedwater heat that plant could take,21.95,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-az-mesa,d_bio_m,Distance to digester / feedstock,33672.0,m,derived,medium,UNITED DAIRYMEN OF ARIZONA - DAIRY: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-az-mesa,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ca-la-one-wilshire,it_mw,IT load,10.0,MW,team_estimate,low,team_assumption,Downtown carrier hotel.
+us-ca-la-one-wilshire,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
+us-ca-la-one-wilshire,loop_air,air loop temperatures and heat,"13/7 C, 10 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ca-la-one-wilshire,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-ca-la-one-wilshire,pue_reported,PUE used for comparison,1.6,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ca-la-one-wilshire,coordinates,Location,"34.048, -118.256",deg,derived,building,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ca-la-one-wilshire,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ca-la-one-wilshire,p_elec_usd_mwh,Electricity price (retail industrial),215.3,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ca-la-one-wilshire,ci_grid_kg_mwh,Grid carbon intensity,194.3,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (CAMX),"annual average, not hourly"
+us-ca-la-one-wilshire,p_wholesale_usd_mwh,Hourly wholesale price,32.7,USD/MWh,sourced_region,high,CAISO TH_SP15_GEN-APND (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-ca-la-one-wilshire,p_gas_usd_mwh,Gas citygate price,12.48,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ca-la-one-wilshire,p_heat_usd_mwh,Heat price (gas boiler),54.3,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ca-la-one-wilshire,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ca-la-one-wilshire,lcfs_usd_t,LCFS credit,53.37,USD/t,sourced_region,high,https://aegis-hedging.com/insights/lcfs-rin-pricing-report-through-december-22nd-2025,"Dec 2025 average; ARB Oct 2025 average 58, CY2024 64"
+us-ca-la-one-wilshire,p_co2_usd_t,State carbon price,28.32,USD/t,team_estimate,low,https://ww2.arb.ca.gov/sites/default/files/2025-11/nc-nov_2025_summary_results_report.pdf,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ca-la-one-wilshire,p_water_usd_m3,Water + sewer tariff,4.295,USD/m3,team_estimate,medium,"LADWP (water); City of LA Sanitation (sewer, not found) (ladwp_2026)",estimated part flagged in site_water.csv
+us-ca-la-one-wilshire,wsi,Water stress (WRI Aqueduct),5.0,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ca-la-one-wilshire,d_dh_m,Distance to dense heat demand,0.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-ca-la-one-wilshire,rho_heat_mwh_m,Linear heat density of that area,4.57,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ca-la-one-wilshire,d_coast_m,Distance to coast,24890.0,m,derived,medium,Overture Maps ocean polygons (OSM coastline); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ca-la-one-wilshire,d_pp_m,Distance to thermal power plant,18617.0,m,derived,medium,Magnolia Power Project: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ca-la-one-wilshire,q_fw_mw,Feedwater heat that plant could take,6.07,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ca-la-one-wilshire,d_bio_m,Distance to digester / feedstock,5602.0,m,derived,medium,Darling Ingredients Inc: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-ca-la-one-wilshire,geo_storage_score,Geology score for ATES/BTES,3.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ca-santa-clara,it_mw,IT load,20.0,MW,team_estimate,low,team_assumption,Power-constrained market; facilities are small.
+us-ca-santa-clara,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
+us-ca-santa-clara,loop_air,air loop temperatures and heat,"26/18 C, 20 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ca-santa-clara,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-ca-santa-clara,pue_reported,PUE used for comparison,1.45,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ca-santa-clara,coordinates,Location,"37.37, -121.96",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ca-santa-clara,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ca-santa-clara,p_elec_usd_mwh,Electricity price (retail industrial),215.3,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ca-santa-clara,ci_grid_kg_mwh,Grid carbon intensity,194.3,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (CAMX),"annual average, not hourly"
+us-ca-santa-clara,p_wholesale_usd_mwh,Hourly wholesale price,40.7,USD/MWh,sourced_region,high,CAISO TH_NP15_GEN-APND (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-ca-santa-clara,p_gas_usd_mwh,Gas citygate price,12.48,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ca-santa-clara,p_heat_usd_mwh,Heat price (gas boiler),54.3,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ca-santa-clara,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ca-santa-clara,lcfs_usd_t,LCFS credit,53.37,USD/t,sourced_region,high,https://aegis-hedging.com/insights/lcfs-rin-pricing-report-through-december-22nd-2025,"Dec 2025 average; ARB Oct 2025 average 58, CY2024 64"
+us-ca-santa-clara,p_co2_usd_t,State carbon price,28.32,USD/t,team_estimate,low,https://ww2.arb.ca.gov/sites/default/files/2025-11/nc-nov_2025_summary_results_report.pdf,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ca-santa-clara,p_water_usd_m3,Water + sewer tariff,3.99,USD/m3,team_estimate,medium,City of Santa Clara Water & Sewer Utilities (santa_clara_2025),estimated part flagged in site_water.csv
+us-ca-santa-clara,wsi,Water stress (WRI Aqueduct),1.7567,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ca-santa-clara,d_dh_m,Distance to dense heat demand,2680.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-ca-santa-clara,rho_heat_mwh_m,Linear heat density of that area,1.79,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ca-santa-clara,d_coast_m,Distance to coast,8540.0,m,derived,medium,Overture Maps ocean polygons (OSM coastline); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ca-santa-clara,d_pp_m,Distance to thermal power plant,1323.0,m,derived,low,Donald Von Raesfeld Power Plant: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ca-santa-clara,q_fw_mw,Feedwater heat that plant could take,2.29,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ca-santa-clara,d_bio_m,Distance to digester / feedstock,8374.0,m,derived,low,Zero Waste Energy Development Co LLC: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-ca-santa-clara,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-fl-miami-equinix,it_mw,IT load,20.0,MW,team_estimate,low,team_assumption,Hot humid climate.
+us-fl-miami-equinix,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
+us-fl-miami-equinix,loop_air,air loop temperatures and heat,"13/7 C, 20 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-fl-miami-equinix,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-fl-miami-equinix,pue_reported,PUE used for comparison,1.6,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-fl-miami-equinix,coordinates,Location,"25.78, -80.19",deg,derived,building,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-fl-miami-equinix,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-fl-miami-equinix,p_elec_usd_mwh,Electricity price (retail industrial),85.0,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-fl-miami-equinix,ci_grid_kg_mwh,Grid carbon intensity,354.8,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (FRCC),"annual average, not hourly"
+us-fl-miami-equinix,p_wholesale_usd_mwh,Hourly wholesale price,85.0,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-fl-miami-equinix,p_gas_usd_mwh,Gas citygate price,21.67,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-fl-miami-equinix,p_heat_usd_mwh,Heat price (gas boiler),46.7,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-fl-miami-equinix,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-fl-miami-equinix,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-fl-miami-equinix,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-fl-miami-equinix,p_water_usd_m3,Water + sewer tariff,3.22,USD/m3,sourced_region,medium,Miami-Dade Water and Sewer Department (miami_dade_2025),
+us-fl-miami-equinix,wsi,Water stress (WRI Aqueduct),3.7954,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-fl-miami-equinix,d_dh_m,Distance to dense heat demand,300.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-fl-miami-equinix,rho_heat_mwh_m,Linear heat density of that area,1.9,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-fl-miami-equinix,d_coast_m,Distance to coast,330.0,m,derived,medium,Overture Maps ocean polygons (OSM coastline); straight line x 1.2 routing factor; brackish aquifers not included,
+us-fl-miami-equinix,d_pp_m,Distance to thermal power plant,38522.0,m,derived,medium,Dania Beach 7: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-fl-miami-equinix,q_fw_mw,Feedwater heat that plant could take,23.55,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-fl-miami-equinix,d_bio_m,Distance to digester / feedstock,6131.0,m,derived,medium,Central District Wastewater Treat Plant: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-fl-miami-equinix,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ga-atlanta-qts,it_mw,IT load,200.0,MW,team_estimate,low,team_assumption;qts_atl1,"Verified (QTS data sheet): chillers, cooling towers, CRAH, water-side economizer, rainwater harvesting."
+us-ga-atlanta-qts,cooling_profile,Cooling at the rack,air_chilled_elevated,,sourced_site,high,QTS data sheet ATL1 DC1,
+us-ga-atlanta-qts,loop_air,air loop temperatures and heat,"26/18 C, 200 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ga-atlanta-qts,baseline_rejection,Today's heat rejection,tower,,sourced_site,high,https://qtsdatacenters.com/wp-content/uploads/2024/07/QTS_DataSheet_ATL1-DC1.pdf,
+us-ga-atlanta-qts,pue_reported,PUE used for comparison,1.35,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ga-atlanta-qts,coordinates,Location,"33.77, -84.43",deg,derived,campus_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ga-atlanta-qts,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ga-atlanta-qts,p_elec_usd_mwh,Electricity price (retail industrial),72.1,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ga-atlanta-qts,ci_grid_kg_mwh,Grid carbon intensity,382.1,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SRSO),"annual average, not hourly"
+us-ga-atlanta-qts,p_wholesale_usd_mwh,Hourly wholesale price,72.1,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-ga-atlanta-qts,p_gas_usd_mwh,Gas citygate price,12.84,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ga-atlanta-qts,p_heat_usd_mwh,Heat price (gas boiler),36.2,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ga-atlanta-qts,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ga-atlanta-qts,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-ga-atlanta-qts,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ga-atlanta-qts,p_water_usd_m3,Water + sewer tariff,3.565,USD/m3,sourced_region,medium,Atlanta Department of Watershed Management (atlanta_dwm;mlgw_survey_2026),
+us-ga-atlanta-qts,wsi,Water stress (WRI Aqueduct),2.4116,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ga-atlanta-qts,d_dh_m,Distance to dense heat demand,2280.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-ga-atlanta-qts,rho_heat_mwh_m,Linear heat density of that area,1.98,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ga-atlanta-qts,d_coast_m,Distance to coast,432390.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ga-atlanta-qts,d_pp_m,Distance to thermal power plant,8804.0,m,derived,medium,Jack McDonough: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ga-atlanta-qts,q_fw_mw,Feedwater heat that plant could take,72.84,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ga-atlanta-qts,d_bio_m,Distance to digester / feedstock,69095.0,m,derived,medium,GENERAL MILLS INC.: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-ga-atlanta-qts,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ga-douglas-google,it_mw,IT load,200.0,MW,team_estimate,low,google_ocp_2025;team_assumption,TPU share assumed 40%.
+us-ga-douglas-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
+us-ga-douglas-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 80 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ga-douglas-google,loop_air,air loop temperatures and heat,"26/18 C, 120 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ga-douglas-google,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://datacenters.google/locations/douglas-county-georgia,
+us-ga-douglas-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ga-douglas-google,coordinates,Location,"33.75, -84.62",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ga-douglas-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ga-douglas-google,p_elec_usd_mwh,Electricity price (retail industrial),72.1,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ga-douglas-google,ci_grid_kg_mwh,Grid carbon intensity,382.1,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SRSO),"annual average, not hourly"
+us-ga-douglas-google,p_wholesale_usd_mwh,Hourly wholesale price,72.1,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-ga-douglas-google,p_gas_usd_mwh,Gas citygate price,12.84,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ga-douglas-google,p_heat_usd_mwh,Heat price (gas boiler),36.2,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ga-douglas-google,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ga-douglas-google,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-ga-douglas-google,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ga-douglas-google,p_water_usd_m3,Water + sewer tariff,2.625,USD/m3,team_estimate,low,Douglasville-Douglas County WSA (not researched) (team_assumption;atlanta_dwm),estimated part flagged in site_water.csv
+us-ga-douglas-google,wsi,Water stress (WRI Aqueduct),2.4116,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ga-douglas-google,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-ga-douglas-google,rho_heat_mwh_m,Linear heat density of that area,0.85,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ga-douglas-google,d_coast_m,Distance to coast,451230.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ga-douglas-google,d_pp_m,Distance to thermal power plant,18787.0,m,derived,medium,Jack McDonough: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ga-douglas-google,q_fw_mw,Feedwater heat that plant could take,72.84,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ga-douglas-google,d_bio_m,Distance to digester / feedstock,89016.0,m,derived,medium,GENERAL MILLS INC.: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-ga-douglas-google,geo_storage_score,Geology score for ATES/BTES,5.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ia-altoona-meta,it_mw,IT load,200.0,MW,team_estimate,low,team_assumption;meta_edi_2025,
+us-ia-altoona-meta,cooling_profile,Cooling at the rack,air_economizer,,team_estimate,low,site_profiles.csv (team_assumption;meta_edi_2025),
+us-ia-altoona-meta,loop_air,air loop temperatures and heat,"32/24 C, 200 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ia-altoona-meta,baseline_rejection,Today's heat rejection,adiabatic,,team_estimate,low,typical for the cooling profile (no public source),
+us-ia-altoona-meta,pue_reported,PUE used for comparison,1.08,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ia-altoona-meta,coordinates,Location,"41.65, -93.47",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ia-altoona-meta,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ia-altoona-meta,p_elec_usd_mwh,Electricity price (retail industrial),68.0,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ia-altoona-meta,ci_grid_kg_mwh,Grid carbon intensity,417.4,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (MROW),"annual average, not hourly"
+us-ia-altoona-meta,p_wholesale_usd_mwh,Hourly wholesale price,27.3,USD/MWh,sourced_region,high,MISO MINN.HUB (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-ia-altoona-meta,p_gas_usd_mwh,Gas citygate price,14.26,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ia-altoona-meta,p_heat_usd_mwh,Heat price (gas boiler),29.8,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ia-altoona-meta,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ia-altoona-meta,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-ia-altoona-meta,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ia-altoona-meta,p_water_usd_m3,Water + sewer tariff,2.363,USD/m3,sourced_region,medium,City of Altoona (ames_survey_2024),
+us-ia-altoona-meta,wsi,Water stress (WRI Aqueduct),0.6122,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ia-altoona-meta,d_dh_m,Distance to dense heat demand,1200.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-ia-altoona-meta,rho_heat_mwh_m,Linear heat density of that area,1.65,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ia-altoona-meta,d_coast_m,Distance to coast,1539880.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ia-altoona-meta,d_pp_m,Distance to thermal power plant,13790.0,m,derived,medium,Greater Des Moines: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ia-altoona-meta,q_fw_mw,Feedwater heat that plant could take,8.09,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ia-altoona-meta,d_bio_m,Distance to digester / feedstock,11723.0,m,derived,low,ADM SOYBEAN PROCESSING - DES MOINES: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-ia-altoona-meta,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ia-council-bluffs-google,it_mw,IT load,300.0,MW,team_estimate,low,google_ocp_2025;team_assumption,TPU share assumed 40%.
+us-ia-council-bluffs-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
+us-ia-council-bluffs-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 120 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ia-council-bluffs-google,loop_air,air loop temperatures and heat,"26/18 C, 180 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ia-council-bluffs-google,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://flatwaterfreepress.org/data-centers-can-guzzle-serious-water-as-some-nebraskans-worry-tech-giants-seek-solutions/,
+us-ia-council-bluffs-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ia-council-bluffs-google,coordinates,Location,"41.19, -95.86",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ia-council-bluffs-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ia-council-bluffs-google,p_elec_usd_mwh,Electricity price (retail industrial),68.0,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ia-council-bluffs-google,ci_grid_kg_mwh,Grid carbon intensity,417.4,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (MROW),"annual average, not hourly"
+us-ia-council-bluffs-google,p_wholesale_usd_mwh,Hourly wholesale price,27.3,USD/MWh,sourced_region,high,MISO MINN.HUB (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-ia-council-bluffs-google,p_gas_usd_mwh,Gas citygate price,14.26,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ia-council-bluffs-google,p_heat_usd_mwh,Heat price (gas boiler),29.8,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ia-council-bluffs-google,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ia-council-bluffs-google,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-ia-council-bluffs-google,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ia-council-bluffs-google,p_water_usd_m3,Water + sewer tariff,1.232,USD/m3,sourced_region,medium,Council Bluffs Water Works / City of Council Bluffs (ames_survey_2024),
+us-ia-council-bluffs-google,wsi,Water stress (WRI Aqueduct),0.1279,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ia-council-bluffs-google,d_dh_m,Distance to dense heat demand,4950.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-ia-council-bluffs-google,rho_heat_mwh_m,Linear heat density of that area,1.8,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ia-council-bluffs-google,d_coast_m,Distance to coast,1507400.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ia-council-bluffs-google,d_pp_m,Distance to thermal power plant,2345.0,m,derived,low,Walter Scott Jr Energy Center: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ia-council-bluffs-google,q_fw_mw,Feedwater heat that plant could take,72.35,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ia-council-bluffs-google,d_bio_m,Distance to digester / feedstock,7171.0,m,derived,low,Missouri River Wastewater Treatment: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-ia-council-bluffs-google,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ia-west-des-moines-microsoft,it_mw,IT load,300.0,MW,team_estimate,low,team_assumption;msft_ia_2025,"Verified: direct evaporative cooling, water under 15 % of the year; next two buildings zero-water closed loop (Axios 2026-01)."
+us-ia-west-des-moines-microsoft,cooling_profile,Cooling at the rack,air_economizer,,sourced_site,high,Microsoft datacenters in Iowa (fact sheet),
+us-ia-west-des-moines-microsoft,loop_air,air loop temperatures and heat,"32/24 C, 300 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ia-west-des-moines-microsoft,baseline_rejection,Today's heat rejection,adiabatic,,sourced_site,high,https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Iowa.pdf,
+us-ia-west-des-moines-microsoft,pue_reported,PUE used for comparison,1.2,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ia-west-des-moines-microsoft,coordinates,Location,"41.55, -93.78",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ia-west-des-moines-microsoft,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ia-west-des-moines-microsoft,p_elec_usd_mwh,Electricity price (retail industrial),68.0,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ia-west-des-moines-microsoft,ci_grid_kg_mwh,Grid carbon intensity,417.4,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (MROW),"annual average, not hourly"
+us-ia-west-des-moines-microsoft,p_wholesale_usd_mwh,Hourly wholesale price,27.3,USD/MWh,sourced_region,high,MISO MINN.HUB (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-ia-west-des-moines-microsoft,p_gas_usd_mwh,Gas citygate price,14.26,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ia-west-des-moines-microsoft,p_heat_usd_mwh,Heat price (gas boiler),29.8,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ia-west-des-moines-microsoft,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ia-west-des-moines-microsoft,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-ia-west-des-moines-microsoft,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ia-west-des-moines-microsoft,p_water_usd_m3,Water + sewer tariff,2.009,USD/m3,sourced_region,medium,West Des Moines Water Works / City of West Des Moines (ames_survey_2024),
+us-ia-west-des-moines-microsoft,wsi,Water stress (WRI Aqueduct),1.5441,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ia-west-des-moines-microsoft,d_dh_m,Distance to dense heat demand,950.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-ia-west-des-moines-microsoft,rho_heat_mwh_m,Linear heat density of that area,1.56,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ia-west-des-moines-microsoft,d_coast_m,Distance to coast,1534960.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ia-west-des-moines-microsoft,d_pp_m,Distance to thermal power plant,25147.0,m,derived,medium,Greater Des Moines: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ia-west-des-moines-microsoft,q_fw_mw,Feedwater heat that plant could take,8.09,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ia-west-des-moines-microsoft,d_bio_m,Distance to digester / feedstock,22124.0,m,derived,medium,ADM SOYBEAN PROCESSING - DES MOINES: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-ia-west-des-moines-microsoft,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-il-chicago-cermak,it_mw,IT load,100.0,MW,team_estimate,low,team_assumption,Large multi-tenant carrier hotel; MW not verified.
+us-il-chicago-cermak,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
+us-il-chicago-cermak,loop_air,air loop temperatures and heat,"13/7 C, 100 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-il-chicago-cermak,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-il-chicago-cermak,pue_reported,PUE used for comparison,1.5,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-il-chicago-cermak,coordinates,Location,"41.853, -87.618",deg,derived,building,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-il-chicago-cermak,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-il-chicago-cermak,p_elec_usd_mwh,Electricity price (retail industrial),88.3,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-il-chicago-cermak,ci_grid_kg_mwh,Grid carbon intensity,413.4,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (RFCW),"annual average, not hourly"
+us-il-chicago-cermak,p_wholesale_usd_mwh,Hourly wholesale price,88.3,USD/MWh,synthetic,low,PJM N ILLINOIS HUB (synthetic_shape),used only for the power value of feedwater preheat and ORC
+us-il-chicago-cermak,p_gas_usd_mwh,Gas citygate price,12.61,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-il-chicago-cermak,p_heat_usd_mwh,Heat price (gas boiler),36.0,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-il-chicago-cermak,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-il-chicago-cermak,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-il-chicago-cermak,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-il-chicago-cermak,p_water_usd_m3,Water + sewer tariff,1.612,USD/m3,sourced_region,high,City of Chicago (chicago_2025;mlgw_survey_2026),
+us-il-chicago-cermak,wsi,Water stress (WRI Aqueduct),3.433,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-il-chicago-cermak,d_dh_m,Distance to dense heat demand,0.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-il-chicago-cermak,rho_heat_mwh_m,Linear heat density of that area,6.6,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-il-chicago-cermak,d_coast_m,Distance to coast,1141890.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-il-chicago-cermak,d_pp_m,Distance to thermal power plant,22767.0,m,derived,medium,Ingredion Incorporated: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-il-chicago-cermak,q_fw_mw,Feedwater heat that plant could take,2.25,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-il-chicago-cermak,d_bio_m,Distance to digester / feedstock,22767.0,m,derived,medium,Ingredion Incorporated Argo Plant: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-il-chicago-cermak,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-il-elk-grove,it_mw,IT load,40.0,MW,team_estimate,low,team_assumption,
+us-il-elk-grove,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
+us-il-elk-grove,loop_air,air loop temperatures and heat,"26/18 C, 40 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-il-elk-grove,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-il-elk-grove,pue_reported,PUE used for comparison,1.4,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-il-elk-grove,coordinates,Location,"42.004, -87.97",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-il-elk-grove,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-il-elk-grove,p_elec_usd_mwh,Electricity price (retail industrial),88.3,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-il-elk-grove,ci_grid_kg_mwh,Grid carbon intensity,413.4,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (RFCW),"annual average, not hourly"
+us-il-elk-grove,p_wholesale_usd_mwh,Hourly wholesale price,88.3,USD/MWh,synthetic,low,PJM N ILLINOIS HUB (synthetic_shape),used only for the power value of feedwater preheat and ORC
+us-il-elk-grove,p_gas_usd_mwh,Gas citygate price,12.61,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-il-elk-grove,p_heat_usd_mwh,Heat price (gas boiler),36.0,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-il-elk-grove,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-il-elk-grove,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-il-elk-grove,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-il-elk-grove,p_water_usd_m3,Water + sewer tariff,2.05,USD/m3,team_estimate,low,Village of Elk Grove Village (not researched) (team_assumption;chicago_2025),estimated part flagged in site_water.csv
+us-il-elk-grove,wsi,Water stress (WRI Aqueduct),3.501,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-il-elk-grove,d_dh_m,Distance to dense heat demand,1800.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-il-elk-grove,rho_heat_mwh_m,Linear heat density of that area,1.62,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-il-elk-grove,d_coast_m,Distance to coast,1181500.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-il-elk-grove,d_pp_m,Distance to thermal power plant,33552.0,m,derived,medium,Ingredion Incorporated: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-il-elk-grove,q_fw_mw,Feedwater heat that plant could take,2.25,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-il-elk-grove,d_bio_m,Distance to digester / feedstock,33552.0,m,derived,medium,Ingredion Incorporated Argo Plant: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-il-elk-grove,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-la-richland-meta,it_mw,IT load,1500.0,MW,team_estimate,low,nvidia_45c_2026;team_assumption,Under construction; 2 GW is the press-reported initial facility size. Chip generation is an assumption (Rubin era by the time it fills).
+us-la-richland-meta,cooling_profile,Cooling at the rack,dlc_hot,,team_estimate,low,site_profiles.csv (nvidia_45c_2026;team_assumption),
+us-la-richland-meta,loop_liquid,liquid loop temperatures and heat,"55/45 C, 1,425 MW",,literature_typical,medium,cooling_profiles.csv (nvidia_45c_2026;compass_rubin_2026;coolit_rubin_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-la-richland-meta,loop_air,air loop temperatures and heat,"26/18 C, 75 MW",,literature_typical,medium,cooling_profiles.csv (nvidia_45c_2026;compass_rubin_2026;coolit_rubin_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-la-richland-meta,baseline_rejection,Today's heat rejection,dry,,team_estimate,low,typical for the cooling profile (no public source),
+us-la-richland-meta,pue_reported,PUE used for comparison,1.2,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-la-richland-meta,coordinates,Location,"32.39, -91.73",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-la-richland-meta,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-la-richland-meta,p_elec_usd_mwh,Electricity price (retail industrial),56.1,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-la-richland-meta,ci_grid_kg_mwh,Grid carbon intensity,335.5,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SRMV),"annual average, not hourly"
+us-la-richland-meta,p_wholesale_usd_mwh,Hourly wholesale price,26.5,USD/MWh,sourced_region,high,MISO LOUISIANA.HUB (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-la-richland-meta,p_gas_usd_mwh,Gas citygate price,12.88,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-la-richland-meta,p_heat_usd_mwh,Heat price (gas boiler),42.5,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-la-richland-meta,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-la-richland-meta,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-la-richland-meta,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-la-richland-meta,p_water_usd_m3,Water + sewer tariff,1.3,USD/m3,team_estimate,low,Richland Parish (not researched) (team_assumption),estimated part flagged in site_water.csv
+us-la-richland-meta,wsi,Water stress (WRI Aqueduct),2.9069,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-la-richland-meta,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-la-richland-meta,rho_heat_mwh_m,Linear heat density of that area,0.09,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-la-richland-meta,d_coast_m,Distance to coast,317150.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-la-richland-meta,d_pp_m,Distance to thermal power plant,48986.0,m,derived,medium,Plant 31 Paper Mill: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-la-richland-meta,q_fw_mw,Feedwater heat that plant could take,3.16,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-la-richland-meta,d_bio_m,Distance to digester / feedstock,48986.0,m,derived,medium,Plant 31 Paper Mill: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-la-richland-meta,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ma-boston-one-summer,it_mw,IT load,15.0,MW,team_estimate,low,team_assumption,
+us-ma-boston-one-summer,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
+us-ma-boston-one-summer,loop_air,air loop temperatures and heat,"13/7 C, 15 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ma-boston-one-summer,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-ma-boston-one-summer,pue_reported,PUE used for comparison,1.6,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ma-boston-one-summer,coordinates,Location,"42.354, -71.059",deg,derived,building,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ma-boston-one-summer,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ma-boston-one-summer,p_elec_usd_mwh,Electricity price (retail industrial),181.9,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ma-boston-one-summer,ci_grid_kg_mwh,Grid carbon intensity,244.6,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (NEWE),"annual average, not hourly"
+us-ma-boston-one-summer,p_wholesale_usd_mwh,Hourly wholesale price,41.5,USD/MWh,sourced_region,high,ISONE .H.INTERNAL_HUB (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-ma-boston-one-summer,p_gas_usd_mwh,Gas citygate price,24.47,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ma-boston-one-summer,p_heat_usd_mwh,Heat price (gas boiler),59.9,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ma-boston-one-summer,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ma-boston-one-summer,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-ma-boston-one-summer,p_co2_usd_t,State carbon price,38.58,USD/t,team_estimate,low,https://www.rggi.org/sites/default/files/Uploads/Auction-Materials/72/PR060526_Auction72.pdf,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ma-boston-one-summer,p_water_usd_m3,Water + sewer tariff,4.465,USD/m3,sourced_region,high,Boston Water and Sewer Commission (bwsc_2026),
+us-ma-boston-one-summer,wsi,Water stress (WRI Aqueduct),2.1884,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ma-boston-one-summer,d_dh_m,Distance to dense heat demand,0.0,m,derived,low,Min of: existing DH network (edge of approximate service area or mapped pipe); straight line x 1.2. Heat density from Overture buildings,
+us-ma-boston-one-summer,rho_heat_mwh_m,Linear heat density of that area,13.28,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ma-boston-one-summer,d_coast_m,Distance to coast,700.0,m,derived,medium,Overture Maps ocean polygons (OSM coastline); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ma-boston-one-summer,d_pp_m,Distance to thermal power plant,2347.0,m,derived,medium,Kendall Square Station: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ma-boston-one-summer,q_fw_mw,Feedwater heat that plant could take,2.0,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ma-boston-one-summer,d_bio_m,Distance to digester / feedstock,9489.0,m,derived,medium,Deer Island Treatment Plant: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-ma-boston-one-summer,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-nc-lenoir-google,it_mw,IT load,150.0,MW,team_estimate,low,google_ocp_2025;team_assumption,Older campus; TPU share assumed 30%.
+us-nc-lenoir-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
+us-nc-lenoir-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 45 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-nc-lenoir-google,loop_air,air loop temperatures and heat,"26/18 C, 105 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-nc-lenoir-google,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-nc-lenoir-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-nc-lenoir-google,coordinates,Location,"35.89, -81.54",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-nc-lenoir-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-nc-lenoir-google,p_elec_usd_mwh,Electricity price (retail industrial),77.69999999999999,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-nc-lenoir-google,ci_grid_kg_mwh,Grid carbon intensity,269.2,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SRVC),"annual average, not hourly"
+us-nc-lenoir-google,p_wholesale_usd_mwh,Hourly wholesale price,77.7,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-nc-lenoir-google,p_gas_usd_mwh,Gas citygate price,11.82,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-nc-lenoir-google,p_heat_usd_mwh,Heat price (gas boiler),31.9,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-nc-lenoir-google,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-nc-lenoir-google,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-nc-lenoir-google,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-nc-lenoir-google,p_water_usd_m3,Water + sewer tariff,2.625,USD/m3,team_estimate,low,City of Lenoir (not researched) (team_assumption;unc_efc_nc_2021),estimated part flagged in site_water.csv
+us-nc-lenoir-google,wsi,Water stress (WRI Aqueduct),2.9427,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-nc-lenoir-google,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-nc-lenoir-google,rho_heat_mwh_m,Linear heat density of that area,0.99,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-nc-lenoir-google,d_coast_m,Distance to coast,413210.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-nc-lenoir-google,d_pp_m,Distance to thermal power plant,73419.0,m,derived,medium,Marshall (NC): EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-nc-lenoir-google,q_fw_mw,Feedwater heat that plant could take,84.02,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-nc-lenoir-google,d_bio_m,Distance to digester / feedstock,52918.0,m,derived,medium,"TYSON FARMS, INC.: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip)",
+us-nc-lenoir-google,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-nc-maiden-apple,it_mw,IT load,100.0,MW,team_estimate,low,team_assumption,
+us-nc-maiden-apple,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
+us-nc-maiden-apple,loop_air,air loop temperatures and heat,"26/18 C, 100 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-nc-maiden-apple,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-nc-maiden-apple,pue_reported,PUE used for comparison,1.2,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-nc-maiden-apple,coordinates,Location,"35.58, -81.21",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-nc-maiden-apple,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-nc-maiden-apple,p_elec_usd_mwh,Electricity price (retail industrial),77.69999999999999,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-nc-maiden-apple,ci_grid_kg_mwh,Grid carbon intensity,269.2,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SRVC),"annual average, not hourly"
+us-nc-maiden-apple,p_wholesale_usd_mwh,Hourly wholesale price,77.7,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-nc-maiden-apple,p_gas_usd_mwh,Gas citygate price,11.82,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-nc-maiden-apple,p_heat_usd_mwh,Heat price (gas boiler),31.9,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-nc-maiden-apple,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-nc-maiden-apple,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-nc-maiden-apple,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-nc-maiden-apple,p_water_usd_m3,Water + sewer tariff,2.625,USD/m3,team_estimate,low,Town of Maiden (not researched) (team_assumption;unc_efc_nc_2021),estimated part flagged in site_water.csv
+us-nc-maiden-apple,wsi,Water stress (WRI Aqueduct),3.6383,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-nc-maiden-apple,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-nc-maiden-apple,rho_heat_mwh_m,Linear heat density of that area,0.46,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-nc-maiden-apple,d_coast_m,Distance to coast,358800.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-nc-maiden-apple,d_pp_m,Distance to thermal power plant,26601.0,m,derived,medium,Marshall (NC): EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-nc-maiden-apple,q_fw_mw,Feedwater heat that plant could take,84.02,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-nc-maiden-apple,d_bio_m,Distance to digester / feedstock,60588.0,m,derived,medium,Orbit Energy Charlotte: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-nc-maiden-apple,geo_storage_score,Geology score for ATES/BTES,5.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ne-sarpy-meta,it_mw,IT load,200.0,MW,team_estimate,low,team_assumption;meta_edi_2025,
+us-ne-sarpy-meta,cooling_profile,Cooling at the rack,air_economizer,,team_estimate,low,site_profiles.csv (team_assumption;meta_edi_2025),
+us-ne-sarpy-meta,loop_air,air loop temperatures and heat,"32/24 C, 200 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ne-sarpy-meta,baseline_rejection,Today's heat rejection,adiabatic,,sourced_site,medium,https://flatwaterfreepress.org/data-centers-can-guzzle-serious-water-as-some-nebraskans-worry-tech-giants-seek-solutions/,
+us-ne-sarpy-meta,pue_reported,PUE used for comparison,1.08,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ne-sarpy-meta,coordinates,Location,"41.11, -96.05",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ne-sarpy-meta,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ne-sarpy-meta,p_elec_usd_mwh,Electricity price (retail industrial),76.6,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ne-sarpy-meta,ci_grid_kg_mwh,Grid carbon intensity,417.4,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (MROW),"annual average, not hourly"
+us-ne-sarpy-meta,p_wholesale_usd_mwh,Hourly wholesale price,76.6,USD/MWh,synthetic,low,SPP SPPNORTH_HUB (synthetic_shape),used only for the power value of feedwater preheat and ORC
+us-ne-sarpy-meta,p_gas_usd_mwh,Gas citygate price,13.34,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ne-sarpy-meta,p_heat_usd_mwh,Heat price (gas boiler),28.3,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ne-sarpy-meta,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ne-sarpy-meta,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-ne-sarpy-meta,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ne-sarpy-meta,p_water_usd_m3,Water + sewer tariff,1.024,USD/m3,team_estimate,medium,Metropolitan Utilities District (water); sewer municipality not found (mud_w3_2026;mud_sewer_2026),estimated part flagged in site_water.csv
+us-ne-sarpy-meta,wsi,Water stress (WRI Aqueduct),0.7479,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ne-sarpy-meta,d_dh_m,Distance to dense heat demand,1920.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-ne-sarpy-meta,rho_heat_mwh_m,Linear heat density of that area,1.68,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ne-sarpy-meta,d_coast_m,Distance to coast,1500000.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ne-sarpy-meta,d_pp_m,Distance to thermal power plant,23003.0,m,derived,medium,Walter Scott Jr Energy Center: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ne-sarpy-meta,q_fw_mw,Feedwater heat that plant could take,72.35,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ne-sarpy-meta,d_bio_m,Distance to digester / feedstock,14688.0,m,derived,medium,KELLOGG USA INC: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-ne-sarpy-meta,geo_storage_score,Geology score for ATES/BTES,3.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-nj-secaucus-equinix,it_mw,IT load,60.0,MW,team_estimate,low,team_assumption,
+us-nj-secaucus-equinix,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
+us-nj-secaucus-equinix,loop_air,air loop temperatures and heat,"26/18 C, 60 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-nj-secaucus-equinix,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-nj-secaucus-equinix,pue_reported,PUE used for comparison,1.45,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-nj-secaucus-equinix,coordinates,Location,"40.78, -74.07",deg,derived,campus_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-nj-secaucus-equinix,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-nj-secaucus-equinix,p_elec_usd_mwh,Electricity price (retail industrial),119.3,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-nj-secaucus-equinix,ci_grid_kg_mwh,Grid carbon intensity,270.8,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (RFCE),"annual average, not hourly"
+us-nj-secaucus-equinix,p_wholesale_usd_mwh,Hourly wholesale price,119.3,USD/MWh,synthetic,low,PJM EASTERN HUB (synthetic_shape),used only for the power value of feedwater preheat and ORC
+us-nj-secaucus-equinix,p_gas_usd_mwh,Gas citygate price,16.8,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-nj-secaucus-equinix,p_heat_usd_mwh,Heat price (gas boiler),44.9,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-nj-secaucus-equinix,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-nj-secaucus-equinix,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-nj-secaucus-equinix,p_co2_usd_t,State carbon price,38.58,USD/t,team_estimate,low,https://www.rggi.org/sites/default/files/Uploads/Auction-Materials/72/PR060526_Auction72.pdf,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-nj-secaucus-equinix,p_water_usd_m3,Water + sewer tariff,3.125,USD/m3,team_estimate,low,Secaucus MUA / Veolia NJ (not researched) (team_assumption;nyc_fy2027),estimated part flagged in site_water.csv
+us-nj-secaucus-equinix,wsi,Water stress (WRI Aqueduct),2.0222,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-nj-secaucus-equinix,d_dh_m,Distance to dense heat demand,1620.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-nj-secaucus-equinix,rho_heat_mwh_m,Linear heat density of that area,1.66,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-nj-secaucus-equinix,d_coast_m,Distance to coast,1110.0,m,derived,medium,Overture Maps ocean polygons (OSM coastline); straight line x 1.2 routing factor; brackish aquifers not included,
+us-nj-secaucus-equinix,d_pp_m,Distance to thermal power plant,7967.0,m,derived,medium,Covanta Essex Company: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-nj-secaucus-equinix,q_fw_mw,Feedwater heat that plant could take,5.92,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-nj-secaucus-equinix,d_bio_m,Distance to digester / feedstock,25616.0,m,derived,medium,"American Sugar Refining, Inc. - Yonkers Refinery: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip)",
+us-nj-secaucus-equinix,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-nv-las-vegas-switch,it_mw,IT load,200.0,MW,team_estimate,low,team_assumption,Hot desert.
+us-nv-las-vegas-switch,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
+us-nv-las-vegas-switch,loop_air,air loop temperatures and heat,"26/18 C, 200 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-nv-las-vegas-switch,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-nv-las-vegas-switch,pue_reported,PUE used for comparison,1.3,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-nv-las-vegas-switch,coordinates,Location,"36.07, -115.15",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-nv-las-vegas-switch,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-nv-las-vegas-switch,p_elec_usd_mwh,Electricity price (retail industrial),86.4,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-nv-las-vegas-switch,ci_grid_kg_mwh,Grid carbon intensity,319.2,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (AZNM),"annual average, not hourly"
+us-nv-las-vegas-switch,p_wholesale_usd_mwh,Hourly wholesale price,86.4,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-nv-las-vegas-switch,p_gas_usd_mwh,Gas citygate price,13.11,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-nv-las-vegas-switch,p_heat_usd_mwh,Heat price (gas boiler),53.0,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-nv-las-vegas-switch,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-nv-las-vegas-switch,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-nv-las-vegas-switch,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-nv-las-vegas-switch,p_water_usd_m3,Water + sewer tariff,1.46,USD/m3,team_estimate,medium,"Las Vegas Valley Water District + SNWA (water); Clark County WRD (sewer, not found) (lvvwd_2025)",estimated part flagged in site_water.csv
+us-nv-las-vegas-switch,wsi,Water stress (WRI Aqueduct),0.6701,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-nv-las-vegas-switch,d_dh_m,Distance to dense heat demand,5370.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-nv-las-vegas-switch,rho_heat_mwh_m,Linear heat density of that area,4.5,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-nv-las-vegas-switch,d_coast_m,Distance to coast,444460.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-nv-las-vegas-switch,d_pp_m,Distance to thermal power plant,10960.0,m,derived,low,Clark (NVE): EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-nv-las-vegas-switch,q_fw_mw,Feedwater heat that plant could take,2.39,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-nv-las-vegas-switch,d_bio_m,Distance to digester / feedstock,343008.0,m,derived,medium,Blue Mountain Biogas: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-nv-las-vegas-switch,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-nv-reno-switch,it_mw,IT load,300.0,MW,team_estimate,low,team_assumption,High desert; hybrid air and evaporative cooling assumed.
+us-nv-reno-switch,cooling_profile,Cooling at the rack,air_economizer,,team_estimate,low,site_profiles.csv (team_assumption),
+us-nv-reno-switch,loop_air,air loop temperatures and heat,"32/24 C, 300 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-nv-reno-switch,baseline_rejection,Today's heat rejection,adiabatic,,team_estimate,low,typical for the cooling profile (no public source),
+us-nv-reno-switch,pue_reported,PUE used for comparison,1.18,,sourced_site,high,Switch: Tahoe Reno 2 one-sheet (2024),the model computes its own PUE from the energy balance; this value is only a check
+us-nv-reno-switch,coordinates,Location,"39.54, -119.44",deg,derived,campus_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-nv-reno-switch,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-nv-reno-switch,p_elec_usd_mwh,Electricity price (retail industrial),86.4,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-nv-reno-switch,ci_grid_kg_mwh,Grid carbon intensity,286.6,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (NWPP),"annual average, not hourly"
+us-nv-reno-switch,p_wholesale_usd_mwh,Hourly wholesale price,86.4,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-nv-reno-switch,p_gas_usd_mwh,Gas citygate price,13.11,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-nv-reno-switch,p_heat_usd_mwh,Heat price (gas boiler),53.0,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-nv-reno-switch,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-nv-reno-switch,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-nv-reno-switch,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-nv-reno-switch,p_water_usd_m3,Water + sewer tariff,0.85,USD/m3,team_estimate,medium,Truckee Meadows Water Authority (water); sewer provider not found (tmwa_2026),estimated part flagged in site_water.csv
+us-nv-reno-switch,wsi,Water stress (WRI Aqueduct),3.0825,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-nv-reno-switch,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-nv-reno-switch,rho_heat_mwh_m,Linear heat density of that area,0.23,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-nv-reno-switch,d_coast_m,Distance to coast,291750.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-nv-reno-switch,d_pp_m,Distance to thermal power plant,9246.0,m,derived,medium,Tracy: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-nv-reno-switch,q_fw_mw,Feedwater heat that plant could take,18.29,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-nv-reno-switch,d_bio_m,Distance to digester / feedstock,139048.0,m,derived,medium,HL Power: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-nv-reno-switch,geo_storage_score,Geology score for ATES/BTES,3.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ny-nyc-60-hudson,it_mw,IT load,20.0,MW,team_estimate,low,team_assumption,Carrier hotel in an old office building.
+us-ny-nyc-60-hudson,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
+us-ny-nyc-60-hudson,loop_air,air loop temperatures and heat,"13/7 C, 20 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ny-nyc-60-hudson,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-ny-nyc-60-hudson,pue_reported,PUE used for comparison,1.6,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ny-nyc-60-hudson,coordinates,Location,"40.717, -74.008",deg,derived,building,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ny-nyc-60-hudson,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ny-nyc-60-hudson,p_elec_usd_mwh,Electricity price (retail industrial),91.7,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ny-nyc-60-hudson,ci_grid_kg_mwh,Grid carbon intensity,392.1,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (NYCW),"annual average, not hourly"
+us-ny-nyc-60-hudson,p_wholesale_usd_mwh,Hourly wholesale price,39.4,USD/MWh,sourced_region,high,NYISO N.Y.C. (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-ny-nyc-60-hudson,p_gas_usd_mwh,Gas citygate price,13.7,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ny-nyc-60-hudson,p_heat_usd_mwh,Heat price (gas boiler),40.3,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ny-nyc-60-hudson,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ny-nyc-60-hudson,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-ny-nyc-60-hudson,p_co2_usd_t,State carbon price,38.58,USD/t,team_estimate,low,https://www.rggi.org/sites/default/files/Uploads/Auction-Materials/72/PR060526_Auction72.pdf,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ny-nyc-60-hudson,p_water_usd_m3,Water + sewer tariff,2.642,USD/m3,sourced_region,high,NYC Water Board / DEP (nyc_fy2027),
+us-ny-nyc-60-hudson,wsi,Water stress (WRI Aqueduct),0.2204,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ny-nyc-60-hudson,d_dh_m,Distance to dense heat demand,0.0,m,derived,low,Min of: existing DH network (edge of approximate service area or mapped pipe); straight line x 1.2. Heat density from Overture buildings,
+us-ny-nyc-60-hudson,rho_heat_mwh_m,Linear heat density of that area,13.58,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ny-nyc-60-hudson,d_coast_m,Distance to coast,560.0,m,derived,medium,Overture Maps ocean polygons (OSM coastline); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ny-nyc-60-hudson,d_pp_m,Distance to thermal power plant,3725.0,m,derived,medium,East River: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ny-nyc-60-hudson,q_fw_mw,Feedwater heat that plant could take,8.16,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ny-nyc-60-hudson,d_bio_m,Distance to digester / feedstock,29731.0,m,derived,medium,"American Sugar Refining, Inc. - Yonkers Refinery: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip)",
+us-ny-nyc-60-hudson,geo_storage_score,Geology score for ATES/BTES,5.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-oh-new-albany,it_mw,IT load,100.0,MW,team_estimate,low,team_assumption,"Several hyperscale campuses (Meta, Google, AWS); one representative facility."
+us-oh-new-albany,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
+us-oh-new-albany,loop_air,air loop temperatures and heat,"26/18 C, 100 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-oh-new-albany,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-oh-new-albany,pue_reported,PUE used for comparison,1.25,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-oh-new-albany,coordinates,Location,"40.08, -82.78",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-oh-new-albany,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-oh-new-albany,p_elec_usd_mwh,Electricity price (retail industrial),71.0,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-oh-new-albany,ci_grid_kg_mwh,Grid carbon intensity,413.4,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (RFCW),"annual average, not hourly"
+us-oh-new-albany,p_wholesale_usd_mwh,Hourly wholesale price,71.0,USD/MWh,synthetic,low,PJM AEP-DAYTON HUB (synthetic_shape),used only for the power value of feedwater preheat and ORC
+us-oh-new-albany,p_gas_usd_mwh,Gas citygate price,16.2,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-oh-new-albany,p_heat_usd_mwh,Heat price (gas boiler),28.8,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-oh-new-albany,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-oh-new-albany,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-oh-new-albany,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-oh-new-albany,p_water_usd_m3,Water + sewer tariff,2.26,USD/m3,sourced_region,medium,City of Columbus (contract / suburban rates) (columbus_2026),
+us-oh-new-albany,wsi,Water stress (WRI Aqueduct),2.8343,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-oh-new-albany,d_dh_m,Distance to dense heat demand,2560.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-oh-new-albany,rho_heat_mwh_m,Linear heat density of that area,1.61,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-oh-new-albany,d_coast_m,Distance to coast,602920.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-oh-new-albany,d_pp_m,Distance to thermal power plant,76829.0,m,derived,medium,Dresden Energy Facility: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-oh-new-albany,q_fw_mw,Feedwater heat that plant could take,18.99,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-oh-new-albany,d_bio_m,Distance to digester / feedstock,25586.0,m,derived,medium,Abbott Nutrition: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-oh-new-albany,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ok-pryor-google,it_mw,IT load,300.0,MW,team_estimate,low,google_ocp_2025;team_assumption,TPU share assumed 40%.
+us-ok-pryor-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
+us-ok-pryor-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 120 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ok-pryor-google,loop_air,air loop temperatures and heat,"26/18 C, 180 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ok-pryor-google,baseline_rejection,Today's heat rejection,tower,,sourced_site,high,https://www.readfrontier.org/stories/as-data-centers-boom-in-oklahoma-so-does-water-demand/,
+us-ok-pryor-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ok-pryor-google,coordinates,Location,"36.24, -95.33",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ok-pryor-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ok-pryor-google,p_elec_usd_mwh,Electricity price (retail industrial),58.4,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ok-pryor-google,ci_grid_kg_mwh,Grid carbon intensity,395.6,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SPSO),"annual average, not hourly"
+us-ok-pryor-google,p_wholesale_usd_mwh,Hourly wholesale price,58.4,USD/MWh,synthetic,low,SPP SPPSOUTH_HUB (synthetic_shape),used only for the power value of feedwater preheat and ORC
+us-ok-pryor-google,p_gas_usd_mwh,Gas citygate price,20.39,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ok-pryor-google,p_heat_usd_mwh,Heat price (gas boiler),38.1,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ok-pryor-google,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ok-pryor-google,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-ok-pryor-google,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ok-pryor-google,p_water_usd_m3,Water + sewer tariff,1.25,USD/m3,team_estimate,low,MidAmerica Industrial Park / City of Pryor (not researched) (team_assumption;mlgw_survey_2026),estimated part flagged in site_water.csv
+us-ok-pryor-google,wsi,Water stress (WRI Aqueduct),0.0,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ok-pryor-google,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-ok-pryor-google,rho_heat_mwh_m,Linear heat density of that area,0.92,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ok-pryor-google,d_coast_m,Distance to coast,848480.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ok-pryor-google,d_pp_m,Distance to thermal power plant,6180.0,m,derived,low,Chouteau: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ok-pryor-google,q_fw_mw,Feedwater heat that plant could take,23.23,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ok-pryor-google,d_bio_m,Distance to digester / feedstock,5668.0,m,derived,low,PRYOR SOLAE: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-ok-pryor-google,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-or-hillsboro,it_mw,IT load,60.0,MW,team_estimate,low,team_assumption,
+us-or-hillsboro,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
+us-or-hillsboro,loop_air,air loop temperatures and heat,"26/18 C, 60 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-or-hillsboro,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-or-hillsboro,pue_reported,PUE used for comparison,1.3,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-or-hillsboro,coordinates,Location,"45.54, -122.92",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-or-hillsboro,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-or-hillsboro,p_elec_usd_mwh,Electricity price (retail industrial),80.5,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-or-hillsboro,ci_grid_kg_mwh,Grid carbon intensity,286.6,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (NWPP),"annual average, not hourly"
+us-or-hillsboro,p_wholesale_usd_mwh,Hourly wholesale price,80.5,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-or-hillsboro,p_gas_usd_mwh,Gas citygate price,16.4,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-or-hillsboro,p_heat_usd_mwh,Heat price (gas boiler),45.2,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-or-hillsboro,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-or-hillsboro,lcfs_usd_t,LCFS credit,157.5,USD/t,sourced_region,high,https://aegis-hedging.com/insights/lcfs-rin-pricing-report-through-december-22nd-2025,"Oregon Clean Fuels Program credit, Dec 2025 average"
+us-or-hillsboro,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-or-hillsboro,p_water_usd_m3,Water + sewer tariff,2.425,USD/m3,team_estimate,low,City of Hillsboro / Clean Water Services (not found) (team_assumption),estimated part flagged in site_water.csv
+us-or-hillsboro,wsi,Water stress (WRI Aqueduct),0.0,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-or-hillsboro,d_dh_m,Distance to dense heat demand,600.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-or-hillsboro,rho_heat_mwh_m,Linear heat density of that area,2.23,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-or-hillsboro,d_coast_m,Distance to coast,84830.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-or-hillsboro,d_pp_m,Distance to thermal power plant,23318.0,m,derived,medium,River Road Gen Plant: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-or-hillsboro,q_fw_mw,Feedwater heat that plant could take,5.31,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-or-hillsboro,d_bio_m,Distance to digester / feedstock,23548.0,m,derived,medium,Durham AWTF: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-or-hillsboro,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-or-prineville-meta,it_mw,IT load,300.0,MW,team_estimate,low,team_assumption;fb_prineville_2011;meta_edi_2025,"Verified: 100 % outside air with direct evaporative cooling, no chillers; PUE 1.08 is the Meta fleet value 2024 (building 1 reported 1.07)."
+us-or-prineville-meta,cooling_profile,Cooling at the rack,air_economizer,,sourced_site,high,Meta Engineering: Designing a very efficient data center (Prineville),
+us-or-prineville-meta,loop_air,air loop temperatures and heat,"32/24 C, 300 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-or-prineville-meta,baseline_rejection,Today's heat rejection,adiabatic,,sourced_site,high,https://www.opencompute.org/news/water-efficiency-at-facebooks-prineville-data-center/,
+us-or-prineville-meta,pue_reported,PUE used for comparison,1.07,,sourced_site,high,Meta Engineering: Designing a very efficient data center (Prineville) (2011-04-14),the model computes its own PUE from the energy balance; this value is only a check
+us-or-prineville-meta,coordinates,Location,"44.29, -120.89",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-or-prineville-meta,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-or-prineville-meta,p_elec_usd_mwh,Electricity price (retail industrial),80.5,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-or-prineville-meta,ci_grid_kg_mwh,Grid carbon intensity,286.6,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (NWPP),"annual average, not hourly"
+us-or-prineville-meta,p_wholesale_usd_mwh,Hourly wholesale price,80.5,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-or-prineville-meta,p_gas_usd_mwh,Gas citygate price,16.4,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-or-prineville-meta,p_heat_usd_mwh,Heat price (gas boiler),45.2,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-or-prineville-meta,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-or-prineville-meta,lcfs_usd_t,LCFS credit,157.5,USD/t,sourced_region,high,https://aegis-hedging.com/insights/lcfs-rin-pricing-report-through-december-22nd-2025,"Oregon Clean Fuels Program credit, Dec 2025 average"
+us-or-prineville-meta,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-or-prineville-meta,p_water_usd_m3,Water + sewer tariff,1.834,USD/m3,team_estimate,low,City of Prineville (not researched) (team_assumption),estimated part flagged in site_water.csv
+us-or-prineville-meta,wsi,Water stress (WRI Aqueduct),1.9801,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-or-prineville-meta,d_dh_m,Distance to dense heat demand,3900.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-or-prineville-meta,rho_heat_mwh_m,Linear heat density of that area,1.53,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-or-prineville-meta,d_coast_m,Distance to coast,299680.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-or-prineville-meta,d_pp_m,Distance to thermal power plant,200102.0,m,derived,medium,IP Springfield Oregon: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-or-prineville-meta,q_fw_mw,Feedwater heat that plant could take,2.19,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-or-prineville-meta,d_bio_m,Distance to digester / feedstock,175909.0,m,derived,medium,Evergreen BioPower LLC: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-or-prineville-meta,geo_storage_score,Geology score for ATES/BTES,3.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-or-the-dalles-google,it_mw,IT load,250.0,MW,team_estimate,low,google_ocp_2025;team_assumption,TPU share assumed 40%.
+us-or-the-dalles-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
+us-or-the-dalles-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 100 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-or-the-dalles-google,loop_air,air loop temperatures and heat,"26/18 C, 150 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-or-the-dalles-google,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://blog.google/innovation-and-ai/infrastructure-and-cloud/global-network/the-dalles-data-center-20-years/,
+us-or-the-dalles-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-or-the-dalles-google,coordinates,Location,"45.63, -121.2",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-or-the-dalles-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-or-the-dalles-google,p_elec_usd_mwh,Electricity price (retail industrial),80.5,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-or-the-dalles-google,ci_grid_kg_mwh,Grid carbon intensity,286.6,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (NWPP),"annual average, not hourly"
+us-or-the-dalles-google,p_wholesale_usd_mwh,Hourly wholesale price,80.5,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-or-the-dalles-google,p_gas_usd_mwh,Gas citygate price,16.4,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-or-the-dalles-google,p_heat_usd_mwh,Heat price (gas boiler),45.2,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-or-the-dalles-google,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-or-the-dalles-google,lcfs_usd_t,LCFS credit,157.5,USD/t,sourced_region,high,https://aegis-hedging.com/insights/lcfs-rin-pricing-report-through-december-22nd-2025,"Oregon Clean Fuels Program credit, Dec 2025 average"
+us-or-the-dalles-google,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-or-the-dalles-google,p_water_usd_m3,Water + sewer tariff,2.0,USD/m3,team_estimate,low,City of The Dalles (not researched) (team_assumption),estimated part flagged in site_water.csv
+us-or-the-dalles-google,wsi,Water stress (WRI Aqueduct),0.0,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-or-the-dalles-google,d_dh_m,Distance to dense heat demand,4080.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-or-the-dalles-google,rho_heat_mwh_m,Linear heat density of that area,1.7,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-or-the-dalles-google,d_coast_m,Distance to coast,198380.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-or-the-dalles-google,d_pp_m,Distance to thermal power plant,41890.0,m,derived,medium,Goldendale Generating Station: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-or-the-dalles-google,q_fw_mw,Feedwater heat that plant could take,6.69,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-or-the-dalles-google,d_bio_m,Distance to digester / feedstock,141634.0,m,derived,medium,Darigold Inc: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-or-the-dalles-google,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-sc-berkeley-google,it_mw,IT load,200.0,MW,team_estimate,low,google_ocp_2025;team_assumption,TPU share assumed 40%.
+us-sc-berkeley-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
+us-sc-berkeley-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 80 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-sc-berkeley-google,loop_air,air loop temperatures and heat,"26/18 C, 120 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-sc-berkeley-google,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://www.live5news.com/2019/12/12/google-agrees-tougher-conditions-berkeley-co-groundwater-withdrawal-permit/,
+us-sc-berkeley-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-sc-berkeley-google,coordinates,Location,"33.06, -80.04",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-sc-berkeley-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-sc-berkeley-google,p_elec_usd_mwh,Electricity price (retail industrial),68.4,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-sc-berkeley-google,ci_grid_kg_mwh,Grid carbon intensity,269.2,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SRVC),"annual average, not hourly"
+us-sc-berkeley-google,p_wholesale_usd_mwh,Hourly wholesale price,68.4,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-sc-berkeley-google,p_gas_usd_mwh,Gas citygate price,15.91,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-sc-berkeley-google,p_heat_usd_mwh,Heat price (gas boiler),41.2,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-sc-berkeley-google,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-sc-berkeley-google,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-sc-berkeley-google,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-sc-berkeley-google,p_water_usd_m3,Water + sewer tariff,2.15,USD/m3,team_estimate,low,Berkeley County Water & Sanitation (volumetric rates not found) (team_assumption;sc_ria_2025),estimated part flagged in site_water.csv
+us-sc-berkeley-google,wsi,Water stress (WRI Aqueduct),2.8487,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-sc-berkeley-google,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-sc-berkeley-google,rho_heat_mwh_m,Linear heat density of that area,0.56,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-sc-berkeley-google,d_coast_m,Distance to coast,34280.0,m,derived,medium,Overture Maps ocean polygons (OSM coastline); straight line x 1.2 routing factor; brackish aquifers not included,
+us-sc-berkeley-google,d_pp_m,Distance to thermal power plant,13675.0,m,derived,medium,Williams: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-sc-berkeley-google,q_fw_mw,Feedwater heat that plant could take,29.61,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-sc-berkeley-google,d_bio_m,Distance to digester / feedstock,51661.0,m,derived,medium,Dorchester Biomass: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-sc-berkeley-google,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-tn-memphis-xai,it_mw,IT load,150.0,MW,team_estimate,medium,toms_colossus_2025;klockwood_colossus;semianalysis_cooling,"Colossus 1: H100/H200 in Supermicro nodes, cold plates plus rear door heat exchangers (confirmed). 150 MW grid supply reported, 300 MW total planned; IT share derived. Later phases (GB200) not modelled here."
+us-tn-memphis-xai,cooling_profile,Cooling at the rack,dlc_cold,,sourced_site,high,ServeTheHome: Inside the 100K GPU xAI Colossus cluster,
+us-tn-memphis-xai,loop_liquid,liquid loop temperatures and heat,"38/30 C, 112 MW",,literature_typical,low,cooling_profiles.csv (dcd_hot_cold_water;klockwood_colossus;semianalysis_cooling),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tn-memphis-xai,loop_air,air loop temperatures and heat,"26/18 C, 38 MW",,literature_typical,low,cooling_profiles.csv (dcd_hot_cold_water;klockwood_colossus;semianalysis_cooling),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tn-memphis-xai,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-tn-memphis-xai,pue_reported,PUE used for comparison,1.3,,team_estimate,medium,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-tn-memphis-xai,coordinates,Location,"35.06, -90.03",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-tn-memphis-xai,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-tn-memphis-xai,p_elec_usd_mwh,Electricity price (retail industrial),62.1,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-tn-memphis-xai,ci_grid_kg_mwh,Grid carbon intensity,407.4,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SRTV),"annual average, not hourly"
+us-tn-memphis-xai,p_wholesale_usd_mwh,Hourly wholesale price,62.1,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-tn-memphis-xai,p_gas_usd_mwh,Gas citygate price,11.59,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-tn-memphis-xai,p_heat_usd_mwh,Heat price (gas boiler),35.3,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-tn-memphis-xai,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-tn-memphis-xai,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-tn-memphis-xai,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-tn-memphis-xai,p_water_usd_m3,Water + sewer tariff,0.72,USD/m3,team_estimate,medium,"Memphis Light, Gas and Water (water); City of Memphis (sewer, not found) (mlgw_w7_2022)",estimated part flagged in site_water.csv
+us-tn-memphis-xai,wsi,Water stress (WRI Aqueduct),0.0,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-tn-memphis-xai,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-tn-memphis-xai,rho_heat_mwh_m,Linear heat density of that area,0.91,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-tn-memphis-xai,d_coast_m,Distance to coast,617450.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-tn-memphis-xai,d_pp_m,Distance to thermal power plant,8861.0,m,derived,low,TVA Southaven Combined Cycle: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-tn-memphis-xai,q_fw_mw,Feedwater heat that plant could take,33.99,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-tn-memphis-xai,d_bio_m,Distance to digester / feedstock,3538.0,m,derived,low,Riviana Foods: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-tn-memphis-xai,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-tx-abilene-stargate,it_mw,IT load,824.0,MW,team_estimate,medium,epoch_abilene;crusoe_abilene;compass_rubin_2026;crusoe_abilene_2025,"Verified (Crusoe): closed-loop non-evaporative liquid cooling, heat rejected by air-cooled chillers, no cooling water. IT 824 MW is an Epoch AI estimate; GB200 racks since June 2025."
+us-tx-abilene-stargate,cooling_profile,Cooling at the rack,dlc_warm,,sourced_site,high,Crusoe: An inside look at the Abilene AI data center,
+us-tx-abilene-stargate,loop_liquid,liquid loop temperatures and heat,"42/32 C, 742 MW",,literature_typical,medium,cooling_profiles.csv (lenovo_lp2357;compass_rubin_2026;dcd_hot_cold_water;gpusmith_wclass_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tx-abilene-stargate,loop_air,air loop temperatures and heat,"26/18 C, 82 MW",,literature_typical,medium,cooling_profiles.csv (lenovo_lp2357;compass_rubin_2026;dcd_hot_cold_water;gpusmith_wclass_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tx-abilene-stargate,baseline_rejection,Today's heat rejection,dry,,sourced_site,high,https://www.crusoe.ai/resources/blog/an-inside-look-at-the-abilene-ai-data-center,
+us-tx-abilene-stargate,pue_reported,PUE used for comparison,1.25,,team_estimate,medium,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-tx-abilene-stargate,coordinates,Location,"32.53, -99.76",deg,derived,campus_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-tx-abilene-stargate,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-tx-abilene-stargate,p_elec_usd_mwh,Electricity price (retail industrial),61.2,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-tx-abilene-stargate,ci_grid_kg_mwh,Grid carbon intensity,332.9,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (ERCT),"annual average, not hourly"
+us-tx-abilene-stargate,p_wholesale_usd_mwh,Hourly wholesale price,28.9,USD/MWh,sourced_region,high,ERCOT HB_WEST (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-tx-abilene-stargate,p_gas_usd_mwh,Gas citygate price,10.7,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-tx-abilene-stargate,p_heat_usd_mwh,Heat price (gas boiler),37.4,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-tx-abilene-stargate,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-tx-abilene-stargate,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-tx-abilene-stargate,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-tx-abilene-stargate,p_water_usd_m3,Water + sewer tariff,1.625,USD/m3,team_estimate,low,City of Abilene (not researched) (team_assumption;dallas_2026;fortworth_2026),estimated part flagged in site_water.csv
+us-tx-abilene-stargate,wsi,Water stress (WRI Aqueduct),3.0934,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-tx-abilene-stargate,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-tx-abilene-stargate,rho_heat_mwh_m,Linear heat density of that area,0.43,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-tx-abilene-stargate,d_coast_m,Distance to coast,619230.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-tx-abilene-stargate,d_pp_m,Distance to thermal power plant,151919.0,m,derived,medium,Graham: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-tx-abilene-stargate,q_fw_mw,Feedwater heat that plant could take,13.78,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-tx-abilene-stargate,d_bio_m,Distance to digester / feedstock,270261.0,m,derived,medium,PYCO INDUSTRIES AVENUE A FACILITY: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-tx-abilene-stargate,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-tx-dallas-infomart,it_mw,IT load,40.0,MW,team_estimate,low,team_assumption,Older carrier hotel converted building.
+us-tx-dallas-infomart,cooling_profile,Cooling at the rack,air_chilled_legacy,,team_estimate,low,site_profiles.csv (team_assumption),
+us-tx-dallas-infomart,loop_air,air loop temperatures and heat,"13/7 C, 40 MW",,literature_typical,medium,cooling_profiles.csv (dcd_hot_cold_water;se_chilled_water_2016;semianalysis_cooling;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tx-dallas-infomart,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-tx-dallas-infomart,pue_reported,PUE used for comparison,1.5,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-tx-dallas-infomart,coordinates,Location,"32.802, -96.82",deg,derived,campus_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-tx-dallas-infomart,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-tx-dallas-infomart,p_elec_usd_mwh,Electricity price (retail industrial),61.2,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-tx-dallas-infomart,ci_grid_kg_mwh,Grid carbon intensity,332.9,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (ERCT),"annual average, not hourly"
+us-tx-dallas-infomart,p_wholesale_usd_mwh,Hourly wholesale price,27.1,USD/MWh,sourced_region,high,ERCOT HB_NORTH (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-tx-dallas-infomart,p_gas_usd_mwh,Gas citygate price,10.7,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-tx-dallas-infomart,p_heat_usd_mwh,Heat price (gas boiler),37.4,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-tx-dallas-infomart,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-tx-dallas-infomart,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-tx-dallas-infomart,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-tx-dallas-infomart,p_water_usd_m3,Water + sewer tariff,1.918,USD/m3,sourced_region,high,Dallas Water Utilities (dallas_2026),
+us-tx-dallas-infomart,wsi,Water stress (WRI Aqueduct),1.8498,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-tx-dallas-infomart,d_dh_m,Distance to dense heat demand,600.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-tx-dallas-infomart,rho_heat_mwh_m,Linear heat density of that area,1.88,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-tx-dallas-infomart,d_coast_m,Distance to coast,453540.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-tx-dallas-infomart,d_pp_m,Distance to thermal power plant,16723.0,m,derived,medium,Mountain Creek: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-tx-dallas-infomart,q_fw_mw,Feedwater heat that plant could take,6.61,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-tx-dallas-infomart,d_bio_m,Distance to digester / feedstock,11153.0,m,derived,medium,Frito Lay Inc: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-tx-dallas-infomart,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-tx-midlothian-google,it_mw,IT load,250.0,MW,team_estimate,low,google_ocp_2025;team_assumption,Share of TPU (liquid) versus CPU (air) halls unknown; 40% liquid assumed. PUE 1.1 is a typical Google figure (unverified here).
+us-tx-midlothian-google,cooling_profile,Cooling at the rack,tpu_dlc,,team_estimate,low,site_profiles.csv (google_ocp_2025;team_assumption),
+us-tx-midlothian-google,loop_liquid,liquid loop temperatures and heat,"42/32 C, 100 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tx-midlothian-google,loop_air,air loop temperatures and heat,"26/18 C, 150 MW",,literature_typical,low,cooling_profiles.csv (google_ocp_2025),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tx-midlothian-google,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-tx-midlothian-google,pue_reported,PUE used for comparison,1.1,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-tx-midlothian-google,coordinates,Location,"32.48, -96.99",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-tx-midlothian-google,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-tx-midlothian-google,p_elec_usd_mwh,Electricity price (retail industrial),61.2,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-tx-midlothian-google,ci_grid_kg_mwh,Grid carbon intensity,332.9,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (ERCT),"annual average, not hourly"
+us-tx-midlothian-google,p_wholesale_usd_mwh,Hourly wholesale price,27.1,USD/MWh,sourced_region,high,ERCOT HB_NORTH (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-tx-midlothian-google,p_gas_usd_mwh,Gas citygate price,10.7,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-tx-midlothian-google,p_heat_usd_mwh,Heat price (gas boiler),37.4,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-tx-midlothian-google,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-tx-midlothian-google,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-tx-midlothian-google,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-tx-midlothian-google,p_water_usd_m3,Water + sewer tariff,1.675,USD/m3,team_estimate,low,City of Midlothian (not researched) (team_assumption;fortworth_2026;dallas_2026),estimated part flagged in site_water.csv
+us-tx-midlothian-google,wsi,Water stress (WRI Aqueduct),0.7936,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-tx-midlothian-google,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-tx-midlothian-google,rho_heat_mwh_m,Linear heat density of that area,0.71,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-tx-midlothian-google,d_coast_m,Distance to coast,425590.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-tx-midlothian-google,d_pp_m,Distance to thermal power plant,9777.0,m,derived,low,Midlothian Energy Facility: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-tx-midlothian-google,q_fw_mw,Feedwater heat that plant could take,28.02,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-tx-midlothian-google,d_bio_m,Distance to digester / feedstock,46237.0,m,derived,medium,Frito Lay Inc: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-tx-midlothian-google,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-tx-san-antonio-microsoft,it_mw,IT load,200.0,MW,team_estimate,low,team_assumption;msft_tx_2023,"Verified: legacy halls on water-cooled chillers (reused water), newer halls air-cooled chillers with economizers; PUE 1.307, WUE 1.82 measured CY2022."
+us-tx-san-antonio-microsoft,cooling_profile,Cooling at the rack,air_chilled_elevated,,sourced_site,medium,"Microsoft sustainability fact sheet Texas (South Central US), CY2022",
+us-tx-san-antonio-microsoft,loop_air,air loop temperatures and heat,"26/18 C, 200 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-tx-san-antonio-microsoft,baseline_rejection,Today's heat rejection,tower,,sourced_site,medium,https://datacenters.microsoft.com/wp-content/uploads/2024/08/Texas%20%28South%20Central%20US%29.pdf,
+us-tx-san-antonio-microsoft,pue_reported,PUE used for comparison,1.307,,sourced_site,high,"Microsoft sustainability fact sheet Texas (South Central US), CY2022 (2023-04)",the model computes its own PUE from the energy balance; this value is only a check
+us-tx-san-antonio-microsoft,coordinates,Location,"29.37, -98.66",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-tx-san-antonio-microsoft,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-tx-san-antonio-microsoft,p_elec_usd_mwh,Electricity price (retail industrial),61.2,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-tx-san-antonio-microsoft,ci_grid_kg_mwh,Grid carbon intensity,332.9,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (ERCT),"annual average, not hourly"
+us-tx-san-antonio-microsoft,p_wholesale_usd_mwh,Hourly wholesale price,28.1,USD/MWh,sourced_region,high,ERCOT HB_SOUTH (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-tx-san-antonio-microsoft,p_gas_usd_mwh,Gas citygate price,10.7,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-tx-san-antonio-microsoft,p_heat_usd_mwh,Heat price (gas boiler),37.4,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-tx-san-antonio-microsoft,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-tx-san-antonio-microsoft,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-tx-san-antonio-microsoft,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-tx-san-antonio-microsoft,p_water_usd_m3,Water + sewer tariff,0.838,USD/m3,sourced_region,medium,San Antonio Water System (SAWS) (saws_2026),
+us-tx-san-antonio-microsoft,wsi,Water stress (WRI Aqueduct),3.9896,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-tx-san-antonio-microsoft,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-tx-san-antonio-microsoft,rho_heat_mwh_m,Linear heat density of that area,1.13,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-tx-san-antonio-microsoft,d_coast_m,Distance to coast,237240.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-tx-san-antonio-microsoft,d_pp_m,Distance to thermal power plant,35468.0,m,derived,medium,Arthur Von Rosenberg: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-tx-san-antonio-microsoft,q_fw_mw,Feedwater heat that plant could take,15.55,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-tx-san-antonio-microsoft,d_bio_m,Distance to digester / feedstock,193602.0,m,derived,medium,Darling Ingredients Inc.: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-tx-san-antonio-microsoft,geo_storage_score,Geology score for ATES/BTES,3.0,1 to 5,team_estimate,low,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-ut-eagle-mountain-meta,it_mw,IT load,200.0,MW,team_estimate,low,team_assumption;meta_edi_2025,
+us-ut-eagle-mountain-meta,cooling_profile,Cooling at the rack,air_economizer,,team_estimate,low,site_profiles.csv (team_assumption;meta_edi_2025),
+us-ut-eagle-mountain-meta,loop_air,air loop temperatures and heat,"32/24 C, 200 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-ut-eagle-mountain-meta,baseline_rejection,Today's heat rejection,adiabatic,,team_estimate,low,typical for the cooling profile (no public source),
+us-ut-eagle-mountain-meta,pue_reported,PUE used for comparison,1.08,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-ut-eagle-mountain-meta,coordinates,Location,"40.31, -112.01",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-ut-eagle-mountain-meta,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-ut-eagle-mountain-meta,p_elec_usd_mwh,Electricity price (retail industrial),78.60000000000001,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-ut-eagle-mountain-meta,ci_grid_kg_mwh,Grid carbon intensity,286.6,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (NWPP),"annual average, not hourly"
+us-ut-eagle-mountain-meta,p_wholesale_usd_mwh,Hourly wholesale price,78.6,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-ut-eagle-mountain-meta,p_gas_usd_mwh,Gas citygate price,17.26,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-ut-eagle-mountain-meta,p_heat_usd_mwh,Heat price (gas boiler),44.3,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-ut-eagle-mountain-meta,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-ut-eagle-mountain-meta,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-ut-eagle-mountain-meta,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-ut-eagle-mountain-meta,p_water_usd_m3,Water + sewer tariff,0.654,USD/m3,sourced_region,high,Eagle Mountain City (eagle_mountain_2025),
+us-ut-eagle-mountain-meta,wsi,Water stress (WRI Aqueduct),3.2323,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-ut-eagle-mountain-meta,d_dh_m,Distance to dense heat demand,0.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-ut-eagle-mountain-meta,rho_heat_mwh_m,Linear heat density of that area,1.62,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-ut-eagle-mountain-meta,d_coast_m,Distance to coast,1025130.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-ut-eagle-mountain-meta,d_pp_m,Distance to thermal power plant,26187.0,m,derived,medium,Lake Side Power Plant: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-ut-eagle-mountain-meta,q_fw_mw,Feedwater heat that plant could take,26.95,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-ut-eagle-mountain-meta,d_bio_m,Distance to digester / feedstock,178654.0,m,derived,medium,SWIFT BEEF CO: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-ut-eagle-mountain-meta,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-va-ashburn-equinix,it_mw,IT load,200.0,MW,team_estimate,low,jll_nova_wtop_2025;team_assumption,"Multi-building colocation campus; no single public MW figure. Northern Virginia market is about 4,900 MW in total (context only)."
+us-va-ashburn-equinix,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (jll_nova_wtop_2025;team_assumption),
+us-va-ashburn-equinix,loop_air,air loop temperatures and heat,"26/18 C, 200 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-va-ashburn-equinix,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-va-ashburn-equinix,pue_reported,PUE used for comparison,1.4,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-va-ashburn-equinix,coordinates,Location,"39.0158, -77.4597",deg,derived,campus_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-va-ashburn-equinix,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-va-ashburn-equinix,p_elec_usd_mwh,Electricity price (retail industrial),89.9,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-va-ashburn-equinix,ci_grid_kg_mwh,Grid carbon intensity,269.2,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SRVC),"annual average, not hourly"
+us-va-ashburn-equinix,p_wholesale_usd_mwh,Hourly wholesale price,89.9,USD/MWh,synthetic,low,PJM DOMINION HUB (synthetic_shape),used only for the power value of feedwater preheat and ORC
+us-va-ashburn-equinix,p_gas_usd_mwh,Gas citygate price,14.29,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-va-ashburn-equinix,p_heat_usd_mwh,Heat price (gas boiler),37.2,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-va-ashburn-equinix,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-va-ashburn-equinix,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-va-ashburn-equinix,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,https://www.rggi.org/sites/default/files/Uploads/Auction-Materials/72/PR060526_Auction72.pdf,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-va-ashburn-equinix,p_water_usd_m3,Water + sewer tariff,1.605,USD/m3,sourced_region,high,Loudoun Water (loudoun_2026),
+us-va-ashburn-equinix,wsi,Water stress (WRI Aqueduct),0.1583,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-va-ashburn-equinix,d_dh_m,Distance to dense heat demand,2180.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-va-ashburn-equinix,rho_heat_mwh_m,Linear heat density of that area,1.6,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-va-ashburn-equinix,d_coast_m,Distance to coast,59380.0,m,derived,medium,Overture Maps ocean polygons (OSM coastline); straight line x 1.2 routing factor; brackish aquifers not included,
+us-va-ashburn-equinix,d_pp_m,Distance to thermal power plant,10486.0,m,derived,medium,Stonewall: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-va-ashburn-equinix,q_fw_mw,Feedwater heat that plant could take,21.14,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-va-ashburn-equinix,d_bio_m,Distance to digester / feedstock,52710.0,m,derived,medium,DC Water CHP: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-va-ashburn-equinix,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-va-boydton-microsoft,it_mw,IT load,400.0,MW,team_estimate,low,team_assumption;msft_va_2023,"Verified: direct evaporative outside air cooling, PUE 1.144 and WUE 0.17 measured CY2022 (Microsoft Virginia fact sheet)."
+us-va-boydton-microsoft,cooling_profile,Cooling at the rack,air_economizer,,sourced_site,high,"Microsoft sustainability fact sheet Virginia (East US, East US 2), CY2022",
+us-va-boydton-microsoft,loop_air,air loop temperatures and heat,"32/24 C, 400 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-va-boydton-microsoft,baseline_rejection,Today's heat rejection,adiabatic,,sourced_site,high,https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Virginia.pdf,
+us-va-boydton-microsoft,pue_reported,PUE used for comparison,1.144,,sourced_site,high,"Microsoft sustainability fact sheet Virginia (East US, East US 2), CY2022 (2023-03)",the model computes its own PUE from the energy balance; this value is only a check
+us-va-boydton-microsoft,coordinates,Location,"36.667, -78.387",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-va-boydton-microsoft,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-va-boydton-microsoft,p_elec_usd_mwh,Electricity price (retail industrial),89.9,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-va-boydton-microsoft,ci_grid_kg_mwh,Grid carbon intensity,269.2,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SRVC),"annual average, not hourly"
+us-va-boydton-microsoft,p_wholesale_usd_mwh,Hourly wholesale price,89.9,USD/MWh,synthetic,low,PJM DOMINION HUB (synthetic_shape),used only for the power value of feedwater preheat and ORC
+us-va-boydton-microsoft,p_gas_usd_mwh,Gas citygate price,14.29,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-va-boydton-microsoft,p_heat_usd_mwh,Heat price (gas boiler),37.2,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-va-boydton-microsoft,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-va-boydton-microsoft,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-va-boydton-microsoft,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,https://www.rggi.org/sites/default/files/Uploads/Auction-Materials/72/PR060526_Auction72.pdf,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-va-boydton-microsoft,p_water_usd_m3,Water + sewer tariff,2.418,USD/m3,team_estimate,low,Mecklenburg County / Town of Boydton (not researched) (team_assumption;loudoun_2026;pww_2026),estimated part flagged in site_water.csv
+us-va-boydton-microsoft,wsi,Water stress (WRI Aqueduct),2.7697,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-va-boydton-microsoft,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-va-boydton-microsoft,rho_heat_mwh_m,Linear heat density of that area,0.53,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-va-boydton-microsoft,d_coast_m,Distance to coast,146990.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-va-boydton-microsoft,d_pp_m,Distance to thermal power plant,43297.0,m,derived,medium,Clover: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-va-boydton-microsoft,q_fw_mw,Feedwater heat that plant could take,19.89,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-va-boydton-microsoft,d_bio_m,Distance to digester / feedstock,52242.0,m,derived,medium,Halifax County Biomass: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-va-boydton-microsoft,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-va-manassas,it_mw,IT load,60.0,MW,team_estimate,low,team_assumption,One representative large facility in the cluster.
+us-va-manassas,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (team_assumption),
+us-va-manassas,loop_air,air loop temperatures and heat,"26/18 C, 60 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-va-manassas,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-va-manassas,pue_reported,PUE used for comparison,1.35,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-va-manassas,coordinates,Location,"38.751, -77.475",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-va-manassas,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-va-manassas,p_elec_usd_mwh,Electricity price (retail industrial),89.9,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-va-manassas,ci_grid_kg_mwh,Grid carbon intensity,269.2,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SRVC),"annual average, not hourly"
+us-va-manassas,p_wholesale_usd_mwh,Hourly wholesale price,89.9,USD/MWh,synthetic,low,PJM DOMINION HUB (synthetic_shape),used only for the power value of feedwater preheat and ORC
+us-va-manassas,p_gas_usd_mwh,Gas citygate price,14.29,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-va-manassas,p_heat_usd_mwh,Heat price (gas boiler),37.2,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-va-manassas,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-va-manassas,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-va-manassas,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,https://www.rggi.org/sites/default/files/Uploads/Auction-Materials/72/PR060526_Auction72.pdf,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-va-manassas,p_water_usd_m3,Water + sewer tariff,1.895,USD/m3,sourced_region,medium,Prince William Water (pww_2026),
+us-va-manassas,wsi,Water stress (WRI Aqueduct),3.5887,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-va-manassas,d_dh_m,Distance to dense heat demand,300.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-va-manassas,rho_heat_mwh_m,Linear heat density of that area,1.53,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-va-manassas,d_coast_m,Distance to coast,31240.0,m,derived,medium,Overture Maps ocean polygons (OSM coastline); straight line x 1.2 routing factor; brackish aquifers not included,
+us-va-manassas,d_pp_m,Distance to thermal power plant,25470.0,m,derived,medium,Covanta Fairfax Energy: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-va-manassas,q_fw_mw,Feedwater heat that plant could take,8.58,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-va-manassas,d_bio_m,Distance to digester / feedstock,48397.0,m,derived,medium,DC Water CHP: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-va-manassas,geo_storage_score,Geology score for ATES/BTES,4.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-va-sterling-digital,it_mw,IT load,200.0,MW,team_estimate,low,jll_nova_wtop_2025;team_assumption,Multi-building colocation campus; no public total.
+us-va-sterling-digital,cooling_profile,Cooling at the rack,air_chilled_elevated,,team_estimate,low,site_profiles.csv (jll_nova_wtop_2025;team_assumption),
+us-va-sterling-digital,loop_air,air loop temperatures and heat,"26/18 C, 200 MW",,literature_typical,medium,cooling_profiles.csv (se_chilled_water_2016;dcd_hot_cold_water;doe_bpg_2024),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-va-sterling-digital,baseline_rejection,Today's heat rejection,tower,,team_estimate,low,typical for the cooling profile (no public source),
+us-va-sterling-digital,pue_reported,PUE used for comparison,1.4,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-va-sterling-digital,coordinates,Location,"39.006, -77.428",deg,derived,campus_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-va-sterling-digital,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-va-sterling-digital,p_elec_usd_mwh,Electricity price (retail industrial),89.9,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-va-sterling-digital,ci_grid_kg_mwh,Grid carbon intensity,269.2,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (SRVC),"annual average, not hourly"
+us-va-sterling-digital,p_wholesale_usd_mwh,Hourly wholesale price,89.9,USD/MWh,synthetic,low,PJM DOMINION HUB (synthetic_shape),used only for the power value of feedwater preheat and ORC
+us-va-sterling-digital,p_gas_usd_mwh,Gas citygate price,14.29,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-va-sterling-digital,p_heat_usd_mwh,Heat price (gas boiler),37.2,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-va-sterling-digital,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-va-sterling-digital,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-va-sterling-digital,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,https://www.rggi.org/sites/default/files/Uploads/Auction-Materials/72/PR060526_Auction72.pdf,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-va-sterling-digital,p_water_usd_m3,Water + sewer tariff,1.605,USD/m3,sourced_region,high,Loudoun Water (loudoun_2026),
+us-va-sterling-digital,wsi,Water stress (WRI Aqueduct),0.1583,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-va-sterling-digital,d_dh_m,Distance to dense heat demand,3350.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-va-sterling-digital,rho_heat_mwh_m,Linear heat density of that area,1.75,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-va-sterling-digital,d_coast_m,Distance to coast,56760.0,m,derived,medium,Overture Maps ocean polygons (OSM coastline); straight line x 1.2 routing factor; brackish aquifers not included,
+us-va-sterling-digital,d_pp_m,Distance to thermal power plant,13976.0,m,derived,medium,Stonewall: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-va-sterling-digital,q_fw_mw,Feedwater heat that plant could take,21.14,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-va-sterling-digital,d_bio_m,Distance to digester / feedstock,49208.0,m,derived,medium,DC Water CHP: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-va-sterling-digital,geo_storage_score,Geology score for ATES/BTES,5.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-wa-quincy,it_mw,IT load,80.0,MW,team_estimate,low,team_assumption,Several hyperscale campuses; one representative facility.
+us-wa-quincy,cooling_profile,Cooling at the rack,air_economizer,,sourced_site,medium,Microsoft datacenters in Washington (fact sheet),
+us-wa-quincy,loop_air,air loop temperatures and heat,"32/24 C, 80 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-wa-quincy,baseline_rejection,Today's heat rejection,adiabatic,,sourced_site,medium,https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Washington.pdf,
+us-wa-quincy,pue_reported,PUE used for comparison,1.2,,team_estimate,low,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-wa-quincy,coordinates,Location,"47.23, -119.85",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-wa-quincy,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-wa-quincy,p_elec_usd_mwh,Electricity price (retail industrial),66.10000000000001,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-wa-quincy,ci_grid_kg_mwh,Grid carbon intensity,286.6,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (NWPP),"annual average, not hourly"
+us-wa-quincy,p_wholesale_usd_mwh,Hourly wholesale price,66.1,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-wa-quincy,p_gas_usd_mwh,Gas citygate price,14.29,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-wa-quincy,p_heat_usd_mwh,Heat price (gas boiler),40.2,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-wa-quincy,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-wa-quincy,lcfs_usd_t,LCFS credit,0.0,USD/t,default,,default 0.0 (no data),
+us-wa-quincy,p_co2_usd_t,State carbon price,39.5,USD/t,team_estimate,low,https://blogs.edf.org/climate411/2026/09/09/washington-cap-and-invest-sees-lowest-prices-in-years-following-linkage-agreement-with-california-and-quebec/,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-wa-quincy,p_water_usd_m3,Water + sewer tariff,1.028,USD/m3,sourced_region,high,City of Quincy (quincy_2026),
+us-wa-quincy,wsi,Water stress (WRI Aqueduct),5.0,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-wa-quincy,d_dh_m,Distance to dense heat demand,7200.0,m,derived,low,Lower bound: no cell >= 1.5 MWh/(m yr) within 6000 m (value is a lower bound); no known DH network within 50 km,
+us-wa-quincy,rho_heat_mwh_m,Linear heat density of that area,1.38,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-wa-quincy,d_coast_m,Distance to coast,225280.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-wa-quincy,d_pp_m,Distance to thermal power plant,111679.0,m,derived,medium,Columbia Generating Station: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-wa-quincy,q_fw_mw,Feedwater heat that plant could take,176.9,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-wa-quincy,d_bio_m,Distance to digester / feedstock,1898.0,m,derived,low,Lamb Weston Holdings Inc: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-wa-quincy,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-wi-mount-pleasant-microsoft,it_mw,IT load,450.0,MW,team_estimate,medium,msft_fairwater_2025;klockwood_fairwater;lenovo_lp2357;msft_zero_water_2024;dcf_fairwater_2025,"Verified: GB200 NVL72, closed-loop chip cooling, heat-exchanger fins with 172 fans plus economizing chillers; water only on the hottest days. 450 MW IT is an outside inference."
+us-wi-mount-pleasant-microsoft,cooling_profile,Cooling at the rack,dlc_warm,,sourced_site,high,"Microsoft: Sustainable by design, next-generation datacenters consume zero water for cooling",
+us-wi-mount-pleasant-microsoft,loop_liquid,liquid loop temperatures and heat,"42/32 C, 405 MW",,literature_typical,medium,cooling_profiles.csv (lenovo_lp2357;compass_rubin_2026;dcd_hot_cold_water;gpusmith_wclass_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-wi-mount-pleasant-microsoft,loop_air,air loop temperatures and heat,"26/18 C, 45 MW",,literature_typical,medium,cooling_profiles.csv (lenovo_lp2357;compass_rubin_2026;dcd_hot_cold_water;gpusmith_wclass_2026),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-wi-mount-pleasant-microsoft,baseline_rejection,Today's heat rejection,dry,,sourced_site,high,https://www.datacenterfrontier.com/hyperscale/article/55317925/inside-microsofts-global-ai-infrastructure-the-fairwater-blueprint-for-distributed-supercomputing,
+us-wi-mount-pleasant-microsoft,pue_reported,PUE used for comparison,1.2,,team_estimate,medium,site_profiles.csv pue_assumed,the model computes its own PUE from the energy balance; this value is only a check
+us-wi-mount-pleasant-microsoft,coordinates,Location,"42.7, -87.93",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-wi-mount-pleasant-microsoft,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-wi-mount-pleasant-microsoft,p_elec_usd_mwh,Electricity price (retail industrial),85.39999999999999,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-wi-mount-pleasant-microsoft,ci_grid_kg_mwh,Grid carbon intensity,633.8,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (MROE),"annual average, not hourly"
+us-wi-mount-pleasant-microsoft,p_wholesale_usd_mwh,Hourly wholesale price,27.6,USD/MWh,sourced_region,high,MISO ILLINOIS.HUB (wholesale_da_lmp),used only for the power value of feedwater preheat and ORC
+us-wi-mount-pleasant-microsoft,p_gas_usd_mwh,Gas citygate price,13.37,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-wi-mount-pleasant-microsoft,p_heat_usd_mwh,Heat price (gas boiler),28.8,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-wi-mount-pleasant-microsoft,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-wi-mount-pleasant-microsoft,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-wi-mount-pleasant-microsoft,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-wi-mount-pleasant-microsoft,p_water_usd_m3,Water + sewer tariff,0.85,USD/m3,sourced_region,medium,Racine Water Utility / Racine Wastewater Utility (racine_water_2020;racine_sewer_2025;msft_zero_water_2024),
+us-wi-mount-pleasant-microsoft,wsi,Water stress (WRI Aqueduct),3.501,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-wi-mount-pleasant-microsoft,d_dh_m,Distance to dense heat demand,1530.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-wi-mount-pleasant-microsoft,rho_heat_mwh_m,Linear heat density of that area,1.9,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-wi-mount-pleasant-microsoft,d_coast_m,Distance to coast,1209540.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-wi-mount-pleasant-microsoft,d_pp_m,Distance to thermal power plant,21796.0,m,derived,medium,South Oak Creek: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-wi-mount-pleasant-microsoft,q_fw_mw,Feedwater heat that plant could take,25.43,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-wi-mount-pleasant-microsoft,d_bio_m,Distance to digester / feedstock,26379.0,m,derived,medium,MMSD South Shore Wastewater: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet),
+us-wi-mount-pleasant-microsoft,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),
+us-wy-cheyenne-microsoft,it_mw,IT load,150.0,MW,team_estimate,low,team_assumption;msft_wy_2023,"Verified: direct evaporative cooling, water under 10 % of the year; PUE 1.125, WUE 0.23 measured CY2022."
+us-wy-cheyenne-microsoft,cooling_profile,Cooling at the rack,air_economizer,,sourced_site,high,Microsoft datacenters in Wyoming (fact sheet),
+us-wy-cheyenne-microsoft,loop_air,air loop temperatures and heat,"32/24 C, 150 MW",,literature_typical,low,cooling_profiles.csv (doe_bpg_2024;meta_odense_2018),"typical for the cooling profile, not measured at this site; heat = IT load x liquid share"
+us-wy-cheyenne-microsoft,baseline_rejection,Today's heat rejection,adiabatic,,sourced_site,high,https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Wyoming.pdf,
+us-wy-cheyenne-microsoft,pue_reported,PUE used for comparison,1.125,,sourced_site,high,"Microsoft sustainability fact sheet Wyoming (West Central US), CY2022 (2023-03)",the model computes its own PUE from the energy balance; this value is only a check
+us-wy-cheyenne-microsoft,coordinates,Location,"41.1, -104.84",deg,derived,city_approx,sites.csv,"campus_approx = campus centre from maps, not a parcel"
+us-wy-cheyenne-microsoft,weather,Hourly dry and wet bulb temperature,8760 h,C,measured_location,high,open_meteo_era5,"reanalysis at the coordinates, one year"
+us-wy-cheyenne-microsoft,p_elec_usd_mwh,Electricity price (retail industrial),79.6,USD/MWh,sourced_region,medium,eia_avgprice_annual 2024,state average; a hyperscale contract price is not public and is likely lower
+us-wy-cheyenne-microsoft,ci_grid_kg_mwh,Grid carbon intensity,470.2,kg CO2/MWh,sourced_region,high,epa_egrid2023_rev2 2023 (RMPA),"annual average, not hourly"
+us-wy-cheyenne-microsoft,p_wholesale_usd_mwh,Hourly wholesale price,79.6,USD/MWh,synthetic,low,no wholesale market in this region: synthetic hourly shape,used only for the power value of feedwater preheat and ORC
+us-wy-cheyenne-microsoft,p_gas_usd_mwh,Gas citygate price,12.88,USD/MWh,sourced_region,high,https://www.eia.gov/naturalgas/Annual/pdf/table_022.pdf,
+us-wy-cheyenne-microsoft,p_heat_usd_mwh,Heat price (gas boiler),34.5,USD/MWh,derived,high,https://www.eia.gov/naturalgas/Annual/pdf/table_023.pdf,gas price / boiler efficiency (assumed)
+us-wy-cheyenne-microsoft,rin_usd_mmbtu,D3 RIN value,28.75,USD/MMBtu,sourced_region,,D3 RIN value per MMBtu RNG (market_prices.csv),
+us-wy-cheyenne-microsoft,lcfs_usd_t,LCFS credit,0.0,USD/t,sourced_region,high,no LCFS program in this state,
+us-wy-cheyenne-microsoft,p_co2_usd_t,State carbon price,0.0,USD/t,team_estimate,low,estimate,"team Excel input 26, used as value of avoided emissions = state compliance carbon price (0 without a state market). Partly embedded in fuel and power prices already"
+us-wy-cheyenne-microsoft,p_water_usd_m3,Water + sewer tariff,1.75,USD/m3,team_estimate,low,Cheyenne Board of Public Utilities (not researched) (team_assumption),estimated part flagged in site_water.csv
+us-wy-cheyenne-microsoft,wsi,Water stress (WRI Aqueduct),5.0,0 to 5,measured_location,high,WRI Aqueduct 4.0 (data_pipeline/aqueduct_sites.csv),
+us-wy-cheyenne-microsoft,d_dh_m,Distance to dense heat demand,4570.0,m,derived,low,Min of: nearest 250 m cell with modelled linear heat density >= 1.5 MWh/(m yr); straight line x 1.2. Heat density from Overture buildings,
+us-wy-cheyenne-microsoft,rho_heat_mwh_m,Linear heat density of that area,2.35,MWh/m,derived,low,"Persson & Werner (2011) Q/L = e*q*w, w = 61.8*e^-0.15; plot ratio e from Overture building footprints x floors (250 m cells, 750 m smoothing) at the d_dh target; q = 0.024 kWh/(m2 K d) x HDD18 + 10.0 kWh/m2 (assumption)",
+us-wy-cheyenne-microsoft,d_coast_m,Distance to coast,1588020.0,m,derived,low,Natural Earth 10 m coastline (no OSM ocean polygon within 60 km); straight line x 1.2 routing factor; brackish aquifers not included,
+us-wy-cheyenne-microsoft,d_pp_m,Distance to thermal power plant,36756.0,m,derived,medium,Rawhide: EIA-860/923 2025 via PUDL stable (https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/stable/out_eia__yearly_generators.parquet); q_fw is an engineering estimate (see docs/INDUSTRY.md),
+us-wy-cheyenne-microsoft,q_fw_mw,Feedwater heat that plant could take,14.78,MW,team_estimate,low,engineering estimate from steam capacity (docs/INDUSTRY.md),
+us-wy-cheyenne-microsoft,d_bio_m,Distance to digester / feedstock,88956.0,m,derived,medium,JBS Swift Beef Company - Greeley Plant: EPA GHGRP 2023 data summary spreadsheets (https://www.epa.gov/system/files/other-files/2024-10/2023_data_summary_spreadsheets.zip),
+us-wy-cheyenne-microsoft,geo_storage_score,Geology score for ATES/BTES,2.0,1 to 5,team_estimate,medium,macrostrat;usgs_principal_aquifers (team thresholds on public geology),

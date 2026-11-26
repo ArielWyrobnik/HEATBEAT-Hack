@@ -303,6 +303,10 @@ a { color: inherit; text-decoration: none; }
 .tabs small { color: var(--muted); font-weight: 400; margin-left: 4px; }
 .panel-body { flex: 1; overflow-y: auto; padding: 4px 20px 24px; }
 
+.verdict { margin: 14px 0 0; padding: 10px 12px; border-left: 3px solid #6fbf8f; background: rgba(111,191,143,.08); font-size: 13px; display: grid; gap: 4px; }
+.verdict strong { font-size: 13px; }
+.verdict-small_gain { border-left-color: #e0b252; background: rgba(224,178,82,.07); }
+.verdict-no_gain { border-left-color: #8fa3b8; background: rgba(143,163,184,.10); }
 .warnings { list-style: none; margin: 14px 0 0; padding: 10px 12px; border-left: 3px solid #e0b252; background: rgba(224,178,82,.07); font-size: 12px; color: #d8c08a; display: grid; gap: 4px; }
 .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
 .kpis-baseline { grid-template-columns: repeat(3, 1fr); }

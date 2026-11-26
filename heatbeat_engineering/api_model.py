@@ -16,6 +16,7 @@ from .chains import best_per_use, evaluate_site
 from .params import PARAMS, defaults
 from .sensitivity import tornado as tornado_fn
 from .site import load_location, load_site
+from .verdict import verdict as verdict_fn
 
 UNITS = {
     "p_elec_usd_mwh": "USD/MWh", "ci_grid_kg_mwh": "kg CO2/MWh", "p_heat_usd_mwh": "USD/MWh_th",
@@ -157,6 +158,9 @@ class HeatChainModel:
             warnings.append(s.prov["weather"]["source"])
         extra = {}
         fields = getattr(ModelResult, "model_fields", {})
+        if "verdict" in fields and mode != "reuse_only":
+            v = verdict_fn(df, base, s, planned=planned)
+            extra["verdict"], extra["verdict_level"] = v["text"], v["level"]
         if planned and "inputs" in fields:
             extra["inputs"] = self._inputs_list(s, par_o)
         if planned and "planned_site" in fields:
