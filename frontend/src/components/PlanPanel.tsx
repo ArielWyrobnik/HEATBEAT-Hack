@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { num } from '../format';
-import type { CoolingProfile, ModelResult, SiteInputs } from '../types/api';
+import type { CoolingProfile, ModelInfo, ModelResult, SiteInputs } from '../types/api';
 import { Inputs, Results } from './SitePanel';
 
 export interface PlanPoint { lat: number; lng: number }
@@ -22,17 +22,21 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
   const [tab, setTab] = useState<'results' | 'inputs'>('results');
   const [state, setState] = useState<{ s: 'idle' | 'loading' } | { s: 'error'; e: string } | { s: 'ok'; r: ModelResult }>({ s: 'idle' });
 
+  const [models, setModels] = useState<ModelInfo[]>([]);
+  const [model, setModel] = useState<string | undefined>();
   useEffect(() => { api.coolingProfiles().then(setProfiles).catch(() => setProfiles([])); }, []);
+  useEffect(() => { api.models().then(setModels).catch(() => setModels([])); }, []);
+  const info = models.find((m) => m.name === model) ?? models.find((m) => m.default) ?? models[0];
 
   const itMw = (parseFloat(size.replace(',', '.')) || 0) * (unit === 'GW' ? 1000 : 1);
   const profile = profiles.find((p) => p.cooling_profile_id === cooling);
 
-  const run = (m = mode) => {
+  const run = (m = mode, mdl = info?.name) => {
     if (itMw <= 0) { setState({ s: 'error', e: 'Enter an IT load above 0.' }); return; }
     setState({ s: 'loading' });
     api.plan({
       lat: point.lat, lon: point.lng, it_mw: itMw, cooling_profile: cooling, name: name || null,
-      pue: pue ? parseFloat(pue.replace(',', '.')) : null, is_greenfield: greenfield, mode: m ?? null,
+      pue: pue ? parseFloat(pue.replace(',', '.')) : null, is_greenfield: greenfield, mode: m ?? null, model: mdl ?? null,
     }).then((r) => setState({ s: 'ok', r })).catch((e: Error) => setState({ s: 'error', e: e.message }));
   };
 
@@ -97,10 +101,20 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
         <nav className="tabs">
           <button className={tab === 'results' ? 'on' : ''} onClick={() => setTab('results')}>Results</button>
           <button className={tab === 'inputs' ? 'on' : ''} onClick={() => setTab('inputs')}>Inputs <small>{r.inputs.length}</small></button>
-          <span className="seg tabs-mode">
-            {['corrected', 'excel'].map((m) => (
-              <button key={m} className={(mode ?? r.mode) === m ? 'on' : ''} onClick={() => { setMode(m); run(m); }}>{m}</button>
-            ))}
+          <span className="tabs-mode">
+            {models.length > 1 && (
+              <select value={info?.name} onChange={(e) => { setModel(e.target.value); setMode(undefined); run(undefined, e.target.value); }}
+                      aria-label="Model">
+                {models.map((x) => <option key={x.name} value={x.name}>{x.label}</option>)}
+              </select>
+            )}
+            {info && info.modes.length > 1 && (
+              <span className="seg">
+                {info.modes.map((m) => (
+                  <button key={m} className={(mode ?? r.mode) === m ? 'on' : ''} onClick={() => { setMode(m); run(m); }}>{m.replace(/_/g, ' ')}</button>
+                ))}
+              </span>
+            )}
           </span>
         </nav>
       )}

@@ -374,3 +374,8 @@ table.inputs tr:hover td { background: var(--surface); }
 .impl p { margin: 0 0 6px; }
 .impl b { color: var(--text); }
 .impl small { color: var(--muted); }
+.bar i.neg { background: #ff7a6b; }
+.site-panel h4 .scale { color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: 400; margin-left: 6px; }
+.tabs-mode { display: flex; gap: 6px; align-items: center; }
+.tabs-mode select { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 4px; font: inherit; font-size: 12px; max-width: 150px; }
+.tabs button, .seg button { white-space: nowrap; }

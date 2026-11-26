@@ -153,7 +153,8 @@ class ModelResult(BaseModel):
     warnings: list[str] = Field(default_factory=list, description="Shown above the results, e.g. unverified CAPEX")
     inputs_used: dict[str, Any] = Field(default_factory=dict)
     inputs: list["InputValue"] = Field(default_factory=list, description="Inputs with flags (filled for planned sites)")
-    planned_site: "PlanRequest | None" = Field(None, description="Set when the result is for a planned data center")
+    planned_site: "PlanRequest | dict[str, Any] | None" = Field(
+        None, description="Set when the result is for a planned data center (the request, or a model's own summary)")
 
 
 class ModelInfo(BaseModel):
