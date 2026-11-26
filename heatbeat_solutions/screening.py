@@ -105,10 +105,19 @@ def _demand_score(s: Solution, summ: dict, ctx: dict) -> tuple[float, str]:
     return CONSTANT_DEMAND_SCORE, "demand not climate driven, offtaker must exist locally"
 
 
-def _ambient_score(s: Solution, summ: dict, weather) -> tuple[float, str]:
+def _ambient_score(s: Solution, summ: dict, weather, hp: Optional[dict] = None) -> tuple[float, str]:
     ideal, tol = s.ambient.t_db_ideal_c, s.ambient.t_db_tolerable_c
     if ideal is None:
         return 1.0, "not climate dependent"
+    supply = _num((hp or {}).get("facility_supply_temp_c"))
+    if s.ambient.supply_approach_k is not None and supply is not None:
+        cap = supply - s.ambient.supply_approach_k  # dry cooler limit for this site's water loop
+        ideal = (ideal[0], min(ideal[1], cap))
+        tol = (tol[0], min(tol[1], cap + 2.0)) if tol else None  # small margin with adiabatic assist
+        if ideal[0] > ideal[1]:
+            ideal = (ideal[1], ideal[1])
+        if tol and tol[0] > tol[1]:
+            tol = (tol[1], tol[1])
     if weather is not None and "t_db_c" in getattr(weather, "columns", []):
         t = weather["t_db_c"]
         in_ideal = float(((t >= ideal[0]) & (t <= ideal[1])).mean())
@@ -143,7 +152,7 @@ def screen(heat_profile: dict, site_summary: dict, weather=None, context: Option
         if share <= 0 and s.heat.needs_heat:
             f_t, why_t = f_t * AIR_CAPTURE_FACTOR, why_t + f", x{AIR_CAPTURE_FACTOR} for air side capture"
         f_d, why_d = _demand_score(s, site_summary, ctx)
-        f_a, why_a = _ambient_score(s, site_summary, weather)
+        f_a, why_a = _ambient_score(s, site_summary, weather, heat_profile)
         f_m = s.trl[1] / 9.0
         total = 0.0 if blockers else f_t * (WEIGHTS["demand"] * f_d + WEIGHTS["ambient"] * f_a + WEIGHTS["maturity"] * f_m)
         rows.append({

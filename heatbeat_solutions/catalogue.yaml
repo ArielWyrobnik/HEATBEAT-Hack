@@ -15,6 +15,8 @@
 #   estimate (engineering estimate derived from physics or several sources),
 #   unverified (placeholder, must be checked before it is used in a result).
 #   `unverified_fields` lists the fields that are weakest.
+# - `ambient.supply_approach_k`: if set, the ideal and tolerable upper limits become
+#   facility_supply_temp_c minus this approach (dry coolers cannot cool below ambient + approach).
 # - `requires`: hard site conditions passed in the screening `context` (coastal, evaporative_cooling).
 # - Market prices (for example fish price per country) are deliberately NOT in here.
 #   They are added later, only for shortlisted solutions.
@@ -674,6 +676,7 @@ solutions:
       t_db_ideal_c: [-30, 35]
       t_db_tolerable_c: [-30, 42]
       note: "Feasible hours = hours with t_db_c below facility_supply_temp_c minus approach (about 3 to 8 K)."
+      supply_approach_k: 5
     demand_driver: constant
     seasonality: year_round
     water:
