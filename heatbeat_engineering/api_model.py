@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import math
 
-from heatbeat_api.schemas import (Baseline, BudgetSummary, EnergyFlow, HeatLoop, InputValue, Kpis, ModelInfo,
+from heatbeat_api.schemas import (Baseline, BudgetSummary, Cascade, EnergyFlow, HeatLoop, InputValue, Kpis, ModelInfo,
                                   ModelResult, OptionResult, PlanDefaults, SetupFact, Tornado, TornadoBar)
 
-from . import calc_trace
+from . import calc_trace, cascade
 from .chains import DH_SIZED_PLANS, best_per_use, evaluate_site
 from .params import PARAMS, defaults
 from .sensitivity import tornado as tornado_fn
@@ -22,7 +22,7 @@ UNITS = {
     "p_elec_usd_mwh": "USD/MWh", "ci_grid_kg_mwh": "kg CO2/MWh", "p_heat_usd_mwh": "USD/MWh_th",
     "p_gas_usd_mwh": "USD/MWh", "rin_usd_mmbtu": "USD/MMBtu", "lcfs_usd_t": "USD/t", "p_co2_usd_t": "USD/t",
     "p_water_usd_m3": "USD/m3", "wsi": "0 to 5", "d_dh_m": "m", "rho_heat_mwh_m": "MWh/m/yr", "d_coast_m": "m",
-    "d_pp_m": "m", "q_fw_mw": "MW", "d_bio_m": "m", "geo_storage_score": "1 to 5", "p_wholesale_usd_mwh": "USD/MWh",
+    "d_pp_m": "m", "q_fw_mw": "MW", "flat_land_m2": "m2", "d_bio_m": "m", "geo_storage_score": "1 to 5", "p_wholesale_usd_mwh": "USD/MWh",
     "it_mw": "MW",
 }
 LABELS = {
@@ -30,7 +30,7 @@ LABELS = {
     "p_heat_usd_mwh": "Gas heat cost (customers)", "p_gas_usd_mwh": "Gas price (citygate)",
     "rin_usd_mmbtu": "D3 RIN value for RNG", "lcfs_usd_t": "LCFS credit", "p_co2_usd_t": "Carbon price",
     "p_water_usd_m3": "Water + sewer tariff", "wsi": "Water stress (Aqueduct)", "d_dh_m": "Distance to community",
-    "rho_heat_mwh_m": "Linear heat density", "d_coast_m": "Distance to coast", "d_pp_m": "Distance to power plant",
+    "rho_heat_mwh_m": "Linear heat density", "d_coast_m": "Distance to coast", "flat_land_m2": "Flat open land nearby", "d_pp_m": "Distance to power plant",
     "q_fw_mw": "Power plant feedwater heat", "d_bio_m": "Distance to digester feedstock",
     "geo_storage_score": "Geological storage score", "p_wholesale_usd_mwh": "Wholesale power price",
     "is_greenfield": "Greenfield site", "it_mw": "IT load",
@@ -314,6 +314,9 @@ class HeatChainModel:
             extra["planned_site"] = {"name": s.name, "it_mw": s.it_mw, "cooling_profile": s.cooling_profile,
                                      "template_site_id": s.x.get("template_site_id"),
                                      "template_km": round(s.x.get("template_distance_m", 0) / 1000, 1)}
+        if "cascades" in fields:
+            extra["cascades"] = [Cascade(**{k: v for k, v in d.items() if k in Cascade.model_fields})
+                                 for d in cascade.designs(s, P, base)]
         return ModelResult(site_id=site_id, model=self.info.name, mode=mode, model_version="0.1",
                            score_scale="NPV vs baseline, million USD", baseline=bl, options=options, tornado=torn,
                            warnings=warnings,

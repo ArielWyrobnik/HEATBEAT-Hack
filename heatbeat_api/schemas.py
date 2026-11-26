@@ -226,6 +226,39 @@ class Tornado(BaseModel):
     bars: list[TornadoBar]
 
 
+class CascadeStage(BaseModel):
+    """One heat user in a heat cascade (heat waste perspective)."""
+    key: str
+    label: str
+    size: str
+    mwh_yr: float = Field(description="Heat delivered to this user")
+    share: float = Field(description="Share of all server heat behind this user, 0 to 1")
+    t_in_c: float
+    t_out_c: float
+    peak_mw: float
+    value_usd_yr: float
+
+
+class Cascade(BaseModel):
+    """Several heat users in series, hottest first; the rest is cooled away (heatbeat_engineering.cascade)."""
+    title: str
+    users: list[str] = []
+    stages: list[CascadeStage] = []
+    heat_used_share: float
+    heat_used_mwh_yr: float
+    heat_rejected_mwh_yr: float
+    water_saved_m3_yr: float
+    co2_avoided_t_yr: float
+    npv_usd: float
+    capex_usd: float
+    t_top_c: float
+    t_back_c: float
+    heat_pump_cop: float | None = None
+    heat_pump_mwh_yr: float = 0.0
+    direct_mwh_yr: float = 0.0
+    rejection: str
+
+
 class BudgetSummary(BaseModel):
     """Compute + infrastructure sizing solved from a total build budget (USD)."""
     budget_usd: float
@@ -270,6 +303,8 @@ class ModelResult(BaseModel):
         None, description="Set when the result is for a planned data center (the request, or a model's own summary)")
     budget_summary: BudgetSummary | None = Field(
         None, description="Filled when PlanRequest specifies budget_usd instead of it_mw")
+    cascades: list[Cascade] = Field(default_factory=list,
+                                    description="Heat waste perspective: top 2 heat cascades (most heat used)")
 
 
 class ModelInfo(BaseModel):

@@ -5,6 +5,8 @@ import type { CoolingProfile, InputValue, ModelResult, OptionResult, PlanDefault
 import { HeatOrderSelect, PROFIT_FALLBACK, rankHeatOptions, reuseShare, totalNpv, type HeatOrder } from './HeatFlow';
 import { PERSPECTIVES } from '../perspectives';
 import { COOLING_COMPONENTS, coolingOnly, Details, money, Vendors } from './Results';
+import { CascadeCard } from './Cascade';
+import { ExpandButton, useExpand } from './SitePanel';
 
 export interface PlanPoint { lat: number; lng: number }
 
@@ -149,6 +151,7 @@ function defaultDisplayValue(field: ParamField, inputs: InputValue[], greenfield
 
 export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClose: () => void }) {
   const [profiles, setProfiles] = useState<CoolingProfile[]>([]);
+  const [expanded, setExpanded] = useExpand();
   const [profileError, setProfileError] = useState('');
   const [sizingMode, setSizingMode] = useState<'size' | 'budget'>('size');
   const [size, setSize] = useState('100');
@@ -258,7 +261,9 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
   const result = state.status === 'ready' ? state.result : null;
   const matches = result ? matchingOptions(result, path) : [];
   const feasible = matches.filter((o) => o.feasible);
-  const proposals = result && result.model === 'heat_chain' ? pickTwoProposals(feasible, path) : [];
+  const cascades = result?.model === 'heat_chain' && path === 'any' ? (result.cascades ?? []) : [];
+  const proposals = result && result.model === 'heat_chain'
+    ? pickTwoProposals(feasible, path).filter((p) => !(cascades.length && p.badge === PERSPECTIVES.heat.label)) : [];
   const rankByHeat = result?.model === 'heat_chain' && path !== 'cooling';
   const comparison = rankByHeat ? rankHeatOptions(feasible, order) : { options: feasible, fallback: false };
   const designs = comparison.options;
@@ -270,7 +275,7 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
     : null;
 
   return (
-    <aside className="site-panel plan-panel" aria-label="Plan a new data center">
+    <aside className={`site-panel plan-panel${expanded ? ' expanded' : ''}`} aria-label="Plan a new data center">
       <header>
         <div className="panel-title">
           <p className="eyebrow-sm">Plan a new data center</p>
@@ -280,7 +285,10 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
             {defaults?.template_site_id ? ` · regional data via ${defaults.template_site_id} (${defaults.template_km} km)` : ' · click the map to move it'}
           </p>
         </div>
-        <button className="close" onClick={onClose} aria-label="Close">×</button>
+        <div className="panel-actions">
+          <ExpandButton expanded={expanded} onToggle={() => setExpanded(!expanded)} />
+          <button className="close" onClick={onClose} aria-label="Close">×</button>
+        </div>
       </header>
       <form className="plan-form" onSubmit={(e) => { e.preventDefault(); void run(); }}
         onChange={() => { if (state.status === 'ready') setState({ status: 'idle' }); }}>
@@ -439,6 +447,7 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
                     </div>
                   );
                 })}
+                {cascades[0] && <div className="cascades"><CascadeCard c={cascades[0]} rank={proposals.length + 1} /></div>}
 
                 {designs.length > proposals.length && (
                   <details className="plan-all">

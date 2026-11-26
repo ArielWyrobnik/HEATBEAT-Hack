@@ -116,6 +116,23 @@ The **baseline** is the same simulator with the existing technology of the cooli
 `params.py` and the main site inputs by +/- 30 %, re-simulating chain and baseline each time.
 The API returns it for the best chain.
 
+## 6b. Heat waste cascade: `cascade.py`
+
+The "Heat waste" tab optimizes for heat used and water saved, not money. A separate heat-use loop runs through
+several users in series, hottest first: biogas digester (about 45 C supply), greenhouse (40 to 30 C), warm water
+fish farm (33 to 29 C, makeup water and hall losses) and an ambient (5GDH) heat network (20 to 10 C) when a
+community is within reach. Each user cools the loop to its own return temperature plus an approach. The return
+water is reheated directly from the DC loops where they are hot enough, a booster heat pump does the rest, and
+whatever heat is left goes to the baseline heat rejection, so less water evaporates and fans run less.
+Every subset of users is simulated; the panel shows the top 2: "Most heat used" and "Most heat used that pays
+off". Temperatures shown are those at the design hour (largest delivery).
+
+Limits: greenhouse area is capped by flat land (site_gis.csv, low confidence) and `gh_max_ha`; fish farm size and
+all host parameters are assumptions (`params.py`). CAPEX of the host businesses (greenhouse, fish farm halls) is
+not counted, only heat exchangers, pipes, heat pump and network. Salmon farms are left out: cold water RAS needs
+cooling, not heat. At large sites (300 to 800 MW) local demand limits use to about 1 to 3 % of the server heat;
+small urban sites reach 20 to 60 %.
+
 ## 7. What the results say (US sites, offline weather 2024, 2026-11-26)
 
 `heatbeat_engineering/results/us_sites.csv` has the best chain for all 40 US sites.

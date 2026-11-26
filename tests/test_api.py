@@ -254,3 +254,11 @@ def test_plan_defaults_and_budget_mode():
     # Validation: missing both it_mw and budget_usd, or tiny budget
     assert c.post("/api/plan", json={"lat": 41.6, "lon": -93.6}).status_code == 422
     assert c.post("/api/plan", json={"lat": 41.6, "lon": -93.6, "budget_usd": 500_000}).status_code == 422
+
+
+def test_heat_waste_cascades_in_result():
+    r = c.get(f"/api/sites/{SITE}/ranking", params={"tornado": False})
+    assert r.status_code == 200, r.text
+    cs = r.json()["cascades"]
+    assert 1 <= len(cs) <= 2
+    assert all(x["stages"] and 0 < x["heat_used_share"] <= 1 for x in cs)

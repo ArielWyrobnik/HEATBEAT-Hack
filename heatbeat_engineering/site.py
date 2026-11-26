@@ -151,6 +151,8 @@ def load_site(site_id: str, live: bool = True, weather: pd.DataFrame | None = No
         "rho_heat_mwh_m": put("rho_heat_mwh_m", gis.get("rho_heat_mwh_m"), 1.0, "estimate",
                               "site_gis.csv linear heat density (low confidence)"),
         "d_coast_m": put("d_coast_m", gis.get("d_coast_m"), 1e6, "data", "site_gis.csv"),
+        "flat_land_m2": put("flat_land_m2", gis.get("flat_land_m2"), 100000.0, "estimate",
+                            "site_gis.csv largest flat open land patch within 2 km (ESA WorldCover + DEM, low confidence)"),
         "d_pp_m": put("d_pp_m", ind.get("d_pp_m"), 1e6, "data", "site_industry.csv (EIA-860 thermal plant)"),
         "q_fw_mw": put("q_fw_mw", ind.get("q_fw_mw"), 0.0, "estimate", "site_industry.csv feedwater heat (engineering estimate)"),
         "d_bio_m": put("d_bio_m", ind.get("d_bio_m"), 1e6, "data", "site_industry.csv nearest biomass / digester feedstock"),
@@ -342,7 +344,7 @@ def synthetic_site(it_mw=100.0, t_mean=15.0, swing=12.0, liquid_share=0.9, t_sup
         loops.append(Loop("air", it_mw * (1 - liquid_share), 18.0, 26.0))
     x = dict(p_elec_usd_mwh=80.0, ci_grid_kg_mwh=400.0, p_heat_usd_mwh=50.0, p_gas_usd_mwh=12.5,
              rin_usd_mmbtu=25.0, lcfs_usd_t=0.0, p_co2_usd_t=0.0, p_water_usd_m3=3.0, wsi=2.0, d_dh_m=2000.0,
-             rho_heat_mwh_m=2.0, d_coast_m=1e6, d_pp_m=8000.0, q_fw_mw=10.0, d_bio_m=10000.0,
+             rho_heat_mwh_m=2.0, d_coast_m=1e6, flat_land_m2=300000.0, d_pp_m=8000.0, q_fw_mw=10.0, d_bio_m=10000.0,
              geo_storage_score=4.0, p_wholesale_usd_mwh=45.0, has_lcfs=False, is_greenfield=False, pp_name="synthetic", bio_name="synthetic",
              bio_kind="food processing (synthetic)")
     x.update(x_over)

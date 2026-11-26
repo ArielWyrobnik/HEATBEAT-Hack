@@ -59,8 +59,35 @@ function TodaySetup({ r, ov, setOv }: { r: ModelResult; ov: SetupOverrides; setO
   );
 }
 
+/** Full screen toggle with Escape to go back. */
+export function useExpand() {
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setExpanded(false); };
+    window.addEventListener('keydown', onKey);
+    document.body.classList.add('panel-full');
+    return () => { window.removeEventListener('keydown', onKey); document.body.classList.remove('panel-full'); };
+  }, [expanded]);
+  return [expanded, setExpanded] as const;
+}
+
+export function ExpandButton({ expanded, onToggle }: { expanded: boolean; onToggle: () => void }) {
+  return (
+    <button className="expand-btn" onClick={onToggle} title={expanded ? 'Back to the map (Esc)' : 'Full screen'}
+            aria-label={expanded ? 'Back to the map' : 'Full screen'}>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
+        {expanded
+          ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" strokeWidth="2" />
+          : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" strokeWidth="2" />}
+      </svg>
+    </button>
+  );
+}
+
 export default function SitePanel({ site, onClose }: { site: DataCenter; onClose: () => void }) {
   const [ov, setOv] = useState<SetupOverrides>({});
+  const [expanded, setExpanded] = useExpand();
   useEffect(() => setOv({}), [site.id]);
   const hasOv = Object.values(ov).some(Boolean);
   const ranking = useLoad(() => (hasOv
@@ -71,13 +98,16 @@ export default function SitePanel({ site, onClose }: { site: DataCenter; onClose
   const s = site as DataCenter & { it_load_mw?: number };
 
   return (
-    <aside className="site-panel" aria-label={`Results for ${site.name}`}>
+    <aside className={`site-panel${expanded ? ' expanded' : ''}`} aria-label={`Results for ${site.name}`}>
       <header>
         <div className="panel-title">
           <h3>{site.name}</h3>
           <p className="muted">{[loc, site.operator, s.it_load_mw != null && `${num(s.it_load_mw)} MW IT`].filter(Boolean).join(' · ')}</p>
         </div>
-        <button className="close" onClick={onClose} aria-label="Close">×</button>
+        <div className="panel-actions">
+          <ExpandButton expanded={expanded} onToggle={() => setExpanded(!expanded)} />
+          <button className="close" onClick={onClose} aria-label="Close">×</button>
+        </div>
       </header>
       <div className="panel-body">
         {ranking.state === 'loading' ? <p className="muted">Running the model…</p>
