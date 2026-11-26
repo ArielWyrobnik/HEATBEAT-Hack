@@ -11,6 +11,8 @@ on:
   push:
     paths:
       - "data_pipeline/**"
+      - "!data_pipeline/ecology/**"
+      - "!data_pipeline/site_ecology.csv"
       - ".github/workflows/build-data.yml"
 
 permissions:
