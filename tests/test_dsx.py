@@ -1,4 +1,4 @@
-"""DSX evaluator (heatbeat_dsx): same numbers as the DSX engine in the frontend, gates and API model."""
+"""DSX evaluator (heatbeat_dsx): same numbers as the DSX engine in the frontend (v3.4), gates and API model."""
 import math
 
 import numpy as np

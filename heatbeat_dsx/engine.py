@@ -10,6 +10,12 @@ changes so it runs on the database inputs:
   boiler; here that division is already inside the input (market uses a 0.85 boiler, EPA factors).
 * DAC is paid the 45Q credit (p_dac_credit_usd_ton) instead of the general carbon price.
 
+v3.4 calibration against real deployments (frontend reference pins, docs/DSX.md), same in both engines:
+* BTES / ATES is charged only with surplus heat in the warm part of the year (demand ramps from 0 at
+  10 C to full at 20 C) instead of a flat 70 % all year, since a seasonal store takes summer heat and
+  gives it back in winter.
+* BTES / ATES needs a heat user to discharge to (existing heat network or one within 3 km).
+
 Every constant below is a planning assumption of the DSX evaluator (not a site fact).
 """
 from __future__ import annotations
@@ -18,7 +24,7 @@ import math
 
 import numpy as np
 
-VERSION = "3.3.0-db"
+VERSION = "3.4.0-db"
 HOURS = 8760
 
 C = {
@@ -130,6 +136,8 @@ def g_btes(s, h):
     _chk(s["geo_storage_score"] >= 3, f"ground storage score {s['geo_storage_score']:g} of 5 (needs 3)", f)
     _chk(h["lt15"] >= 2500, f"only {_n0(h['lt15'])} h below 15 C (needs 2,500 h)", f)
     _chk(h["gt20"] >= 1000, f"only {_n0(h['gt20'])} h above 20 C (needs 1,000 h to charge the store)", f)
+    _chk(s["has_existing_dh"] == 1 or s["d_dh_m"] <= 3000,
+         f"no heat user to discharge the store to: heat network {_km(s['d_dh_m'])} km away (limit 3 km)", f)
     return f
 
 
@@ -203,7 +211,7 @@ OPTIONS = [
     _o(4, "absorption_cooling", "Absorption Cooling", "both", 85, ("cooling", 24, 10), "cooling", 450, 0, None, 1, False, 0.8, 0.4, lambda s: 1.0, g_absorption),
     _o(5, "orc", "Organic Rankine Cycle", "both", 100, ("constant", 0.9), "power", 2500, 0, None, 1, False, 0.5, 0.3, lambda s: 1.0, g_orc),
     _o(6, "dac", "Carbon Capture / DAC", "both", 90, ("constant", 0.85), "co2", 1500, 400, "d_co2_m", 50000, False, 0.2, 0.2, lambda s: 1.0, g_dac),
-    _o(7, "btes_ates", "BTES / ATES Storage", "greenfield", 55, ("constant", 0.7), "stored_heat", 600, 0, None, 1, False, 0.3, 0.6, lambda s: 1.0, g_btes),
+    _o(7, "btes_ates", "BTES / ATES Storage", "greenfield", 55, ("cooling", 10, 10), "stored_heat", 600, 0, None, 1, False, 0.3, 0.6, lambda s: 1.0, g_btes),
     _o(8, "feedwater_preheat", "Boiler Feedwater Preheat", "greenfield", 55, ("constant", 0.85), "steam", 200, 800, "d_pp_m", 1500, False, 0.2, 0.3, lambda s: min(1.0, s["q_fw_mw"] / s["q_dc_mw"]), g_feedwater),
     _o(9, "desalination", "Desalination (MED/MD)", "greenfield", 70, ("constant", 0.9), "water", 1200, 900, "d_coast_m", 5000, False, -1.0, 1.0, lambda s: 1.0, g_desal),
     _o(10, "biomass_processing", "Biomass Processing", "greenfield", 65, ("constant", 0.7), "heat", 500, 0, "d_bio_m", 25000, True, 0.3, 0.5, lambda s: 0.6, g_biomass),

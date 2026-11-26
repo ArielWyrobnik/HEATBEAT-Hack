@@ -30,9 +30,39 @@ Ranking is by viability, then eco score. All constants are DSX planning assumpti
 `heatbeat_dsx/engine.py`); specific costs per kW and per metre are generic, so payback and NPV are
 indicative.
 
+## Calibration against real deployments (v3.4)
+
+The 11 reference pins in the DSX frontend are real heat reuse projects. With each pin's sourced inputs,
+the model should put the real pathway near the top. Two changes, both physical rather than fitted:
+
+1. BTES / ATES is charged only with surplus heat in the warm part of the year (0 at 10 C, full at 20 C)
+   instead of a flat 70 % all year: a seasonal store takes summer heat and returns it in winter.
+2. BTES / ATES needs a heat user to discharge to (existing heat network, or one within 3 km).
+
+Plus one data fix: High Tech Campus Eindhoven is an office and lab campus, so no industrial zoning
+(same rule as Amsterdam Science Park and Saint-Denis).
+
+| Real project | Real pathway | v3.3 rank | v3.4 rank |
+|---|---|---|---|
+| Green Mountain Rjukan | fish farm | 1 | 1 |
+| Equinix AM3 | ATES | 1 | 1 |
+| NorthC Eindhoven | ATES | 1 | 1 |
+| Echelon Arklow | biogas | 1 | 1 |
+| Westin Seattle | district heating | 1 | 1 |
+| EcoDataCenter Falun | drying / biomass | 2 | 1 |
+| Nebius Mantsala | district heating | 3 | 2 |
+| Equinix PA10 | district heating | 2 | 2 |
+| Civo (Orbital) | DAC | 3 | 3 |
+| Syracuse University | absorption cooling (runs on microturbine exhaust, not server heat) | out | out |
+| Trevi at NELHA Kona | desalination (pilot; water stress is an estimate) | out | out |
+
+Top 1: 5 to 6 of 11, top 3: 9 of 11. Not fixed on purpose: Mantsala ranks industrial drying first
+because nothing in the inputs says there is no dryer customer nearby, and Civo's real site is not
+public (pin in London, default zoning).
+
 ## Checks
 
 `tests/test_dsx.py`: the Python engine reproduces the frontend DSX engine (`frontend/src/dsx/engine.ts`,
-PRs #52 to #63) on the same inputs (52 of 52 option results equal), weights, gate messages, energy
+PRs #52 to #63) on the same inputs (91 of 91 option results equal over 7 input sets), weights, gate messages, energy
 balance and the API contract. Against 11 real heat reuse deployments the DSX ranking put the real
 project in its top 3 in 7 cases (Excel ranking: 1).
