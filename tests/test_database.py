@@ -47,3 +47,9 @@ def test_synthetic_flags_consistent():
         if r.retail_price_source:
             assert r.retail_price_source in src.index
         assert r.co2_source in src.index
+
+
+def test_every_grid_region_has_a_time_zone():
+    from data_pipeline.common import REGION_TZ, load_grid_regions
+    missing = set(load_grid_regions()["grid_region_id"]) - set(REGION_TZ)
+    assert not missing, missing

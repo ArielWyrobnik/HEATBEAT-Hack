@@ -1,0 +1,26 @@
+ref,solution,metric,reported,model,unit,model_engine,ratio,verdict,source_id,note
+1,Fish Farm (RAS),reuse_mw_th,1.75,7.71144406392694,MW_th,excel,4.406539465101109,miss,waa_hima_2026,phase 1 test capacity; phase 2 aims at 8 MW
+1,Fish Farm (RAS),reuse_mw_th_target,8.0,7.71144406392694,MW_th,excel,0.9639305079908675,match,waa_hima_2026,phase 2 target
+2,District Heating,heat_delivered_mwh,20000.0,7500.0,MWh/yr,engineering,0.375,same order,nebius_75mw_2024,"approximately 20,000 MWh/yr (2024)"
+2,District Heating,co2_avoided_t_yr,3220.0,1374.3695443126876,tCO2e/yr,engineering,0.42682283984866076,same order,nebius_heat,"2024, versus the previous local heat supply (not only gas)"
+2,District Heating,t_source_c,37.5,32.0,C,engineering,0.8533333333333334,match,nebius_heat,air to water heat exchangers give 35 to 40 C (mid value)
+2,District Heating,pue,1.13,1.1188437090676688,-,engineering,0.9901271761660787,match,nebius_greenfield_fi,at full capacity
+3b,Biogas Generator (stranded gas),co2e_reduction_share,0.63,,-,,,not covered by the model,crusoe_argus_2021,up to 63% lower CO2e than continued flaring
+4,Absorption Cooling,chp_kw,780.0,,kW_e,,,no model value,nyserda_su_gdc,12 x 65 kW Capstone C65
+5,Organic Rankine Cycle,orc_eta_gross_max,0.03,0.05523037670718898,-,engineering,1.8410125569062994,same order,vertiv_orc_wp,best thermal efficiency in the test matrix (Table 7)
+5,Organic Rankine Cycle,orc_net_with_fans_kw,-0.4,0.6743608106049069,kW,engineering,,miss (opposite sign),vertiv_orc_wp,"WHR net power incl. condenser fan and pump, best case -0.4 kW (all cases negative)"
+5,Organic Rankine Cycle,orc_eta_gross_max_nsf,0.0333,0.05523037670718898,-,engineering,1.658569871086756,same order,nsf_orc_prototype,"20 kW prototype, 60 to 85 C source, 3.33% measured"
+6,Carbon Capture / DAC,dac_cost_usd_t,200.0,,USD/t,,,no model value,semafor_orbital_2025,early tests suggest about 200 USD per ton (company claim)
+7a,BTES / ATES Storage,pue,1.2,1.113998235957387,-,engineering,0.9283318632978226,match,ioplus_am3_2026,
+8,Boiler Feedwater Preheat,reuse_mw_th,10.0,3.3000000000000007,MW_th,engineering,0.33000000000000007,miss,dcd_falun_nordic,up to 10 MW of waste heat from B1
+9,Desalination (MED / MD),water_m3_per_mw_yr,276335.06023199996,20708.18884120172,m3/(MW yr),engineering,0.07493869516164886,miss,dcd_endeavour_trevi,"up to 200,000 gallons per day per MW (brackish groundwater, company claim)"
+10,Biomass Processing,reuse_mw_th,10.0,9.0,MW_th,excel,0.9,match,dcd_falun_nordic,up to 10 MW to dry pellets
+11a,Industrial Drying,reuse_mw_th,10.0,9.0,MW_th,excel,0.9,match,dcd_falun_nordic,same heat flow as ref 10 (sawdust drying from 50-55% to 10% moisture)
+12,Radiant / Snow-Melt,reuse_mw_th,5.0,2.2831050228310503,MW_th,engineering,0.4566210045662101,same order,phc_amazon_2018,designed to export up to 5 MW
+12,Radiant / Snow-Melt,t_source_c,18.333333333333332,13.0,C,engineering,0.7090909090909091,same order,amazon_doppler_2017,about 65 F
+12,Radiant / Snow-Melt,t_supply_c,54.44444444444444,70.0,C,engineering,1.2857142857142858,match,amazon_doppler_2017,about 130 F after five heat recovery chillers
+12,Radiant / Snow-Melt,electricity_saved_mwh_yr,3200.0,12246.492116302617,MWh/yr,engineering,3.827028786344568,miss,amazon_doppler_2017,80 million kWh over 25 years
+13,Co-Designed Greenhouse,heat_delivered_mwh,10000.0,16700.0,MWh/yr,engineering,1.67,same order,dck_pa10_2024,"will produce 10,000 MWh of heat per year"
+13,Co-Designed Greenhouse,t_source_c,28.0,26.0,C,engineering,0.9285714285714286,match,dck_pa10_2024,recovered at 28 C all year
+13,Co-Designed Greenhouse,t_supply_c,65.0,70.0,C,engineering,1.0769230769230769,match,dck_pa10_2024,three heat pumps raise it to 65 C
+13,Co-Designed Greenhouse,greenhouse_m2,430.0,,m2,,,no model value,dcd_pa10_farm,rooftop greenhouse

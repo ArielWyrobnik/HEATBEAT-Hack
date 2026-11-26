@@ -43,3 +43,7 @@ ZA,South Africa,ZA,ZAF,,,,,90,700,fallback values are rough unverified estimates
 IN,India,IN,IND,,,,,100,700,fallback values are rough unverified estimates
 AE,United Arab Emirates,AE,ARE,,,,,80,400,fallback values are rough unverified estimates
 IL,Israel (IEC TAOZ time-of-use),IL,ISR,,,,,,500,hourly price from IEC TAOZ tariff; CO2 fallback is a rough unverified estimate
+NO,Norway,NO,NOR,,,,,60,30,fallback values are rough unverified estimates
+US-SPP-ND,"SPP North (western North Dakota, Basin Electric)",US,USA,ND,SPP,SPPNORTH_HUB,MROW,,,"SPP North hub as proxy for the Williston Basin; MISO/SPP seam, member utility not verified"
+US-NYISO-CENTRL,"NYISO Zone C (Central, Syracuse)",US,USA,NY,NYISO,CENTRL,NYUP,,,
+US-HI,Hawaii Island non-market (HELCO),US,USA,HI,,,HIMS,,,no organized wholesale market

@@ -98,4 +98,7 @@ REGION_TZ = {
     "FR": "Europe/Paris", "SE": "Europe/Stockholm", "DK": "Europe/Copenhagen", "FI": "Europe/Helsinki",
     "SG": "Asia/Singapore", "JP": "Asia/Tokyo", "AU": "Australia/Sydney", "BR": "America/Sao_Paulo",
     "ZA": "Africa/Johannesburg", "IN": "Asia/Kolkata", "AE": "Asia/Dubai", "IL": "Asia/Jerusalem",
+    # reference validation sites (data_pipeline/reference_sites.py)
+    "NO": "Europe/Oslo", "US-SPP-ND": "America/Chicago", "US-NYISO-CENTRL": "America/New_York",
+    "US-HI": "Pacific/Honolulu",
 }
