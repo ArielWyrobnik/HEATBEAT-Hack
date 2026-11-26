@@ -1,3 +1,4 @@
+import Tex from './Tex';
 import { useRef, useState } from 'react';
 import Pie from './Pie';
 import { ECO_PARTS, VIABILITY_PARTS } from './ScoreBreakdown';
@@ -24,7 +25,7 @@ interface Step {
   title: string;
   status: Status;
   summary: string;
-  details: string[];
+  details: (string | { tex: string; text: string })[];
   inputs: string[];
   output: string;
   note?: string;
@@ -92,8 +93,8 @@ const STEPS: Step[] = [
     summary:
       'Feasible pathways get a viability score from 0 to 5 and a separate eco grade from A to F, so high profit cannot hide environmental harm.',
     details: [
-      'Viability = 30 % thermodynamics + 30 % climate fit + 25 % economics (payback) + 15 % utilisation.',
-      'Eco grade = 40 % net CO2 abatement + 30 % water balance + 30 % local habitat, adjusted by the mitigation tier.',
+      { text: 'Viability, 0 to 5 (G = 0 if any knock-out gate fails):', tex: String.raw`\text{Viability} = G\cdot\left(0.30\,P_{thermo} + 0.30\,P_{climate} + 0.25\,P_{econ} + 0.15\,P_{util}\right)` },
+      { text: 'Eco grade, scored separately and adjusted by the mitigation tier:', tex: String.raw`E = 0.40\,e_{GHG} + 0.30\,e_{water} + 0.30\,e_{local}\quad\Rightarrow\quad A \ge 4.2,\ B \ge 3.4,\ C \ge 2.6,\ D \ge 1.8` },
       'Show calculation opens every step with its formula, the numbers put in and their sources; a tornado chart shows which inputs move the net value most.',
     ],
     inputs: ['Feasible pathways', 'Prices, carbon and ecology inputs'],
@@ -276,7 +277,7 @@ export default function HowItWorks() {
                 <p className="step-summary">{s.summary}</p>
                 <div className="step-grid">
                   <ul className="step-details">
-                    {s.details.map((d) => <li key={d}>{d}</li>)}
+                    {s.details.map((d) => typeof d === 'string' ? <li key={d}>{d}</li> : <li key={d.tex}>{d.text}<Tex block>{d.tex}</Tex></li>)}
                   </ul>
                   <dl className="step-io">
                     <dt>In</dt>

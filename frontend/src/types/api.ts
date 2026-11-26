@@ -83,6 +83,10 @@ export interface CalcTerm {
 export interface CalcStep {
   title: string;
   formula: string;
+  /** optional LaTeX lines; when present they are rendered instead of the plain formula */
+  tex?: string[];
+  /** optional LaTeX line with the numbers of this site put in */
+  tex_values?: string;
   terms: CalcTerm[];
   result?: number | null;
   unit?: string | null;

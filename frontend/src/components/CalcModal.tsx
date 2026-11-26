@@ -3,6 +3,7 @@ import { compact, num, value } from '../format';
 import type { CalcTerm, EnergyFlow, Flag, InputValue, ModelResult, OptionResult } from '../types/api';
 import { FlagBadge } from './SitePanel';
 import { ScoreBreakdown } from './ScoreBreakdown';
+import Tex from './Tex';
 
 const fmt = (v: number | string | null | undefined, unit?: string | null) => {
   if (v == null) return 'n/a';
@@ -98,7 +99,13 @@ export default function CalcModal({ o, r, onClose }: { o: OptionResult; r: Model
                     <b>{st.title}</b>
                     <span className="calc-res">{fmt(st.result, st.unit)}</span>
                   </div>
-                  <code className="formula">{st.formula}</code>
+                  {st.tex?.length
+                    ? <div className="formula-tex">
+                        {st.tex.map((t, k) => <Tex key={k} block>{t}</Tex>)}
+                        {st.tex_values && <div className="tex-values"><span className="tex-values-label">With this site's numbers</span><Tex block>{st.tex_values}</Tex></div>}
+                        <p className="formula-words">{st.formula}</p>
+                      </div>
+                    : <code className="formula">{st.formula}</code>}
                   {st.terms.length > 0 && (
                     <table className="calc-terms"><tbody>{st.terms.map((t) => <Term key={t.key} t={t} />)}</tbody></table>
                   )}

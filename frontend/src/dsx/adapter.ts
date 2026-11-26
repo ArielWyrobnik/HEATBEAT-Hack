@@ -107,6 +107,10 @@ function term(ctx: Ctx, key: keyof DsxSite | string, valueOverride?: number | st
 }
 const calc = (key: string, label: string, value: number | string | null, unit?: string): CalcTerm => ({ key, label, value, unit: unit ?? null, flag: null });
 
+/** LaTeX number: 2 decimals for small values, thousands separated for large ones. */
+const tn = (v: number | null | undefined, d = 2) => (v == null || !isFinite(v) ? '\\text{n/a}'
+  : Math.abs(v) >= 1000 ? Math.round(v).toLocaleString('en-US').replace(/,/g, '{,}') : v.toFixed(d));
+
 function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
   const h = ctx.eval.climate_summary, a = o.annual, s = o.subscores, e = o.eco_subscores, C = ENGINE.C;
   const opt = ENGINE.OPTIONS.find((x) => x.key === o.key)!;
@@ -118,9 +122,24 @@ function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
     m3: 'water = Q_del / 60 kWh_th per m3; value = water × water price; CO2 avoided = 3.5 kWh/m3 of RO × grid carbon',
     tCO2: 'CO2 captured = Q_del / 1.8 MWh_th per t; value = captured × carbon price',
   };
+  const CW = C as unknown as { weights: Record<string, number>; eco_weights: Record<string, number> };
+  const VW = CW.weights, EW = CW.eco_weights;
+  const productTex: Record<string, string[]> = {
+    MWh_th: [String.raw`V = \frac{Q_{del}}{\eta_{boiler}}\; p_{fuel},\qquad \eta_{boiler} = 0.90`,
+      String.raw`\Delta CO_2 = \frac{Q_{del}}{0.90}\, CI_{fuel} \;-\; W_{hp}\, CI_{grid}`],
+    MWh_cool: [String.raw`Q_{cool} = 0.70\, Q_{del},\qquad E_{saved} = \frac{Q_{cool}}{\mathrm{COP}_{chiller}=5}`,
+      String.raw`V = E_{saved}\; p_{elec}`],
+    MWh_e: [String.raw`E_{el} = Q_{src}\cdot 0.45 \cdot \left(1 - \frac{T_{amb} + 10 + 273.15}{T_{dc} + 273.15}\right)`,
+      String.raw`V = E_{el}\; p_{elec}`],
+    m3: [String.raw`V_{water} = \frac{Q_{del}}{60\ \mathrm{kWh_{th}/m^3}},\qquad V = V_{water}\; p_{water}`,
+      String.raw`\Delta CO_2 = V_{water}\cdot 3.5\ \mathrm{kWh/m^3}\cdot CI_{grid}\quad\text{(reverse osmosis avoided)}`],
+    tCO2: [String.raw`m_{CO_2} = \frac{Q_{del}}{1.8\ \mathrm{MWh_{th}/t}},\qquad V = m_{CO_2}\; p_{CO_2}`],
+  };
   return [
     {
       title: 'Hourly climate and coolant temperature',
+      tex: [String.raw`T_{amb}(d,h) = \frac{T_{max}+T_{min}}{2} \;-\; \frac{T_{max}-T_{min}}{2}\,\cos\!\left(\frac{2\pi\,(h-4)}{24}\right)`,
+        String.raw`T_{dc} = \begin{cases} T_{dc,base} & \text{liquid cooling} \\ \max\left(T_{dc,base},\; T_{amb} + ${C.air_offset_c}\right) & \text{air cooling} \end{cases}`],
       formula: 'T_amb(d,h) = (Tmax+Tmin)/2 − (Tmax−Tmin)/2 · cos(2π(h−4)/24);  T_dc = t_dc_base (liquid) or max(t_dc_base, T_amb + 12) (air)',
       terms: [
         { key: 'daily_climate', label: 'Daily min / max temperature', value: '365 days', unit: null, flag: climateFlag, source: ctx.climate.source },
@@ -132,6 +151,7 @@ function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
     },
     {
       title: 'Knock-out gates',
+      tex: [String.raw`G = \prod_i g_i, \qquad g_i \in \{0, 1\}`],
       formula: 'G = 1 only if every gate of this pathway holds (climate hours, distances, land, zoning, water stress, build status)',
       terms: [
         term(ctx, 'is_greenfield'),
@@ -143,12 +163,19 @@ function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
     },
     {
       title: 'Heat drawn from the data center',
+      tex: [String.raw`Q_{src} = \sum_{t=1}^{8760} q_{dc}\cdot d\big(T_{amb}(t)\big)\cdot c_{cap}\cdot 0.998`,
+        String.raw`d = \text{share of the hour the heat user needs heat (or cooling)},\quad c_{cap} = \text{off-taker size cap}`],
+      tex_values: String.raw`Q_{src} = ${tn(a.q_src_mwh, 0)}\ \mathrm{MWh/yr}`,
       formula: 'Q_src(t) = q_dc × demand(T_amb) × cap × 0.998 uptime  (demand follows heating or cooling need, or is constant for process loads)',
       terms: [term(ctx, 'q_dc_mw'), calc('cap', 'Off-taker size cap', a.cap_fraction, '-'), calc('util', 'Utilisation of DC heat', a.utilisation, '-')],
       result: a.q_src_mwh, unit: 'MWh/yr',
     },
     {
       title: o.key === 'orc' ? 'Power cycle' : 'Heat pump lift',
+      tex: o.key === 'orc'
+        ? [String.raw`\eta = 0.45\left(1 - \frac{T_{amb} + 10 + 273.15}{T_{dc} + 273.15}\right)`]
+        : [String.raw`\text{direct exchange if } T_{dc} \ge T_{sink} + ${C.approach_k}\ \mathrm{K}`,
+          String.raw`\mathrm{COP} = \min\left(${C.cop_cap},\; ${C.carnot_eta}\cdot\frac{T_{sink} + ${C.approach_k} + 273.15}{(T_{sink} + ${C.approach_k}) - (T_{dc} - ${C.approach_k})}\right),\qquad W_{hp} = \frac{Q_{src}}{\mathrm{COP} - 1}`],
       formula: o.key === 'orc'
         ? 'η = 0.45 × (1 − (T_amb + 10 + 273.15) / (T_dc + 273.15))'
         : `direct exchange if T_dc ≥ T_sink + ${C.approach_k} K; else COP = min(${C.cop_cap}, ${C.carnot_eta} × (T_sink + 5 + 273.15) / lift), W = Q_src / (COP − 1)`,
@@ -159,6 +186,8 @@ function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
     },
     {
       title: 'Product, value and CO2',
+      tex: productTex[a.product_unit] ?? productTex.MWh_th,
+      tex_values: String.raw`V = \$${tn(a.value_usd, 0)},\quad \text{carbon credit} = \Delta CO_2 \cdot p_{CO_2} = \$${tn(a.carbon_rev_usd, 0)}\ \text{per year}`,
       formula: productFormula[a.product_unit] ?? productFormula.MWh_th,
       terms: [term(ctx, 'p_fuel_usd_kwh'), term(ctx, 'p_elec_usd_kwh'), term(ctx, 'ci_fuel_g_kwh'), term(ctx, 'ci_grid_g_kwh'), term(ctx, 'p_co2_usd_ton'),
         calc('product', 'Product', product(o)), calc('abated', 'Net CO2 avoided', a.net_abated_tco2, 't/yr')],
@@ -166,6 +195,11 @@ function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
     },
     {
       title: 'Investment and payback',
+      tex: [String.raw`\mathrm{CAPEX} = q_{dc}\, c_{cap}\cdot ${opt.capex_usd_kw}\,\tfrac{\$}{kW} \;+\; L_{pipe}\cdot ${opt.pipe_usd_m}\,\tfrac{\$}{m} \;+\; \dot Q_{hp}\cdot ${C.hp_capex_usd_kw}\,\tfrac{\$}{kW}`,
+        String.raw`\text{payback} = \frac{\mathrm{CAPEX}}{V + V_{CO_2} - C_{hp} - 0.02\,\mathrm{CAPEX}}`],
+      tex_values: a.net_annual_usd > 0
+        ? String.raw`\text{payback} = \frac{\$${tn(a.capex_usd, 0)}}{\$${tn(a.net_annual_usd, 0)}\ /\text{yr}} = ${tn(a.payback_yr, 1)}\ \text{years}`
+        : String.raw`\text{net cash flow} = \$${tn(a.net_annual_usd, 0)} \le 0 \;\Rightarrow\; \text{never pays back}`,
       formula: `CAPEX = q_dc × cap × ${opt.capex_usd_kw} $/kW + distance × ${opt.pipe_usd_m} $/m + heat pump × ${C.hp_capex_usd_kw} $/kW;  payback = CAPEX / (revenue − heat pump power − 2 % CAPEX)`,
       terms: [calc('capex', 'CAPEX', a.capex_usd, 'USD'), calc('hp_cost', 'Heat pump electricity', a.hp_elec_cost_usd, 'USD/yr'), calc('net', 'Net cash flow', a.net_annual_usd, 'USD/yr')],
       result: a.payback_yr, unit: 'years',
@@ -173,6 +207,11 @@ function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
     },
     {
       title: 'Viability score',
+      tex: [String.raw`\text{Viability} = G\cdot\left(${VW.thermo.toFixed(2)}\,P_{thermo} + ${VW.climate.toFixed(2)}\,P_{climate} + ${VW.econ.toFixed(2)}\,P_{econ} + ${VW.util.toFixed(2)}\,P_{util}\right)`,
+        o.key === 'orc'
+          ? String.raw`P_{thermo} = 5\cdot\frac{\eta}{0.12},\qquad P_{econ} = 5\cdot\frac{15 - \text{payback}}{15 - 3}\ \text{(clipped to 0 to 5)}`
+          : String.raw`P_{thermo} = 5\cdot\frac{Q_{del} - W_{hp}}{Q_{del}},\qquad P_{econ} = 5\cdot\frac{15 - \text{payback}}{15 - 3}\ \text{(clipped to 0 to 5)}`],
+      tex_values: String.raw`= ${o.ko_pass ? 1 : 0}\cdot\left(${VW.thermo.toFixed(2)}\cdot ${tn(s.p_thermo)} + ${VW.climate.toFixed(2)}\cdot ${tn(s.p_climate)} + ${VW.econ.toFixed(2)}\cdot ${tn(s.p_econ)} + ${VW.util.toFixed(2)}\cdot ${tn(s.p_util)}\right) = \mathbf{${tn(o.viability)}}`,
       formula: 'viability = G × (0.30·P_thermo + 0.30·P_climate + 0.25·P_econ + 0.15·P_util), each 0 to 5;  P_thermo = 5 × free-heat share (ORC: 5 × efficiency / 12 %)',
       terms: [calc('p_thermo', 'P thermo (share of delivered heat not from heat-pump power)', s.p_thermo, '0-5'), calc('p_climate', 'P climate (demand hours)', s.p_climate, '0-5'),
         calc('p_econ', 'P econ (payback 15 → 3 yr)', s.p_econ, '0-5'), calc('p_util', 'P util (heat used, distance)', s.p_util, '0-5')],
@@ -180,6 +219,9 @@ function steps(ctx: Ctx, o: DsxOption): CalcStep[] {
     },
     {
       title: 'Eco grade (independent of viability)',
+      tex: [String.raw`E = ${EW.ghg.toFixed(2)}\,e_{GHG} + ${EW.water.toFixed(2)}\,e_{water} + ${EW.local.toFixed(2)}\,e_{local}`,
+        String.raw`\text{grade} = \begin{cases} A & E \ge 4.2 \\ B & E \ge 3.4 \\ C & E \ge 2.6 \\ D & E \ge 1.8 \\ F & \text{otherwise} \end{cases}`],
+      tex_values: String.raw`E = ${EW.ghg.toFixed(2)}\cdot ${tn(e.e_ghg)} + ${EW.water.toFixed(2)}\cdot ${tn(e.e_water)} + ${EW.local.toFixed(2)}\cdot ${tn(e.e_local)} = \mathbf{${tn(o.eco_score)}}\ \Rightarrow\ \text{grade ${o.eco_grade}}`,
       formula: 'E = 0.40·e_GHG + 0.30·e_water + 0.30·e_local;  e_GHG scores CO2 avoided per MWh delivered against a fully displaced gas boiler (fuel CI / 0.90); e_water adds a credit for cooling-tower water saved;  A ≥ 4.2, B ≥ 3.4, C ≥ 2.6, D ≥ 1.8, else F',
       terms: [calc('e_ghg', 'e GHG', e.e_ghg, '1-5'), calc('e_water', 'e water', e.e_water, '1-5'), calc('e_local', 'e local habitat', e.e_local, '1-5'),
         term(ctx, 'wsi_index'), term(ctx, 'eco_sens_index'), term(ctx, 'mit_tier')],

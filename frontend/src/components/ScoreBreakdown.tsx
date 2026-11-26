@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ENGINE } from '../dsx/types';
 import Pie from './Pie';
+import Tex from './Tex';
 
 /**
  * Score charts: how each sub-score and its weight builds the viability score and the eco score.
@@ -63,7 +64,7 @@ export function ScoreLegend() {
   );
 }
 
-function Breakdown({ title, parts, details, total, gate }: { title: string; parts: Parts; details: Record<string, unknown>; total: number | null | undefined; gate?: boolean }) {
+function Breakdown({ title, tex, parts, details, total, gate }: { title: string; tex?: string; parts: Parts; details: Record<string, unknown>; total: number | null | undefined; gate?: boolean }) {
   const rows = parts.map((p) => {
     const v = sub(details, p.key) ?? 0;
     return { ...p, v, pts: p.w * v };
@@ -72,6 +73,7 @@ function Breakdown({ title, parts, details, total, gate }: { title: string; part
   return (
     <div className="breakdown">
       <h5>{title}</h5>
+      {tex && <Tex block>{tex}</Tex>}
       <table className="breakdown-table">
         <thead><tr><th>Part</th><th className="n">Sub-score (0–5)</th><th className="n">Weight</th><th className="n">Points</th><th className="chart-col">Points out of 5</th></tr></thead>
         <tbody>
@@ -123,8 +125,10 @@ function ScoreDetails({ details, score, ecoScore, feasible, pies }: { details: R
       </div>
       {pies && <ScorePies details={details} score={score} ecoScore={ecoScore} />}
       <Breakdown title={`Viability ${score ?? 0} of 5`}
+        tex={String.raw`\text{Viability} = G\cdot\sum_i w_i\,P_i = G\cdot\left(${VIABILITY_PARTS.map((p) => String.raw`${p.w.toFixed(2)}\,P_{\text{${p.label.split(' ')[0].toLowerCase()}}}`).join(' + ')}\right)`}
         parts={VIABILITY_PARTS} details={details} total={score} gate={feasible} />
-      <Breakdown title={`Eco score ${typeof ecoScore === 'number' ? ecoScore.toFixed(2) : ''} of 5 (A ≥ 4.2, B ≥ 3.4, C ≥ 2.6, D ≥ 1.8)`} parts={ECO_PARTS} details={details} total={ecoScore as number} />
+      <Breakdown title={`Eco score ${typeof ecoScore === 'number' ? ecoScore.toFixed(2) : ''} of 5 (A ≥ 4.2, B ≥ 3.4, C ≥ 2.6, D ≥ 1.8)`} tex={String.raw`E = \sum_j w_j\,e_j = ${ECO_PARTS.map((p) => String.raw`${p.w.toFixed(2)}\,e_{\text{${p.key.slice(2)}}}`).join(' + ')}`}
+        parts={ECO_PARTS} details={details} total={ecoScore as number} />
     </div>
   );
 }
