@@ -4,10 +4,23 @@ import type { DataCenter } from '../types/datacenter';
 
 interface Props {
   dataCenters: DataCenter[];
+  /** Pins come from the backend: a click selects the site instead of opening a popup */
+  fromApi?: boolean;
+  selectedId?: string | null;
+  onSelect?: (id: string) => void;
+  /** Rendered on top of the map (the site panel) */
+  children?: React.ReactNode;
+  /** Plan mode: a click on the map places a planned data center */
+  planning?: boolean;
+  onPlanToggle?: () => void;
+  planPoint?: { lat: number; lng: number } | null;
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
-const pinIcon = L.divIcon({
-  className: 'dc-pin',
+const planIcon = L.divIcon({ className: 'dc-pin dc-pin-plan', html: '<span class="dc-pin-core"></span>', iconSize: [22, 22], iconAnchor: [11, 11] });
+
+const makeIcon = (selected: boolean) => L.divIcon({
+  className: selected ? 'dc-pin dc-pin-selected' : 'dc-pin',
   html: '<span class="dc-pin-core"></span>',
   iconSize: [18, 18],
   iconAnchor: [9, 9],
@@ -33,7 +46,11 @@ function popupHtml(d: DataCenter) {
 
 interface PlaceResult { display_name: string; lat: string; lon: string }
 
-export default function MapSection({ dataCenters }: Props) {
+export default function MapSection({ dataCenters, fromApi = false, selectedId = null, onSelect, children,
+  planning = false, onPlanToggle, planPoint = null, onMapClick }: Props) {
+  const clickRef = useRef(onMapClick);
+  clickRef.current = planning ? onMapClick : undefined;
+  const planMarker = useRef<L.Marker | null>(null);
   const mapEl = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
@@ -54,6 +71,7 @@ export default function MapSection({ dataCenters }: Props) {
     }).addTo(m);
     L.tileLayer(`${esri}/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 16 }).addTo(m);
     layer.current = L.layerGroup().addTo(m);
+    m.on('click', (e: L.LeafletMouseEvent) => clickRef.current?.(e.latlng.lat, L.Util.wrapNum(e.latlng.lng, [-180, 180], true)));
     map.current = m;
     return () => { m.remove(); map.current = null; };
   }, []);
@@ -65,11 +83,36 @@ export default function MapSection({ dataCenters }: Props) {
     g.clearLayers();
     markers.current.clear();
     dataCenters.forEach((d) => {
-      const mk = L.marker([d.lat, d.lng], { icon: pinIcon, title: d.name }).bindPopup(popupHtml(d));
+      const mk = L.marker([d.lat, d.lng], { icon: makeIcon(false), title: d.name });
+      if (fromApi && onSelect) {
+        mk.bindTooltip(esc(d.name), { direction: 'top', offset: [0, -8], className: 'dc-tooltip' });
+        mk.on('click', () => onSelect(d.id));
+      } else {
+        mk.bindPopup(popupHtml(d));
+      }
       mk.addTo(g);
       markers.current.set(d.id, mk);
     });
-  }, [dataCenters]);
+  }, [dataCenters, fromApi, onSelect]);
+
+  // highlight the selected pin
+  useEffect(() => {
+    markers.current.forEach((mk, id) => {
+      const sel = id === selectedId;
+      mk.setIcon(makeIcon(sel));
+      mk.setZIndexOffset(sel ? 1000 : 0);
+    });
+  }, [selectedId, dataCenters]);
+
+  // planned site marker and crosshair cursor
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    m.getContainer().classList.toggle('planning', planning);
+    planMarker.current?.remove();
+    planMarker.current = null;
+    if (planPoint) planMarker.current = L.marker([planPoint.lat, planPoint.lng], { icon: planIcon, zIndexOffset: 2000 }).addTo(m);
+  }, [planning, planPoint]);
 
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -95,13 +138,15 @@ export default function MapSection({ dataCenters }: Props) {
 
   const focusDc = (d: DataCenter) => {
     map.current?.flyTo([d.lat, d.lng], 11, { duration: 1.2 });
-    markers.current.get(d.id)?.openPopup();
+    if (fromApi && onSelect) onSelect(d.id);
+    else markers.current.get(d.id)?.openPopup();
     setQuery(d.name);
     setOpen(false);
   };
 
   const focusPlace = (p: PlaceResult) => {
     map.current?.flyTo([+p.lat, +p.lon], 9, { duration: 1.2 });
+    if (planning && onMapClick) onMapClick(+p.lat, +p.lon);
     setQuery(p.display_name.split(',')[0]);
     setOpen(false);
   };
@@ -118,7 +163,12 @@ export default function MapSection({ dataCenters }: Props) {
     <section className="map-section" id="map">
       <div className="map-head">
         <h2>Data centers worldwide</h2>
-        <p>{dataCenters.length > 0 ? `${dataCenters.length} locations loaded` : 'Location data coming soon'}</p>
+        <p>
+          {dataCenters.length > 0 ? `${dataCenters.length} locations loaded` : 'Location data coming soon'}
+          {dataCenters.length > 0 && (fromApi
+            ? ' · click a pin for its ranking'
+            : ' · backend offline, start it with ./scripts/dev.sh to see rankings')}
+        </p>
       </div>
 
       <div className="map-wrap">
@@ -158,6 +208,12 @@ export default function MapSection({ dataCenters }: Props) {
         </form>
 
         <div ref={mapEl} className="map" />
+        {fromApi && onPlanToggle && (
+          <button className={`plan-toggle${planning ? ' on' : ''}`} onClick={onPlanToggle}>
+            {planning ? (planPoint ? 'Exit planning' : 'Click the map to place the site · cancel') : '+ Plan a new data center'}
+          </button>
+        )}
+        {children}
       </div>
     </section>
   );

@@ -68,6 +68,24 @@ SOURCES = [
 ]
 
 
+def _keep_previous_weather(weather: pd.DataFrame, status: dict) -> pd.DataFrame:
+    """Never drop stored weather: sites missing from the cache keep their rows from the last build.
+
+    Weather is not fetched by the GitHub workflow (see docs/DATA.md), so a runner whose cache has no
+    weather would otherwise overwrite data/parquet/weather_hourly.parquet with an empty table.
+    """
+    missing = [k for k, v in status.items() if v == "missing"]
+    path = PARQUET_DIR / "weather_hourly.parquet"
+    if not missing or not path.exists():
+        return weather
+    prev = pd.read_parquet(path)
+    prev = prev[prev["site_id"].isin(missing)]
+    for sid in prev["site_id"].unique():
+        status[sid] = f"kept_from_previous_build ({prev.loc[prev['site_id'] == sid, 'source'].iloc[0]})"
+    log.info("weather: kept %d sites from the previous build", prev["site_id"].nunique())
+    return pd.concat([weather, prev], ignore_index=True) if len(weather) else prev.reset_index(drop=True)
+
+
 def build(offline: bool = False, fetch: bool = True) -> dict:
     sites, regions = load_sites(), load_grid_regions()
     assert sites["grid_region_id"].isin(regions["grid_region_id"]).all(), "site with unknown grid_region_id"
@@ -76,6 +94,8 @@ def build(offline: bool = False, fetch: bool = True) -> dict:
     retail = dict(zip(regions["grid_region_id"], regions["retail_industrial_usd_mwh"]))
     prices, price_status = get_prices(regions, retail, offline=offline, fetch=fetch)
     weather, weather_status = get_weather(sites, offline=offline, fetch=fetch)
+    if not offline:
+        weather = _keep_previous_weather(weather, weather_status)
 
     kind = prices.groupby("grid_region_id")["price_kind"].first()
     regions["hourly_price_kind"] = regions["grid_region_id"].map(kind)
@@ -106,7 +126,8 @@ def build(offline: bool = False, fetch: bool = True) -> dict:
         "counts": {"sites": len(sites), "grid_regions": len(regions), "weather_rows": len(weather),
                    "price_rows": len(prices)},
         "synthetic_share": {"price_rows": float(prices["is_synthetic"].mean()),
-                            "weather_sites": float(weather.groupby("site_id")["source"].first().str.startswith("synthetic").mean())},
+                            "weather_sites": float(weather.groupby("site_id")["source"].first().str.startswith("synthetic").mean())
+                                             if len(weather) else None},
     }
     write_json(REPORT_PATH, report)
     log.info("built %s: %s", DB_PATH, report["counts"])
