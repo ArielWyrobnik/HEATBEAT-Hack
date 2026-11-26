@@ -1,0 +1,68 @@
+name: Build site industry layers
+
+# Fetches the neighbour data behind data_pipeline/site_industry.csv (power plants, CO2 sinks, biomass,
+# cold chain hubs) on a GitHub runner, because the cloud sandbox cannot reach epa.gov or Overpass.
+# Each source is its own step with a time limit; a failed source leaves its committed layer unchanged.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "data_pipeline/fetch_industry.py"
+      - ".github/workflows/build-industry.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-industry-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: EIA-860/923 power and biomass plants (PUDL)
+        timeout-minutes: 10
+        continue-on-error: true
+        run: python -m data_pipeline.fetch_industry --stage eia
+      - name: EPA GHGRP CO2 and food processing facilities
+        timeout-minutes: 15
+        continue-on-error: true
+        run: python -m data_pipeline.fetch_industry --stage ghgrp
+      - name: EPA AgSTAR manure digesters
+        timeout-minutes: 10
+        continue-on-error: true
+        run: python -m data_pipeline.fetch_industry --stage agstar
+      - name: OpenStreetMap industrial land use near each site (zoning proxy)
+        timeout-minutes: 20
+        continue-on-error: true
+        run: python -m data_pipeline.fetch_industry --stage osm_zoning
+      - name: OpenStreetMap cold chain and food hubs (Overpass)
+        timeout-minutes: 60
+        continue-on-error: true
+        run: python -m data_pipeline.fetch_industry --stage osm
+      - name: Assemble site_industry.csv
+        run: python -m data_pipeline.fetch_industry --stage assemble
+      - name: Tests
+        run: python -m pytest -q tests/test_site_industry.py
+      - name: Commit data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data_pipeline/industry data_pipeline/site_industry.csv data_pipeline/site_ranking_inputs_industry.csv
+          if git diff --cached --quiet; then echo "no data changes"; exit 0; fi
+          git commit -m "data: rebuild site industry layers (run ${{ github.run_id }})"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

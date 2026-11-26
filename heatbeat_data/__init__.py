@@ -213,3 +213,10 @@ from .site_gis import GIS_KEYS, gis_inputs, site_gis, site_gis_row  # noqa: E402
 
 __all__ += ["GIS_KEYS", "gis_inputs", "site_gis", "site_gis_row"]
 Site.gis = lambda self: site_gis_row(self.site_id)
+
+# Neighbouring industry per US site (power plants, CO2, biomass, cold chain). Reads a CSV, no DB needed.
+# Exported as excel_industry_inputs: market.excel_inputs already owns the name excel_inputs.
+from .site_industry import excel_inputs as excel_industry_inputs, site_industry  # noqa: E402
+
+__all__ += ["excel_industry_inputs", "site_industry"]
+Site.industry = lambda self: site_industry(self.site_id)

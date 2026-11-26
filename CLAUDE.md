@@ -31,7 +31,7 @@ Local context: Israel has low heating demand, high cooling demand, water scarcit
 
 Focus: US sites first. Israel is set aside for now (Ariel, 2026-11-26).
 
-PRs #1 and #3 to #20 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020; #8: free cooling capped by site supply temperature; #10: demo works without stored weather; #13: DAC credit split from avoided emission carbon value). What is on `main`:
+PRs #1 and #3 to #23 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020; #8: free cooling capped by site supply temperature; #10: demo works without stored weather; #13: DAC credit split from avoided emission carbon value). What is on `main`:
 
 | Part | Where | Docs | Status |
 |---|---|---|---|
@@ -44,6 +44,7 @@ PRs #1 and #3 to #20 are merged into `main` (#7: US retail prices from EIA 2024 
 | Frontend: landing page, "How it works" section, world map (React, TypeScript, Vite, Leaflet) | `frontend/` | | Merged. Map pins load from `frontend/public/datacenters.json`. |
 | Site GIS inputs for the Excel model: d_coast_m, d_water_m, dz_m, slope_deg, flat and agri land, campus area, DH distance and heat density, industrial zoning; `hd.gis_inputs(site_id)` | `data_pipeline/site_gis.csv`, `fetch_gis.py`, `heatbeat_data/site_gis.py` | `docs/GIS.md` | Merged (#20). `campus_area_m2` synthetic, `ind_zoning` is an OSM proxy, most land figures low confidence. |
 | Ecology and geology scores: eco_sens_index, geo_storage_score, mit_tier; `hd.excel_ecology_inputs(site_id)` | `data_pipeline/site_ecology.csv`, `data_pipeline/ecology/` | `docs/ECOLOGY.md` | Merged (#17). Thresholds are team choices. |
+| Neighbouring industry per US site: d_pp_m, q_fw_mw, d_co2_m, d_bio_m, d_market_m; `hd.excel_industry_inputs(site_id)` (named so it does not shadow the market `hd.excel_inputs`) | `data_pipeline/site_industry.csv`, `fetch_industry.py`, `heatbeat_data/site_industry.py` | `docs/INDUSTRY.md` | Merged (#23). `q_fw_mw` is an engineering estimate; `d_market_m` and `ind_zoning` follow in a later PR. |
 | Ranking engine: port of the team Excel "Hack data.xlsx" (13 options, KO gates, score 0 to 5, eco grade A to F), modes `excel` (tested against the Excel) and `corrected`. Data threads hand missing site inputs over as `data_pipeline/site_ranking_inputs_<topic>.csv`. | `heatbeat_ranking/` | `docs/RANKING.md`, `heatbeat_ranking/AUDIT.md` | Merged (#14). CAPEX per option is a placeholder, heat sink not sized yet (upper bounds). |
 
 Next steps:
