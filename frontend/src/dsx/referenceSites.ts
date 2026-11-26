@@ -6,7 +6,7 @@
 import type { Baseline, Flag, InputValue, SiteInputs, SiteSummary } from '../types/api';
 
 interface Fact { value: number | string; flag: Flag; source: string }
-type Country = 'NO' | 'FI' | 'SE' | 'NL' | 'FR' | 'US-WA' | 'US-NY' | 'GB';
+type Country = 'NO' | 'FI' | 'SE' | 'NL' | 'FR' | 'US-WA' | 'US-NY' | 'GB' | 'IE' | 'US-ND' | 'US-VA' | 'US-HI';
 
 export interface ReferenceSite {
   id: string;
@@ -101,6 +101,33 @@ const COUNTRY: Record<Country, Record<'p_elec_usd_kwh' | 'p_fuel_usd_kwh' | 'ci_
     wsi_index: EST(1.0, 'Aqueduct 4.0 state score not retrieved; planning estimate'),
     p_co2_usd_ton: EST(0, 'No carbon price on heating fuel in New York (RGGI covers power plants only)'),
   },
+  IE: {
+    p_elec_usd_kwh: REAL(r3(0.2552 * EUR), `${S.eurostatElec}, H2 2025: Ireland €0.2552/kWh (highest in the EU)`),
+    p_fuel_usd_kwh: EST(r3(0.0605 * EUR), 'Eurostat nrg_pc_203, H2 2025: EU average €0.0605/kWh (Ireland not itemised here)'),
+    ci_grid_g_kwh: REAL(197, 'EPA Ireland provisional GHG 1990-2025: power generation 197 g CO2/kWh in 2025'), ci_fuel_g_kwh: GAS_CI,
+    wsi_index: EST(1.0, 'Aqueduct 4.0 Ireland score not retrieved; planning estimate'), p_co2_usd_ton: REAL(euaUsd, S.eua),
+  },
+  'US-ND': {
+    p_elec_usd_kwh: REAL(0.0725, 'EIA 2024: North Dakota industrial 7.25 ¢/kWh'),
+    p_fuel_usd_kwh: REAL(r3(2.21 / 304), 'EIA Natural Gas Annual 2024, Table 23: North Dakota industrial $2.21/Mcf'),
+    ci_grid_g_kwh: REAL(646, 'EIA North Dakota electricity profile 2024: 1,424 lb CO2/MWh'), ci_fuel_g_kwh: GAS_CI,
+    wsi_index: EST(1.0, 'Aqueduct 4.0 state score not retrieved; planning estimate'),
+    p_co2_usd_ton: EST(0, 'No carbon price on heating fuel in North Dakota'),
+  },
+  'US-VA': {
+    p_elec_usd_kwh: REAL(0.0899, 'EIA 2024: Virginia industrial 8.99 ¢/kWh'),
+    p_fuel_usd_kwh: REAL(r3(4.35 / 304), 'EIA Natural Gas Annual 2024, Table 23: Virginia industrial $4.35/Mcf'),
+    ci_grid_g_kwh: REAL(286, 'EIA Virginia electricity profile 2024: 631 lb CO2/MWh'), ci_fuel_g_kwh: GAS_CI,
+    wsi_index: EST(1.5, 'Aqueduct 4.0 state score not retrieved; planning estimate'),
+    p_co2_usd_ton: EST(0, 'No carbon price on heating fuel in Virginia'),
+  },
+  'US-HI': {
+    p_elec_usd_kwh: EST(0.38, 'EIA Hawaii electricity profile 2024: all-sector average 38.00 ¢/kWh (industrial not itemised here)'),
+    p_fuel_usd_kwh: REAL(r3(28.35 / 304), 'EIA Natural Gas Annual 2024, Table 23: Hawaii industrial $28.35/Mcf (synthetic natural gas)'),
+    ci_grid_g_kwh: REAL(647, 'EIA Hawaii electricity profile 2024: 1,426 lb CO2/MWh'), ci_fuel_g_kwh: GAS_CI,
+    wsi_index: EST(1.5, 'Hand estimate from the team database (reference_sites.py); Aqueduct score not retrieved'),
+    p_co2_usd_ton: EST(0, 'No carbon price on heating fuel in Hawaii'),
+  },
   GB: {
     p_elec_usd_kwh: REAL(r3(0.168 * GBP), 'DESNZ Quarterly Energy Prices: manufacturing 16.8 p/kWh, Q4 2025'),
     p_fuel_usd_kwh: REAL(r3(0.035 * GBP), 'DESNZ Quarterly Energy Prices: manufacturing gas 3.5 p/kWh, Q4 2025'),
@@ -194,6 +221,57 @@ export const REFERENCE_SITES: ReferenceSite[] = [
     it_mw: EST(2, 'Not published by Civo; planning estimate'), pue: EST(1.3, 'Not published; planning estimate'),
     facts: { t_dc_base_c: EST(30, 'Estimate'), d_co2_m: EST(50000, 'CO2 offtake distance unknown, estimate') },
     note: 'Pin placed in London because the pilot site is not public.',
+  },
+  {
+    id: 'ref-eindhoven', climate: { t_db_mean_c: 11, t_db_min_c: -6, t_db_max_c: 31, warmest_month: 7 }, name: 'NorthC Eindhoven 1 (High Tech Campus)', operator: 'NorthC', city: 'Eindhoven', country: 'NL', region: 'NL',
+    lat: 51.4110, lng: 5.4590, pathways: ['btes_ates'],
+    it_mw: EST(1.8, 'NorthC factsheet: 2.4 MW installed power; IT = 2.4 / PUE 1.25 (inferred)'), pue: EST(1.25, 'Grundfos case study: under 20 % for cooling and security (inferred)'),
+    facts: {
+      is_greenfield: EST(1, 'ATES (WKO) built with the data center (Grundfos case study), so evaluated as designed-in'),
+      geo_storage_score: EST(4, 'Sand aquifers with active ATES use; hand estimate (team database data_pipeline/reference_sites.py)'),
+      has_existing_dh: REAL(1, 'Heat goes to the High Tech Campus heat ring (Grundfos case study)'), d_dh_m: EST(0, 'On the campus ring; hand estimate'),
+      t_dc_base_c: EST(30, 'Estimate'),
+    },
+  },
+  {
+    id: 'ref-arklow', climate: { t_db_mean_c: 10, t_db_min_c: -3, t_db_max_c: 25, warmest_month: 7 }, name: 'Echelon DUB20 Arklow', operator: 'Echelon Data Centres', city: 'Arklow, Wicklow', country: 'IE', region: 'IE',
+    lat: 52.7930, lng: -6.1600, pathways: ['biogas'],
+    it_mw: EST(80, 'RTE 2021: 100 MW facility; IT share not published (estimate)'), pue: EST(1.3, 'Not published; planning estimate'),
+    facts: {
+      is_greenfield: REAL(1, 'Biocore digester agreed together with the new campus (Bioenergy Insight, 2021)'),
+      d_bio_m: REAL(500, 'Biocore biogas plant co-located on the DUB20 site (Bioenergy Insight, 2021); distance assumed 500 m'),
+      ind_zoning: EST(1, 'Industrial campus; hand estimate (team database data_pipeline/reference_sites.py)'), t_dc_base_c: EST(30, 'Estimate'),
+    },
+    note: 'Planned (agreed 2021): data center heat keeps the co-located digester warm.',
+  },
+  {
+    id: 'ref-williston', climate: { t_db_mean_c: 5, t_db_min_c: -30, t_db_max_c: 35, warmest_month: 7 }, name: 'Crusoe Digital Flare Mitigation (Williston Basin)', operator: 'Crusoe', city: 'Williston, North Dakota', country: 'US', region: 'US-ND',
+    lat: 48.1470, lng: -103.6180, pathways: ['biogas'],
+    it_mw: EST(1.5, 'Module size per well pad not published (team assumption)'), pue: EST(1.1, 'Containerised modules; estimate'),
+    facts: {
+      d_bio_m: EST(50000, 'Flare gas is not digester feedstock; hand estimate (team database data_pipeline/reference_sites.py)'),
+      flat_land_m2: EST(3000000, 'Open prairie; hand estimate (team database data_pipeline/reference_sites.py)'), t_dc_base_c: EST(30, 'Estimate'),
+    },
+    note: 'Crusoe burns stranded flare gas to power the compute (gas to power). It does not reuse server heat, so the model is expected to find no heat option here.',
+  },
+  {
+    id: 'ref-kona', climate: { t_db_mean_c: 24, t_db_min_c: 17, t_db_max_c: 31, warmest_month: 8 }, name: 'Trevi Systems desalination test (NELHA Kona)', operator: 'Trevi Systems / Endeavour', city: 'Kailua-Kona, Hawaii', country: 'US', region: 'US-HI',
+    lat: 19.7280, lng: -156.0570, pathways: ['desalination'],
+    it_mw: EST(1, 'Modelled as a 1 MW warm liquid-cooled module so results read per MW (team database data_pipeline/reference_sites.py)'), pue: EST(1.15, 'Estimate'),
+    facts: {
+      is_greenfield: EST(1, 'New modular build'), cooling_type: EST('liquid', 'Warm liquid cooling assumed (Endeavour concept)'), t_dc_base_c: EST(60, 'Warm liquid cooling; estimate'),
+      d_coast_m: EST(300, 'NELHA seawater intake on the coast; hand estimate (team database data_pipeline/reference_sites.py)'), dz_m: EST(5, 'Hand estimate'),
+    },
+    note: 'Pilot: Trevi ran its process on seawater at NELHA (DOE EERE, 2022); Endeavour plans to pair it with data center heat. Not a data center site.',
+  },
+  {
+    id: 'ref-vertiv-orc', climate: { t_db_mean_c: 13.5, t_db_min_c: -10, t_db_max_c: 35, warmest_month: 7 }, name: 'Vertiv ORC testbed (Ashburn design climate)', operator: 'Vertiv', city: 'Ashburn, Virginia', country: 'US', region: 'US-VA',
+    lat: 39.0438, lng: -77.4874, pathways: ['orc'],
+    it_mw: REAL(0.04, 'Vertiv white paper: about 40 kW of liquid-cooled servers'), pue: EST(1.2, 'Estimate'),
+    facts: {
+      cooling_type: REAL('liquid', 'Vertiv white paper: liquid-cooled servers'), t_dc_base_c: REAL(58, 'Vertiv white paper: server outlet 58 C'),
+    },
+    note: 'Lab test, not a data center: the best case still had negative net power after fans and pumps (Vertiv white paper).',
   },
 ];
 
