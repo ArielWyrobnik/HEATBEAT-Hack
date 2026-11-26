@@ -1,8 +1,12 @@
 """Build data/parquet/*.parquet (committed) and data/heatbeat.db (SQLite, local) from all sources.
 
 Usage:
-    python -m data_pipeline.build_db            # real data (needs internet)
-    python -m data_pipeline.build_db --offline  # synthetic placeholders, for testing the pipeline only
+    python -m data_pipeline.build_db                         # everything in one go (needs internet)
+    python -m data_pipeline.build_db --stage weather         # only fetch weather into data/cache
+    python -m data_pipeline.build_db --stage regions         # only fetch EIA / Ember into data/cache
+    python -m data_pipeline.build_db --stage prices --iso CAISO   # only fetch one ISO into data/cache
+    python -m data_pipeline.build_db --stage assemble        # build tables from cache only, no fetching
+    python -m data_pipeline.build_db --offline               # synthetic placeholders, for pipeline tests
 """
 from __future__ import annotations
 
@@ -12,7 +16,7 @@ from datetime import datetime, timezone
 import pandas as pd
 
 from .common import DB_PATH, PARQUET_DIR, REPORT_PATH, YEAR, load_grid_regions, load_sites, log, setup_logging, write_json
-from .fetch_prices import ILS_PER_USD, get_prices
+from .fetch_prices import ILS_PER_USD, get_prices, prefetch_iso
 from .fetch_retail_carbon import EIA_AVGPRICE_URL, EMBER_GLOBAL_URL, enrich_regions
 from .fetch_weather import COLUMNS as WEATHER_COLS, get_weather
 from heatbeat_data.sqlite_build import build_sqlite
@@ -64,14 +68,14 @@ SOURCES = [
 ]
 
 
-def build(offline: bool = False) -> dict:
+def build(offline: bool = False, fetch: bool = True) -> dict:
     sites, regions = load_sites(), load_grid_regions()
     assert sites["grid_region_id"].isin(regions["grid_region_id"]).all(), "site with unknown grid_region_id"
 
-    regions, carbon_status = enrich_regions(regions, offline=offline)
+    regions, carbon_status = enrich_regions(regions, offline=offline, fetch=fetch)
     retail = dict(zip(regions["grid_region_id"], regions["retail_industrial_usd_mwh"]))
-    prices, price_status = get_prices(regions, retail, offline=offline)
-    weather, weather_status = get_weather(sites, offline=offline)
+    prices, price_status = get_prices(regions, retail, offline=offline, fetch=fetch)
+    weather, weather_status = get_weather(sites, offline=offline, fetch=fetch)
 
     kind = prices.groupby("grid_region_id")["price_kind"].first()
     regions["hourly_price_kind"] = regions["grid_region_id"].map(kind)
@@ -113,7 +117,22 @@ def main() -> None:
     setup_logging()
     ap = argparse.ArgumentParser()
     ap.add_argument("--offline", action="store_true", help="synthetic placeholders only, for pipeline tests")
-    build(offline=ap.parse_args().offline)
+    ap.add_argument("--stage", default="all", choices=["all", "weather", "regions", "prices", "assemble"])
+    ap.add_argument("--iso", help="with --stage prices: one of CAISO, ERCOT, MISO, NYISO, ISONE, SPP, PJM")
+    a = ap.parse_args()
+    if a.stage == "weather":
+        _, st = get_weather(load_sites())
+        log.info("weather stage: %d sites, missing: %s", len(st), [k for k, v in st.items() if v == "missing"])
+    elif a.stage == "regions":
+        _, st = enrich_regions(load_grid_regions())
+        log.info("regions stage: %s", st)
+    elif a.stage == "prices":
+        regions = load_grid_regions()
+        isos = [a.iso] if a.iso else sorted(regions["iso_rto"].dropna().unique())
+        for iso in isos:
+            log.info("prices stage %s: %s", iso, prefetch_iso(regions, iso))
+    else:
+        build(offline=a.offline, fetch=a.stage == "all")
 
 
 if __name__ == "__main__":

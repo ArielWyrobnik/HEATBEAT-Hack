@@ -131,55 +131,61 @@ def fetch_iso_prices(iso: str, locations: list[str]) -> tuple[dict[str, pd.Serie
     return {loc: pd.concat(s) if s else pd.Series(dtype=float) for loc, s in parts.items()}, "gridstatus_da_hourly"
 
 
-def get_prices(regions: pd.DataFrame, retail: dict[str, float], offline: bool = False) -> tuple[pd.DataFrame, dict]:
-    """Return long price table and per-region status.
-
-    `retail` maps grid_region_id to annual average retail price (USD/MWh) used to scale synthetic shapes.
-    """
+def prefetch_iso(regions: pd.DataFrame, iso: str) -> dict:
+    """Fetch one ISO's hub series for the reference year and cache each region that meets MIN_COVERAGE."""
     idx = hourly_index()
     cache = CACHE_DIR / "prices"
     cache.mkdir(parents=True, exist_ok=True)
+    grp = regions[regions["iso_rto"] == iso]
+    todo = [r for r in grp.itertuples() if not (cache / f"{r.grid_region_id}.parquet").exists()]
+    status: dict[str, dict] = {r.grid_region_id: {"kind": "wholesale_da_lmp", "cached": True}
+                               for r in grp.itertuples() if r not in todo}
+    if not todo:
+        return status
+    try:
+        fetched, how = fetch_iso_prices(iso, sorted({r.lmp_location for r in todo}))
+    except Exception as exc:  # noqa: BLE001
+        log.warning("prices %s unavailable: %s", iso, exc)
+        return {r.grid_region_id: {"kind": "fallback_synthetic", "error": str(exc)[:300]} for r in todo}
+    for r in todo:
+        s = fetched.get(r.lmp_location, pd.Series(dtype=float))
+        s = s[~s.index.duplicated()].reindex(idx) if len(s) else pd.Series(np.nan, index=idx)
+        coverage = float(s.notna().mean())
+        log.info("prices %s (%s %s): coverage %.1f%%", r.grid_region_id, iso, r.lmp_location, 100 * coverage)
+        if coverage >= MIN_COVERAGE:
+            filled = s.isna().to_numpy().astype(int)
+            s = s.interpolate(limit_direction="both")
+            pd.DataFrame({"price_usd_mwh": s, "is_synthetic": filled, "source": f"{iso.lower()}_{how}"}).to_parquet(
+                cache / f"{r.grid_region_id}.parquet")
+            status[r.grid_region_id] = {"kind": "wholesale_da_lmp", "coverage": round(coverage, 4)}
+        else:
+            status[r.grid_region_id] = {"kind": "fallback_synthetic", "coverage": round(coverage, 4)}
+    return status
+
+
+def get_prices(regions: pd.DataFrame, retail: dict[str, float], offline: bool = False,
+               fetch: bool = True) -> tuple[pd.DataFrame, dict]:
+    """Return long price table and per-region status.
+
+    Real ISO series come from data/cache/prices (filled by prefetch_iso; with fetch=True missing ISOs are
+    fetched here). `retail` maps grid_region_id to annual average retail price (USD/MWh) used to scale
+    synthetic shapes where no real hourly series is cached.
+    """
+    idx = hourly_index()
+    cache = CACHE_DIR / "prices"
     status: dict[str, dict] = {}
-    series: dict[str, tuple[pd.Series, np.ndarray, str]] = {}
+    if fetch and not offline:
+        for iso in sorted(regions["iso_rto"].dropna().unique()):
+            status.update(prefetch_iso(regions, iso))
 
-    # 1) real ISO series, grouped by ISO
-    iso_regions = regions.dropna(subset=["iso_rto"])
-    for iso, grp in ([] if offline else iso_regions.groupby("iso_rto")):
-        todo = [r for r in grp.itertuples() if not (cache / f"{r.grid_region_id}.parquet").exists()]
-        fetched, how = {}, None
-        if todo:
-            try:
-                fetched, how = fetch_iso_prices(iso, sorted({r.lmp_location for r in todo}))
-            except Exception as exc:  # noqa: BLE001
-                log.warning("prices %s unavailable: %s", iso, exc)
-        for r in grp.itertuples():
-            path = cache / f"{r.grid_region_id}.parquet"
-            if path.exists():
-                df = pd.read_parquet(path)
-                series[r.grid_region_id] = (df["price_usd_mwh"], df["is_synthetic"].to_numpy(), df["source"].iloc[0])
-                continue
-            s = fetched.get(r.lmp_location, pd.Series(dtype=float))
-            s = s[~s.index.duplicated()].reindex(idx) if len(s) else pd.Series(np.nan, index=idx)
-            coverage = float(s.notna().mean())
-            log.info("prices %s (%s %s): coverage %.1f%%", r.grid_region_id, iso, r.lmp_location, 100 * coverage)
-            if coverage >= MIN_COVERAGE:
-                filled = s.isna().to_numpy()
-                s = s.interpolate(limit_direction="both")
-                src = f"{iso.lower()}_{how}"
-                pd.DataFrame({"price_usd_mwh": s, "is_synthetic": filled.astype(int), "source": src}).to_parquet(path)
-                series[r.grid_region_id] = (s, filled.astype(int), src)
-                status[r.grid_region_id] = {"kind": "wholesale_da_lmp", "coverage": round(coverage, 4)}
-            else:
-                status[r.grid_region_id] = {"kind": "fallback_synthetic", "coverage": round(coverage, 4)}
-
-    # 2) everything else
     rows = []
     for r in regions.itertuples():
         gid = r.grid_region_id
-        if gid in series:
-            s, synth, src = series[gid]
-            status.setdefault(gid, {"kind": "wholesale_da_lmp", "coverage": float(1 - synth.mean())})
-            kind = "wholesale_da_lmp"
+        path = cache / f"{gid}.parquet"
+        if not offline and isinstance(r.iso_rto, str) and path.exists():
+            df = pd.read_parquet(path)
+            s, synth, src, kind = df["price_usd_mwh"], df["is_synthetic"].to_numpy(), df["source"].iloc[0], "wholesale_da_lmp"
+            status[gid] = {"kind": kind, "coverage": round(float(1 - synth.mean()), 4)}
         elif gid == "IL":
             s, synth, src, kind = _israel_tou(idx), np.zeros(len(idx), int), "iec_taoz_2023", "retail_tou"
             status[gid] = {"kind": kind}
@@ -190,8 +196,8 @@ def get_prices(regions: pd.DataFrame, retail: dict[str, float], offline: bool = 
                 continue
             shape = synthetic_shape(idx, REGION_TZ[gid], southern=r.country_iso2 in ("AU", "BR", "ZA"))
             s, synth, src, kind = pd.Series(base * shape, index=idx), np.ones(len(idx), int), "synthetic_shape", "synthetic_shape"
-            status.setdefault(gid, {})
-            status[gid].update({"kind": kind})
+            prev = status.get(gid, {})
+            status[gid] = {**prev, "kind": kind}
         rows.append(pd.DataFrame({"grid_region_id": gid, "ts_utc": idx, "price_usd_mwh": np.asarray(s, float),
                                   "price_kind": kind, "is_synthetic": synth, "source": src}))
     return pd.concat(rows, ignore_index=True), status

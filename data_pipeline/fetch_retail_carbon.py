@@ -28,9 +28,11 @@ EGRID2023_CO2_LB_MWH = {
 }
 
 
-def fetch_eia_retail() -> tuple[pd.DataFrame, int]:
+def fetch_eia_retail(fetch: bool = True) -> tuple[pd.DataFrame, int]:
     """Return DataFrame indexed by state with industrial and commercial price (USD/MWh) for the latest year."""
     cache = CACHE_DIR / "eia_avgprice_annual.xlsx"
+    if not cache.exists() and not fetch:
+        raise FileNotFoundError(f"{cache} not cached (run --stage regions)")
     if not cache.exists():
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_bytes(http_get(EIA_AVGPRICE_URL).content)
@@ -47,9 +49,11 @@ def fetch_eia_retail() -> tuple[pd.DataFrame, int]:
     return out, year
 
 
-def fetch_ember_intensity() -> tuple[dict[str, float], dict[str, int]]:
+def fetch_ember_intensity(fetch: bool = True) -> tuple[dict[str, float], dict[str, int]]:
     """Latest-year overall emissions intensity (gCO2e/kWh == kg/MWh) per ISO3 country code."""
     cache = CACHE_DIR / "ember_yearly_global.csv"
+    if not cache.exists() and not fetch:
+        raise FileNotFoundError(f"{cache} not cached (run --stage regions)")
     if not cache.exists():
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_bytes(http_get(EMBER_GLOBAL_URL, timeout=600).content)
@@ -71,7 +75,7 @@ def fetch_ember_intensity() -> tuple[dict[str, float], dict[str, int]]:
     return latest[val_col].astype(float).to_dict(), latest[year_col].astype(int).to_dict()
 
 
-def enrich_regions(regions: pd.DataFrame, offline: bool = False) -> tuple[pd.DataFrame, dict]:
+def enrich_regions(regions: pd.DataFrame, offline: bool = False, fetch: bool = True) -> tuple[pd.DataFrame, dict]:
     reg = regions.copy()
     status: dict[str, str] = {}
     for c in ("retail_industrial_usd_mwh", "retail_commercial_usd_mwh", "co2_kg_mwh"):
@@ -87,7 +91,7 @@ def enrich_regions(regions: pd.DataFrame, offline: bool = False) -> tuple[pd.Dat
     # --- US retail (EIA) ---
     if not offline:
         try:
-            eia, year = fetch_eia_retail()
+            eia, year = fetch_eia_retail(fetch)
             for i in reg.index[us]:
                 st = reg.at[i, "us_state"]
                 if st in eia.index:
@@ -110,7 +114,7 @@ def enrich_regions(regions: pd.DataFrame, offline: bool = False) -> tuple[pd.Dat
     # --- Non-US carbon (Ember) ---
     if not offline:
         try:
-            inten, years = fetch_ember_intensity()
+            inten, years = fetch_ember_intensity(fetch)
             for i in reg.index[~us]:
                 iso3 = reg.at[i, "country_iso3"]
                 if iso3 in inten:

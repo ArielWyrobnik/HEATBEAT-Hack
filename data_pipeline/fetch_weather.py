@@ -90,10 +90,11 @@ def synthetic_weather(lat: float, lon: float, seed: int) -> pd.DataFrame:
     return _finish(df)
 
 
-def get_weather(sites: pd.DataFrame, offline: bool = False, pause_s: float = 2.0) -> tuple[pd.DataFrame, dict]:
+def get_weather(sites: pd.DataFrame, offline: bool = False, fetch: bool = True, pause_s: float = 4.0) -> tuple[pd.DataFrame, dict]:
     """Return long table (site_id, ts_utc, columns..., source) and a per-site status dict.
 
     Real results are cached in data/cache/weather/<site_id>.parquet so reruns only fetch missing sites.
+    With fetch=False only cached sites are returned.
     """
     cache = CACHE_DIR / "weather"
     cache.mkdir(parents=True, exist_ok=True)
@@ -106,6 +107,10 @@ def get_weather(sites: pd.DataFrame, offline: bool = False, pause_s: float = 2.0
             source = df.pop("source").iloc[0]
         elif offline:
             df, source = synthetic_weather(s.lat, s.lon, seed=i), "synthetic_offline"
+        elif not fetch:
+            log.warning("weather %s: not cached and fetching disabled", s.site_id)
+            status[s.site_id] = "missing"
+            continue
         else:
             for name, fn in (("open_meteo_era5", fetch_open_meteo), ("nasa_power", fetch_nasa_power)):
                 try:
@@ -126,4 +131,6 @@ def get_weather(sites: pd.DataFrame, offline: bool = False, pause_s: float = 2.0
         df.insert(0, "site_id", s.site_id)
         df["source"] = source
         frames.append(df)
+    if not frames:
+        return pd.DataFrame(columns=["site_id", "ts_utc", *COLUMNS, "source"]), status
     return pd.concat(frames, ignore_index=True), status

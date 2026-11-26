@@ -35,20 +35,35 @@ def hourly_index(year: int = YEAR) -> pd.DatetimeIndex:
     return pd.date_range(f"{year}-01-01", f"{year + 1}-01-01", freq="h", tz="UTC", inclusive="left")
 
 
-def http_get(url: str, *, params: dict | None = None, timeout: int = 120, retries: int = 5,
-             backoff: float = 10.0) -> requests.Response:
+class RateLimited(RuntimeError):
+    pass
+
+
+class PermanentHTTPError(RuntimeError):
+    pass
+
+
+def http_get(url: str, *, params: dict | None = None, timeout: int = 120, retries: int = 4,
+             backoff: float = 5.0) -> requests.Response:
     """GET with retries and exponential backoff (handles 429 and 5xx)."""
     last_exc: Exception | None = None
     for attempt in range(retries):
         try:
             r = requests.get(url, params=params, timeout=timeout, headers={"User-Agent": USER_AGENT})
-            if r.status_code == 429 or r.status_code >= 500:
+            if r.status_code == 429:
+                raise RateLimited(f"HTTP 429: {r.text[:200]}")
+            if r.status_code >= 500:
                 raise requests.HTTPError(f"HTTP {r.status_code}: {r.text[:200]}")
-            r.raise_for_status()
+            if r.status_code >= 400:  # other client errors will not fix themselves
+                raise PermanentHTTPError(f"HTTP {r.status_code} for {url}: {r.text[:200]}")
             return r
+        except PermanentHTTPError:
+            raise
         except Exception as exc:  # noqa: BLE001
             last_exc = exc
             wait = backoff * (2 ** attempt)
+            if isinstance(exc, RateLimited):
+                wait = max(wait, 65.0)  # Open-Meteo minutely limit resets after 60 s
             log.warning("GET %s failed (%s), retry %d/%d in %.0fs", url, exc, attempt + 1, retries, wait)
             time.sleep(wait)
     raise RuntimeError(f"GET {url} failed after {retries} attempts: {last_exc}")
