@@ -98,26 +98,31 @@ export const ENGINE = (() => {
 
   // ---- gates
   const chk = (c, m, f) => { if (!c) f.push(m); };
-  const gf = (s, f) => chk(s.is_greenfield === 1, "greenfield-only option on existing site", f);
+  const gf = (s, f) => chk(s.is_greenfield === 1, "only possible when designed in with a new build; this is an existing site", f);
+  // v3.3: every rejection states the site's actual value and the limit it misses.
+  const km = (m) => (m / 1000).toFixed(1);
+  const n0 = (x) => Math.round(x).toLocaleString("en-US");
   const G = {
-    fish: (s, h) => { const f = []; chk(h.mean_amb <= 26, `mean ambient ${h.mean_amb.toFixed(1)} > 26 C`, f); chk(h.gt30 < 1500, `${h.gt30} h above 30 C (limit <1500)`, f);
-      chk(s.slope_deg <= 8, "slope > 8 deg", f); chk(s.flat_land_m2 >= 5000, "flat land < 5,000 m2", f); chk(s.d_water_m <= 3000, "water intake > 3,000 m", f);
-      chk(s.wsi_index < 4.0, "WSI >= 4.0", f); chk(s.q_dc_mw >= 0.5, "q_dc < 0.5 MW", f); return f; },
-    dh: (s, h) => { const f = []; chk(h.lt15 >= 2000, `only ${h.lt15} h below 15 C (need >=2000)`, f);
-      if (s.is_greenfield === 1) { chk(s.d_dh_m <= 3000, "DH distance > 3,000 m (greenfield)", f); chk(s.rho_heat_mwh_m >= 1.5, "linear heat density < 1.5 MWh/m/yr (greenfield)", f); }
-      else { chk(s.has_existing_dh === 1, "no existing DH grid (retrofit)", f); chk(s.d_dh_m <= 800, "DH distance > 800 m (retrofit)", f); chk(s.rho_heat_mwh_m >= 2.5, "linear heat density < 2.5 MWh/m/yr (retrofit)", f); }
+    fish: (s, h) => { const f = []; chk(h.mean_amb <= 26, `mean ambient ${h.mean_amb.toFixed(1)} C is above the 26 C limit for fish tanks`, f); chk(h.gt30 < 1500, `${n0(h.gt30)} h above 30 C (limit under 1,500 h)`, f);
+      chk(s.slope_deg <= 8, `slope ${s.slope_deg} deg (limit 8 deg)`, f); chk(s.flat_land_m2 >= 10000, `flat land ${n0(s.flat_land_m2)} m2, needs 10,000 m2 for RAS tanks`, f); chk(s.d_water_m <= 3000, `water intake ${km(s.d_water_m)} km away (limit 3 km)`, f);
+      chk(s.wsi_index < 4.0, `water stress ${s.wsi_index} (must be under 4.0)`, f); chk(s.q_dc_mw >= 0.5, `heat source ${s.q_dc_mw} MW (needs 0.5 MW)`, f);
+      chk(s.ind_zoning === 1, "needs industrial or rural zoning; fish farms are not permitted in urban or commercial zones", f); return f; },
+    dh: (s, h) => { const f = []; chk(h.lt15 >= 2000, `only ${n0(h.lt15)} h below 15 C (needs 2,000 h of heating demand)`, f);
+      if (s.is_greenfield === 1) { chk(s.d_dh_m <= 3000, `heat network ${km(s.d_dh_m)} km away (limit 3 km for a new build)`, f); chk(s.rho_heat_mwh_m >= 1.5, `heat density ${s.rho_heat_mwh_m} MWh/m/yr (needs 1.5 for a new build)`, f); }
+      else { chk(s.has_existing_dh === 1, "no existing district heating network to connect to (existing site)", f); chk(s.d_dh_m <= 800, `heat network ${n0(s.d_dh_m)} m away (limit 800 m for an existing site)`, f); chk(s.rho_heat_mwh_m >= 2.5, `heat density ${s.rho_heat_mwh_m} MWh/m/yr (needs 2.5 for an existing site)`, f); }
       return f; },
-    biogas: (s, h) => { const f = []; chk(h.lt25 >= 2500, `only ${h.lt25} h below 25 C (need >=2500)`, f); chk(s.d_bio_m <= 25000, "feedstock > 25 km", f); chk(s.slope_deg <= 10, "slope > 10 deg", f); return f; },
-    absorption: (s, h) => { const f = []; chk(h.max_tdc >= 65, `max coolant temp ${h.max_tdc.toFixed(1)} < 65 C`, f); chk(h.gt24 >= 1500, `only ${h.gt24} h above 24 C (need >=1500)`, f); chk(s.wsi_index < 3.8, "WSI >= 3.8", f); return f; },
-    orc: (s, h) => { const f = []; chk(h.min_tdc >= 80, `min coolant temp ${h.min_tdc.toFixed(1)} < 80 C`, f); chk(h.lt30 >= 5000, `only ${h.lt30} h below 30 C (need >=5000)`, f); return f; },
-    dac: (s, h) => { const f = []; chk(s.d_co2_m <= 50000, "CO2 sink > 50 km", f); chk(h.gt35 < 1500, `${h.gt35} h above 35 C (limit <1500)`, f); return f; },
-    btes: (s, h) => { const f = []; gf(s, f); chk(s.geo_storage_score >= 3, "geo storage score < 3", f); chk(h.lt15 >= 2500, `only ${h.lt15} h below 15 C (need >=2500)`, f); chk(h.gt20 >= 1000, `only ${h.gt20} h above 20 C (need >=1000)`, f); return f; },
-    feedwater: (s, h) => { const f = []; gf(s, f); chk(s.d_pp_m <= 1500, "power plant > 1,500 m", f); chk(s.q_fw_mw >= 2.0, "feedwater sink < 2 MW", f); return f; },
-    desal: (s, h) => { const f = []; gf(s, f); chk(s.d_coast_m <= 5000, "coast > 5,000 m", f); chk(s.dz_m <= 50, "elevation head > 50 m", f); chk(s.wsi_index >= 2.0, "WSI < 2.0 (no water need)", f); return f; },
-    biomass: (s, h) => { const f = []; gf(s, f); chk(s.d_bio_m <= 25000, "feedstock > 25 km", f); chk(s.ind_zoning === 1, "industrial zoning not permitted", f); chk(s.slope_deg <= 10, "slope > 10 deg", f); return f; },
-    drying: (s, h) => { const f = []; gf(s, f); chk(s.ind_zoning === 1, "industrial zoning not permitted", f); chk(s.q_dc_mw >= 5.0, "q_dc < 5 MW", f); chk(s.slope_deg <= 8, "slope > 8 deg", f); return f; },
-    snowmelt: (s, h) => { const f = []; gf(s, f); chk(s.campus_area_m2 >= 20000, "campus slab area < 20,000 m2", f); chk(h.le2 >= 800, `only ${h.le2} h at or below 2 C (need >=800)`, f); return f; },
-    greenhouse: (s, h) => { const f = []; gf(s, f); chk(s.agri_land_m2 >= 20000, "agri land < 20,000 m2", f); chk(s.slope_deg <= 6, "slope > 6 deg", f); chk(s.wsi_index < 4.0, "WSI >= 4.0", f); chk(h.lt18 >= 2000, `only ${h.lt18} h below 18 C (need >=2000)`, f); return f; },
+    biogas: (s, h) => { const f = []; chk(h.lt25 >= 2500, `only ${n0(h.lt25)} h below 25 C (needs 2,500 h)`, f); chk(s.d_bio_m <= 25000, `feedstock ${km(s.d_bio_m)} km away (limit 25 km)`, f); chk(s.slope_deg <= 10, `slope ${s.slope_deg} deg (limit 10 deg)`, f);
+      chk(s.ind_zoning === 1, "needs industrial or agricultural zoning; digesters are not permitted in urban or commercial zones", f); return f; },
+    absorption: (s, h) => { const f = []; chk(h.max_tdc >= 65, `coolant peaks at ${h.max_tdc.toFixed(1)} C; absorption chillers need 65 C`, f); chk(h.gt24 >= 1500, `only ${n0(h.gt24)} h above 24 C (needs 1,500 h of cooling demand)`, f); chk(s.wsi_index < 3.8, `water stress ${s.wsi_index} (must be under 3.8)`, f); return f; },
+    orc: (s, h) => { const f = []; chk(h.min_tdc >= 80, `coolant drops to ${h.min_tdc.toFixed(1)} C; ORC power needs 80 C all year`, f); chk(h.lt30 >= 5000, `only ${n0(h.lt30)} h below 30 C (needs 5,000 h for condenser cooling)`, f); return f; },
+    dac: (s, h) => { const f = []; chk(s.d_co2_m <= 50000, `CO2 storage or user ${km(s.d_co2_m)} km away (limit 50 km)`, f); chk(h.gt35 < 1500, `${n0(h.gt35)} h above 35 C (limit under 1,500 h)`, f); return f; },
+    btes: (s, h) => { const f = []; gf(s, f); chk(s.geo_storage_score >= 3, `ground storage score ${s.geo_storage_score} of 5 (needs 3)`, f); chk(h.lt15 >= 2500, `only ${n0(h.lt15)} h below 15 C (needs 2,500 h)`, f); chk(h.gt20 >= 1000, `only ${n0(h.gt20)} h above 20 C (needs 1,000 h to charge the store)`, f); return f; },
+    feedwater: (s, h) => { const f = []; gf(s, f); chk(s.d_pp_m <= 1500, `power plant ${km(s.d_pp_m)} km away (limit 1.5 km)`, f); chk(s.q_fw_mw >= 2.0, `feedwater heat demand ${s.q_fw_mw} MW (needs 2 MW)`, f); return f; },
+    desal: (s, h) => { const f = []; gf(s, f); chk(s.d_coast_m <= 5000, `coast ${km(s.d_coast_m)} km away (limit 5 km)`, f); chk(s.dz_m <= 50, `site ${s.dz_m} m above the sea (limit 50 m pumping head)`, f); chk(s.wsi_index >= 2.0, `water stress ${s.wsi_index}; under 2.0 there is no need for desalinated water`, f); return f; },
+    biomass: (s, h) => { const f = []; gf(s, f); chk(s.d_bio_m <= 25000, `feedstock ${km(s.d_bio_m)} km away (limit 25 km)`, f); chk(s.ind_zoning === 1, "needs industrial zoning", f); chk(s.slope_deg <= 10, `slope ${s.slope_deg} deg (limit 10 deg)`, f); return f; },
+    drying: (s, h) => { const f = []; gf(s, f); chk(s.ind_zoning === 1, "needs industrial zoning", f); chk(s.q_dc_mw >= 5.0, `heat source ${s.q_dc_mw} MW (needs 5 MW)`, f); chk(s.slope_deg <= 8, `slope ${s.slope_deg} deg (limit 8 deg)`, f); return f; },
+    snowmelt: (s, h) => { const f = []; gf(s, f); chk(s.campus_area_m2 >= 20000, `paved area ${n0(s.campus_area_m2)} m2 (needs 20,000 m2)`, f); chk(h.le2 >= 800, `only ${n0(h.le2)} h at or below 2 C (needs 800 h)`, f); return f; },
+    greenhouse: (s, h) => { const f = []; gf(s, f); chk(s.agri_land_m2 >= 20000, `farm land ${n0(s.agri_land_m2)} m2 (needs 20,000 m2)`, f); chk(s.slope_deg <= 6, `slope ${s.slope_deg} deg (limit 6 deg)`, f); chk(s.wsi_index < 4.0, `water stress ${s.wsi_index} (must be under 4.0)`, f); chk(h.lt18 >= 2000, `only ${n0(h.lt18)} h below 18 C (needs 2,000 h)`, f); return f; },
   };
   const areaCap = (k, w) => s => Math.min(1, s[k] * w / 1e6 / s.q_dc_mw);
   const O = (id, key, name, mode, t_sink, demand, product, capex, pipe, dist_key, dist_max, market, wf, li, cap, gate) =>

@@ -137,6 +137,7 @@ export const REFERENCE_SITES: ReferenceSite[] = [
     lat: 52.355, lng: 4.951, pathways: ['btes_ates'],
     it_mw: REAL(18, 'Cloudscene / datacenters.com: AM3 total power 18 MW'), pue: REAL(1.2, 'Equinix Netherlands via ioplus: AM3 PUE 1.2'),
     facts: {
+      ind_zoning: EST(0, 'Amsterdam Science Park, inside the city (urban / research campus): no industrial zoning, so no fish farm, biomass or drying plant'), flat_land_m2: EST(0, 'No free flat land in an urban core (estimate)'),
       is_greenfield: REAL(1, 'ATES was designed in when AM3 was built (2012), so it is evaluated as designed-in'),
       geo_storage_score: REAL(5, 'Operating ATES wells on site'), t_dc_base_c: EST(30, 'Estimate'),
       d_dh_m: EST(300, 'Heat goes to neighbouring Science Park buildings (estimate)'),
@@ -160,6 +161,7 @@ export const REFERENCE_SITES: ReferenceSite[] = [
     lat: 48.917, lng: 2.357, pathways: ['greenhouse', 'district_heating'],
     it_mw: REAL(5, 'datacenters.com: PA10 has access to 5 MW of power'), pue: EST(1.3, 'Not published; planning estimate'),
     facts: {
+      ind_zoning: EST(0, 'Saint-Denis, dense inner Paris suburb (urban): no industrial zoning, so no fish farm, biomass or drying plant'), flat_land_m2: EST(0, 'No free flat land in an urban core (estimate)'),
       is_greenfield: REAL(1, 'Heat recovery and greenhouse were designed into PA10'),
       agri_land_m2: REAL(430, 'Equinix: 430 m² rooftop greenhouse'),
       has_existing_dh: REAL(1, 'Connected to the Saint-Denis heating network'), d_dh_m: EST(500, 'Plaine Saulnier zone next door (estimate)'),
@@ -172,6 +174,7 @@ export const REFERENCE_SITES: ReferenceSite[] = [
     lat: 47.6145, lng: -122.3385, pathways: ['district_heating'],
     it_mw: REAL(19, 'datacentermap: Westin Building fully built-out power 19 MW'), pue: EST(1.4, 'Not published; older multi-tenant building, planning estimate'),
     facts: {
+      ind_zoning: EST(0, 'Downtown Seattle carrier hotel (urban core): no industrial zoning, so no fish farm, biomass or drying plant'), flat_land_m2: EST(0, 'No free flat land in an urban core (estimate)'),
       has_existing_dh: REAL(1, 'Amazon eco-district loop across the street'), d_dh_m: REAL(100, 'Across the street'),
       t_dc_base_c: REAL(18, 'Water at about 65 F before heat pumps (evaluated at the model minimum of 25 C)'),
       rho_heat_mwh_m: EST(3, 'Dense downtown, estimate'),
@@ -181,7 +184,8 @@ export const REFERENCE_SITES: ReferenceSite[] = [
     id: 'ref-syracuse', climate: { t_db_mean_c: 9, t_db_min_c: -20, t_db_max_c: 32, warmest_month: 7 }, name: 'Syracuse University Green Data Center', operator: 'Syracuse University / IBM', city: 'Syracuse, NY', country: 'US', region: 'US-NY',
     lat: 43.0377, lng: -76.134, pathways: ['absorption_cooling'],
     it_mw: EST(0.5, 'Not published; sized below the 780 kW on-site microturbine plant'), pue: EST(1.3, 'Not published; planning estimate'),
-    facts: { t_dc_base_c: EST(30, 'Estimate') },
+    facts: {
+      ind_zoning: EST(0, 'University campus in the city of Syracuse (urban): no industrial zoning, so no fish farm, biomass or drying plant'), flat_land_m2: EST(0, 'No free flat land in an urban core (estimate)'), t_dc_base_c: EST(30, 'Estimate') },
     note: 'Here the absorption chillers run on microturbine exhaust, not server heat; the model tests whether server heat could do it.',
   },
   {
