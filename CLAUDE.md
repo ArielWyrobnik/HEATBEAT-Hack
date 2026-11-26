@@ -31,7 +31,7 @@ Local context: Israel has low heating demand, high cooling demand, water scarcit
 
 Focus: US sites first. Israel is set aside for now (Ariel, 2026-11-26).
 
-PRs #1 and #3 to #25 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020; #8: free cooling capped by site supply temperature; #10: demo works without stored weather; #13: DAC credit split from avoided emission carbon value). What is on `main`:
+PRs #1 and #3 to #27 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020; #8: free cooling capped by site supply temperature; #10: demo works without stored weather; #13: DAC credit split from avoided emission carbon value). What is on `main`:
 
 | Part | Where | Docs | Status |
 |---|---|---|---|
@@ -39,7 +39,7 @@ PRs #1 and #3 to #25 are merged into `main` (#7: US retail prices from EIA 2024 
 | Heat source per site: IT load, cooling type, chip generation, coolant temperatures, `hd.site_heat_profiles()` | `data_pipeline/cooling_profiles.csv`, `site_profiles.csv`, `heat_sources.csv`, `heatbeat_data/heat_profiles.py` | `docs/HEAT_PROFILES.md` | Merged. Most site MW and chip values are team estimates (low confidence). |
 | Solution catalogue: 21 solutions with ideal parameters, schema validation, `screen()` first pass ranking | `heatbeat_solutions/` | `docs/SOLUTIONS.md` | Merged. |
 | US market prices per state: gas, propane, heating oil, carbon markets, 45Q, RINs, LCFS, fish, tomatoes, pellets; `hd.excel_inputs(site_id)` | `data_pipeline/market_prices.csv`, `heatbeat_data/market.py` | `docs/MARKET.md` | Merged (#12, #13). Transcribed from published tables, synthetic rows flagged. |
-| US water: tariffs and sewer per site, baseline WUE model, WRI Aqueduct lookup | `data_pipeline/site_water.csv`, `wue_profiles.csv`, `heatbeat_data/water.py`, `fetch_aqueduct.py` | `docs/WATER.md` | Merged (#15). `wsi_index` still empty: `fetch_aqueduct.py` must run once on a laptop (files.wri.org blocked in the cloud). |
+| US water: tariffs and sewer per site, baseline WUE model, WRI Aqueduct lookup | `data_pipeline/site_water.csv`, `wue_profiles.csv`, `heatbeat_data/water.py`, `fetch_aqueduct.py` | `docs/WATER.md` | Merged (#15, #27). `wsi_index` filled from WRI Aqueduct 4.0 (baseline plus 2030 and 2050 BAU) in `data_pipeline/aqueduct_sites.csv`. |
 | Demo: Streamlit input overview with live API calls and pipeline checks, every input labelled real / estimated / synthetic | `demo/` (`streamlit run demo/app.py`) | `demo/README.md` | Merged. The `Demo pipeline check` workflow runs the live calls in CI. |
 | Frontend: landing page, "How it works" section, world map (React, TypeScript, Vite, Leaflet) | `frontend/` | | Merged. Map pins load from `frontend/public/datacenters.json`. |
 | Site GIS inputs for the Excel model: d_coast_m, d_water_m, dz_m, slope_deg, flat and agri land, campus area, DH distance and heat density, industrial zoning; `hd.gis_inputs(site_id)` | `data_pipeline/site_gis.csv`, `fetch_gis.py`, `heatbeat_data/site_gis.py` | `docs/GIS.md` | Merged (#20). `campus_area_m2` synthetic, `ind_zoning` is an OSM proxy, most land figures low confidence. |
@@ -50,7 +50,6 @@ PRs #1 and #3 to #25 are merged into `main` (#7: US retail prices from EIA 2024 
 Next steps:
 
 - Shortlist solutions and fill the per solution economics (plan in the Claude Doc "Lösungs-Ranking: Datenschema und Aufgabenverteilung").
-- Run `fetch_aqueduct.py` locally to fill `wsi_index`.
 - Connect map, database and ranking engine (`heatbeat_ranking.rank_site`).
 
 Known gaps: PJM prices need a `PJM_API_KEY` secret, non-US retail prices and the Israel tariff mapping are unverified placeholders, no heat demand data yet.
