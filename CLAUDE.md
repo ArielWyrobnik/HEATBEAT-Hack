@@ -40,12 +40,13 @@ PRs #1 and #3 to #10 are merged into `main` (#7: US retail prices from EIA 2024 
 | Solution catalogue: 21 solutions with ideal parameters, schema validation, `screen()` first pass ranking | `heatbeat_solutions/` | `docs/SOLUTIONS.md` | Merged. Market prices not included yet. |
 | Demo: Streamlit input overview with live API calls and pipeline checks, every input labelled real / estimated / synthetic | `demo/` (`streamlit run demo/app.py`) | `demo/README.md` | Merged. The `Demo pipeline check` workflow runs the live calls in CI. |
 | Frontend: landing page, "How it works" section, world map (React, TypeScript, Vite, Leaflet) | `frontend/` | | Merged. Map pins load from `frontend/public/datacenters.json`. |
+| Ranking engine: port of the team Excel "Hack data.xlsx" (13 options, KO gates, score 0 to 5, eco grade A to F), modes `excel` (tested against the Excel) and `corrected`. Data threads hand missing site inputs over as `data_pipeline/site_ranking_inputs_<topic>.csv`. | `heatbeat_ranking/` | `docs/RANKING.md`, `heatbeat_ranking/AUDIT.md` | Branch `claude/project-thread-v4cogf`, PR open. |
 
 Next steps:
 
 - Shortlist solutions and collect economic and regional market data per solution (plan in the Claude Doc "Lösungs-Ranking: Datenschema und Aufgabenverteilung"). Regional values go into a planned `data_pipeline/market_prices.csv` keyed by `country_iso2` + `region` like `sites.csv`.
 - Water prices for US regions (separate thread).
-- Ranking logic and the connection between map, database and models. A teammate spreadsheet with 13 options, knock-out gates and a weighted score (35% thermo, 30% climate/geo, 25% economics, 10% utilization) is a candidate basis; not yet in the repo.
+- Connect map, database and ranking engine (`heatbeat_ranking.rank_site`).
 
 Known gaps: PJM prices need a `PJM_API_KEY` secret, non-US retail prices and the Israel tariff mapping are unverified placeholders, no water (WUE, water price) or heat demand data yet.
 
