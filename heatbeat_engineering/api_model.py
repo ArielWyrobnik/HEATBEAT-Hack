@@ -11,6 +11,7 @@ import math
 from heatbeat_api.schemas import (Baseline, EnergyFlow, InputValue, Kpis, ModelInfo, ModelResult, OptionResult,
                                   Tornado, TornadoBar)
 
+from . import calc_trace
 from .chains import best_per_use, evaluate_site
 from .params import PARAMS, defaults
 from .sensitivity import tornado as tornado_fn
@@ -175,6 +176,12 @@ class HeatChainModel:
         capex_bd = {a: round(b) for a, b in r["capex"].items() if b}
         if "implementation" in fields:
             extra["implementation"] = implementation(r, s, P)
+        if "calculation" in fields:
+            extra["calculation"] = calc_trace.build(r, base, s, P, LABELS, UNITS)
+            keep = set(calc_trace.relevant_params(r, s.baseline_rejection))
+            extra["calculation_inputs"] = [i for i in self._inputs_list(s, {k: v for k, v in P.items() if k in PARAMS
+                                                                             and v != PARAMS[k].value})
+                                           if i.key not in PARAMS or i.key in keep]
         if "capex_breakdown" in fields:
             # breakdown of the chain CAPEX minus what the baseline itself would cost (greenfield cooling plant)
             bd = dict(capex_bd)

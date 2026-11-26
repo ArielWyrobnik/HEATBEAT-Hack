@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import type { DataCenter } from '../types/datacenter';
 
@@ -114,13 +114,19 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
     if (planPoint) planMarker.current = L.marker([planPoint.lat, planPoint.lng], { icon: planIcon, zIndexOffset: 2000 }).addTo(m);
   }, [planning, planPoint]);
 
+  const label = (d: DataCenter) => [d.city, (d.region as string | undefined), d.country].filter(Boolean).join(', ');
+
+  // all data centers, sorted by country then name; filtered by the query when there is one
+  const sorted = useMemo(() => [...dataCenters].sort((a, b) =>
+    String(a.country ?? '').localeCompare(String(b.country ?? '')) || a.name.localeCompare(b.name)), [dataCenters]);
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return dataCenters
-      .filter((d) => [d.name, d.operator, d.city, d.country].some((v) => typeof v === 'string' && v.toLowerCase().includes(q)))
-      .slice(0, 8);
-  }, [query, dataCenters]);
+    if (!q) return sorted;
+    return sorted.filter((d) => [d.name, d.operator, d.city, d.region, d.country]
+      .some((v) => typeof v === 'string' && v.toLowerCase().includes(q)));
+  }, [query, sorted]);
+  const [active, setActive] = useState(0);
+  useEffect(() => setActive(0), [query]);
 
   // place search fallback (OpenStreetMap Nominatim), debounced
   useEffect(() => {
@@ -137,7 +143,14 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
   }, [query]);
 
   const focusDc = (d: DataCenter) => {
-    map.current?.flyTo([d.lat, d.lng], 11, { duration: 1.2 });
+    const m = map.current;
+    if (m) {
+      // keep the pin in the visible part of the map, left of the side panel
+      const zoom = 11;
+      const panel = fromApi && m.getSize().x > 720 ? Math.min(460, m.getSize().x) / 2 : 0;
+      const target = m.unproject(m.project([d.lat, d.lng], zoom).add([panel, 0]), zoom);
+      m.flyTo(target, zoom, { duration: 1.2 });
+    }
     if (fromApi && onSelect) onSelect(d.id);
     else markers.current.get(d.id)?.openPopup();
     setQuery(d.name);
@@ -153,11 +166,22 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (matches[0]) focusDc(matches[0]);
+    if (matches[active]) focusDc(matches[active]);
     else if (places[0]) focusPlace(places[0]);
   };
 
-  const showDropdown = open && query.trim() && (matches.length > 0 || places.length > 0);
+  const showDropdown = open && (matches.length > 0 || places.length > 0);
+  const onKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') { setOpen(false); return; }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    setOpen(true);
+    setActive((i) => Math.max(0, Math.min(matches.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1))));
+  };
+  const listRef = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    listRef.current?.querySelector('li.active')?.scrollIntoView({ block: 'nearest' });
+  }, [active]);
 
   return (
     <section className="map-section" id="map">
@@ -182,20 +206,36 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
             onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
             onFocus={() => setOpen(true)}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
-            placeholder="Search a data center, operator or city…"
+            onKeyDown={onKey}
+            placeholder="Pick a data center or search an operator, city or place…"
             aria-label="Search"
           />
+          {dataCenters.length > 0 && (
+            <button type="button" className={`list-toggle${open ? ' on' : ''}`} aria-label="Show all data centers"
+              title="Show all data centers"
+              onMouseDown={(e) => { e.preventDefault(); setOpen(!open); (e.currentTarget.form?.querySelector('input') as HTMLInputElement | null)?.focus(); }}>
+              <span>All {dataCenters.length}</span>
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
+            </button>
+          )}
           <button type="submit" className="btn btn-primary">Search</button>
 
           {showDropdown && (
-            <ul className="search-results">
-              {matches.map((d) => (
-                <li key={d.id} onMouseDown={() => focusDc(d)}>
-                  <span className="tag tag-dc">DC</span>
-                  <span className="r-name">{d.name}</span>
-                  <span className="r-sub">{[d.city, d.country].filter(Boolean).join(', ')}</span>
-                </li>
+            <ul className="search-results" ref={listRef}>
+              {matches.map((d, i) => (
+                <Fragment key={d.id}>
+                  {d.country && (i === 0 || matches[i - 1].country !== d.country) && (
+                    <li className="r-group" aria-hidden>{d.country}</li>
+                  )}
+                  <li className={`${i === active ? 'active' : ''}${d.id === selectedId ? ' current' : ''}`}
+                    onMouseDown={() => focusDc(d)} onMouseEnter={() => setActive(i)}>
+                    <span className="tag tag-dc">DC</span>
+                    <span className="r-name">{d.name}</span>
+                    <span className="r-sub">{[d.operator, label(d)].filter(Boolean).join(' · ')}</span>
+                  </li>
+                </Fragment>
               ))}
+              {query.trim() && matches.length === 0 && <li className="r-empty">No data center matches, places below</li>}
               {places.map((p) => (
                 <li key={p.lat + p.lon} onMouseDown={() => focusPlace(p)}>
                   <span className="tag">Place</span>

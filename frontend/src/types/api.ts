@@ -70,6 +70,25 @@ export interface EnergyFlow {
   kind: 'heat' | 'electricity' | 'cooling' | 'fuel' | 'loss' | 'other';
 }
 
+export interface CalcTerm {
+  key: string;
+  label?: string | null;
+  value?: number | string | null;
+  unit?: string | null;
+  /** null = computed by the model in an earlier step */
+  flag?: Flag | null;
+  source?: string | null;
+}
+
+export interface CalcStep {
+  title: string;
+  formula: string;
+  terms: CalcTerm[];
+  result?: number | null;
+  unit?: string | null;
+  note?: string | null;
+}
+
 export interface OptionResult {
   option_id: string;
   name: string;
@@ -87,6 +106,10 @@ export interface OptionResult {
   kpis: Kpis;
   energy_balance: EnergyFlow[];
   details: Record<string, unknown>;
+  /** Step by step calculation trace with sources (engineering model) */
+  calculation?: CalcStep[];
+  /** Every input this option uses, with flag and source */
+  calculation_inputs?: InputValue[];
 }
 
 export interface Baseline {

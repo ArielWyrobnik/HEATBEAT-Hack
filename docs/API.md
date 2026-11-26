@@ -65,6 +65,7 @@ the field names (`_mwh_yr`, `_t_yr`, `_m3_yr`, `_usd`, `_yr`).
 - `OptionResult`: one candidate (with `implementation` text and `capex_breakdown`), either a single option (Excel ranking) or a heat chain (`components`,
   e.g. `["dry_cooler", "heat_pump", "district_heating"]`). `rank`, `feasible`, `score`, `eco_grade`,
   `product`, `ko_reasons`, `kpis`, `energy_balance` (list of `{source, target, mwh_yr, kind}`), `details`.
+- `OptionResult.calculation`: step by step trace (`CalcStep`: title, formula, terms with value, unit, flag and source, result). `calculation_inputs`: every input the option uses, with flag and source. The frontend shows both in the "Show calculation" popup. Filled by the engineering model (`heatbeat_engineering/calc_trace.py`); other models may leave them empty.
 - `Kpis`: heat recovered and delivered, electricity used and saved (MWh/yr), CO2 avoided (t/yr),
   water saved (m3/yr), net value (USD/yr), CAPEX, payback, PUE/WUE before and after, ERE, COP,
   capacity factor. All optional, so a model fills what it computes.
