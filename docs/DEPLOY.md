@@ -16,7 +16,7 @@ under `/api`, so there is one URL and no CORS setup.
 
 Every merge into `main` redeploys automatically (`autoDeploy: true`).
 
-Free plan limits (Render docs, checked 2026-11-26, may change):
+Free plan limits (from Render documentation, not re-verified for this PR, may change):
 
 - The service sleeps after 15 minutes without visitors. The next visit wakes it in about a minute.
 - 512 MB RAM. Measured locally: about 270 MB after running both models for all 57 sites with stored weather.
