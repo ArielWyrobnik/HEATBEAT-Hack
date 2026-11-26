@@ -62,6 +62,10 @@ def _sites() -> dict[str, SiteSummary]:
         stored |= {p.stem for p in (CACHE_DIR / "weather").glob("*.parquet")}
     except Exception:  # noqa: BLE001
         pass
+    try:
+        vs = hd.verification_status().set_index("site_id")["status"].to_dict()
+    except Exception:  # noqa: BLE001
+        vs = {}
     out = {}
     for r in s.to_dict("records"):
         h = hp.loc[r["site_id"]].to_dict() if r["site_id"] in hp.index else {}
@@ -72,7 +76,8 @@ def _sites() -> dict[str, SiteSummary]:
             it_load_mw=_num(h.get("it_load_mw")), cooling_type=_str(h.get("cooling_type")),
             pue=_num(h.get("pue_assumed")), grid_region=_str(r.get("grid_region_name")),
             retail_usd_mwh=_num(r.get("retail_industrial_usd_mwh")), co2_kg_mwh=_num(r.get("co2_kg_mwh")),
-            is_hypothetical=bool(r.get("is_hypothetical") or 0), weather_stored=r["site_id"] in stored)
+            is_hypothetical=bool(r.get("is_hypothetical") or 0), weather_stored=r["site_id"] in stored,
+            setup_status=vs.get(r["site_id"]))
     return out
 
 

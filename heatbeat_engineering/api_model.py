@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 
 from heatbeat_api.schemas import (Baseline, EnergyFlow, InputValue, Kpis, ModelInfo, ModelResult, OptionResult,
-                                  Tornado, TornadoBar)
+                                  SetupFact, Tornado, TornadoBar)
 
 from . import calc_trace
 from .chains import best_per_use, evaluate_site
@@ -135,7 +135,21 @@ class HeatChainModel:
                       water_use_m3_yr=base["water_m3"], co2_t_yr=base["co2_t"] + (base["it_mwh"] + base["other_mwh"]) * s.x["ci_grid_kg_mwh"] / 1000,
                       electricity_cost_usd_yr=(base["it_mwh"] + base["cooling_mwh"] + base["other_mwh"]) * s.x["p_elec_usd_mwh"],
                       cooling_type=f"{s.cooling_profile} ({s.baseline_rejection})")
+        bfields = getattr(Baseline, "model_fields", {})
+        if "current_setup" in bfields:
+            rp = s.prov.get("baseline_rejection", {})
+            bl.cooling_profile = s.cooling_profile
+            bl.heat_rejection = s.baseline_rejection
+            bl.heat_rejection_flag = FLAG.get(rp.get("status"), "estimated")
+            bl.heat_rejection_source = rp.get("source")
+            bl.setup_status = setup_status(s)
+            bl.current_setup = [SetupFact(field=k, **{a: b for a, b in v.items() if a in SetupFact.model_fields})
+                                for k, v in s.setup.items()]
         warnings = list(self.WARNINGS)
+        if not planned and s.prov.get("baseline_rejection", {}).get("status") == "assumption":
+            warnings.append(f"Today's heat rejection at this site is not documented publicly; the baseline assumes "
+                            f"{s.baseline_rejection} (typical for {s.cooling_profile}). Set it under 'Current setup' "
+                            "if you know better.")
         if abs(base["pue"] - s.pue_reported) > 0.1:
             warnings.append(f"Modelled baseline PUE {base['pue']:.2f} differs from the profile value {s.pue_reported:.2f}; "
                             "the model counts cooling, hall fans and a fixed overhead only.")
@@ -179,6 +193,8 @@ class HeatChainModel:
         capex_bd = {a: round(b) for a, b in r["capex"].items() if b}
         if "implementation" in fields:
             extra["implementation"] = implementation(r, s, P)
+        if "already_in_place" in fields:
+            extra["already_in_place"] = already_in_place(r, s)
         if "calculation" in fields:
             extra["calculation"] = calc_trace.build(r, base, s, P, LABELS, UNITS)
             keep = set(calc_trace.relevant_params(r, s.baseline_rejection))
@@ -192,7 +208,10 @@ class HeatChainModel:
             if base_cap:
                 bd["baseline cooling plant (not needed in this chain)"] = -round(base_cap)
             extra["capex_breakdown"] = bd
-        return OptionResult(**extra, option_id=cid, name=r["label"], rank=rank, feasible=True,
+        name = r["label"]
+        if r["tech"] == s.baseline_rejection and not r["uses"] and not r["storage"]:
+            name += " (today's setup, no change)"
+        return OptionResult(**extra, option_id=cid, name=name, rank=rank, feasible=True,
                             score=round(r["npv_usd"] / 1e6, 2), components=r["components"],
                             product=", ".join(prod) or "cooling only", kpis=k, energy_balance=flows,
                             details={"capex_breakdown_usd": {a: round(b) for a, b in r["capex"].items()},
@@ -201,6 +220,43 @@ class HeatChainModel:
                                      "balance_residual_mwh": r["balance_residual_mwh"],
                                      "chiller_hours": r["chiller_hours"], "wet_hours": r["wet_hours"],
                                      **{a: b for a, b in r.get("details", {}).items()}})
+
+
+def setup_status(s) -> str | None:
+    """verified / partial / context / None, same rule as heatbeat_data.verification_status."""
+    from .site import SITE_SCOPES
+    if not s.setup:
+        return None
+    if s.prov.get("baseline_rejection", {}).get("status") == "data":
+        return "verified"
+    site_facts = [v for v in s.setup.values() if v.get("scope") in SITE_SCOPES and v.get("confidence") in ("high", "medium")]
+    return "partial" if site_facts else "context"
+
+
+_USE_FAMILY = {"dh": "dh", "biogas": "biogas", "desal": "desal", "feedwater": "feedwater", "orc": "orc",
+               "adsorption": "adsorption"}
+
+
+def already_in_place(r: dict, s) -> list[str]:
+    """Parts of a chain the site already has today (from the verified setup or a UI override)."""
+    from .chains import TECH_LABEL
+    out = []
+    rp = s.prov.get("baseline_rejection", {})
+    if r["tech"] == s.baseline_rejection and rp.get("status") in ("data", "user"):
+        src = "set by you" if rp["status"] == "user" else (s.setup.get("heat_rejection", {}).get("source_title")
+                                                            or rp.get("source", ""))
+        out.append(f"{TECH_LABEL[r['tech']]} is what the site already uses ({src})"
+                   + (": no change to the heat rejection, only the heat use is new." if r["uses"] else
+                      ": this is today's setup, nothing to improve."))
+    have = set(s.already)
+    for u in r["uses"]:
+        fam = next((f for k, f in _USE_FAMILY.items() if u.startswith(k)), u)
+        if u in have or fam in have:
+            f = s.setup.get("already_implemented", {})
+            out.append(f"{u}: already in place at this site ({f.get('source_title') or 'current setup'}).")
+    if r.get("storage") and r["storage"] in have:
+        out.append(f"{r['storage']} storage: already in place at this site.")
+    return out
 
 
 def implementation(r: dict, s, P: dict) -> str:

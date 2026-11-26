@@ -1,0 +1,44 @@
+source_id,title,url,published
+crusoe_abilene_2025,Crusoe: An inside look at the Abilene AI data center,https://www.crusoe.ai/resources/blog/an-inside-look-at-the-abilene-ai-data-center,2025-08-05
+epoch_abilene,Epoch AI data center directory: OpenAI Stargate Abilene,https://epoch.ai/data/ai-data-centers/directory/openai-stargate-abilene,2026-11-01
+txtrib_water_2025,Texas Tribune: Texas data center water use,https://www.texastribune.org/2025/09/25/texas-data-center-water-use/,2025-09-25
+msft_zero_water_2024,"Microsoft: Sustainable by design, next-generation datacenters consume zero water for cooling",https://microsoft.com/en-us/microsoft-cloud/blog/2024/12/09/sustainable-by-design-next-generation-datacenters-consume-zero-water-for-cooling,2024-12-09
+dcf_fairwater_2025,"Data Center Frontier: Inside Microsoft's global AI infrastructure, the Fairwater blueprint",https://www.datacenterfrontier.com/hyperscale/article/55317925/inside-microsofts-global-ai-infrastructure-the-fairwater-blueprint-for-distributed-supercomputing,2025-10-09
+wpr_fairwater_2024,WPR: Microsoft new technology to save water at Mount Pleasant data center,https://wpr.org/news/microsoft-new-technology-save-water-mount-pleasant-data-center,2024-12-11
+sth_colossus_2024,ServeTheHome: Inside the 100K GPU xAI Colossus cluster,https://www.servethehome.com/inside-100000-nvidia-gpu-xai-colossus-cluster-supermicro-helped-build-for-elon-musk/4/,2024-10-28
+eenews_xai_2026,E&E News: xAI sidelines major water reuse project as IPO looms,https://www.eenews.net/articles/xai-sidelines-major-water-reuse-project-as-ipo-looms/,2026-05-04
+dcf_xai_2026,Data Center Frontier: xAI's AI factories from Colossus to MACROHARDRR,https://datacenterfrontier.com/machine-learning/article/55343403/xais-ai-factories-from-colossus-to-macrohardrr-in-the-gigawatt-era,2026-01-14
+dcd_xai_water,DCD: xAI Memphis supercomputer wastewater treatment plant,https://datacenterdynamics.com/en/news/elon-musk-xai-memphis-supercomputer-wastewater-treatment,
+meta_water_2025,Meta: Advancing water stewardship in our data center communities,https://about.fb.com/news/2025/12/advancing-water-stewardship-in-metas-data-center-communities/,2025-12-17
+meta_edi_2025,Meta 2025 Environmental Data Index (FY2024),https://sustainability.atmeta.com/asset/2025-environmental-data-index,2025-10
+register_hyperion_2024,The Register: Meta's largest ever datacenter in Louisiana,https://www.theregister.com/2024/12/05/meta_largestever_datacenter,2024-12-05
+fortune_hyperion_2026,"Fortune: Meta Hyperion, 10 gas power plants",https://fortune.com/2026/03/27/meta-hyperion-10-gas-power-plants-louisiana-entergy/,2026-03-27
+diw_google_2023,Digital Information World: Google US data center water use 2023 (from Google 2024 Environmental Report),https://www.digitalinformationworld.com/2025/02/which-american-google-data-centers-had.html,2025-02-08
+cardinal_google_2026,"Cardinal News: by water use, Google's Botetourt site would be its 8th largest",https://cardinalnews.org/2026/07/09/by-water-use-googles-botetourt-site-would-be-its-8th-largest-data-center-complex-in-the-world/,2026-07-09
+flatwater_2026,Flatwater Free Press: data centers can guzzle serious water,https://flatwaterfreepress.org/data-centers-can-guzzle-serious-water-as-some-nebraskans-worry-tech-giants-seek-solutions/,2026-07-08
+frontier_ok_2026,"The Frontier: as data centers boom in Oklahoma, so does water demand",https://www.readfrontier.org/stories/as-data-centers-boom-in-oklahoma-so-does-water-demand/,2026-02-23
+google_dalles_2026,"Google: Building the right way, lessons from 20 years in The Dalles",https://blog.google/innovation-and-ai/infrastructure-and-cloud/global-network/the-dalles-data-center-20-years/,2026-11-19
+opb_dalles_2026,"OPB: as Google's water demands grow, The Dalles aims to pull more from Mount Hood forest",https://opb.org/article/2026/01/15/as-googles-water-demands-grow-the-dalles-aims-to-pull-more-from-mount-hood-forest,2026-01-15
+google_georgia,"Google data centers: Douglas County, Georgia",https://datacenters.google/locations/douglas-county-georgia,
+live5_berkeley_2019,Live 5 News: Google agrees to tougher conditions on Berkeley County groundwater permit,https://www.live5news.com/2019/12/12/google-agrees-tougher-conditions-berkeley-co-groundwater-withdrawal-permit/,2019-12-12
+msft_va_2025,Microsoft datacenters in Virginia (fact sheet),https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Virginia.pdf,2025-10
+msft_va_2023,"Microsoft sustainability fact sheet Virginia (East US, East US 2), CY2022",https://datacenters.microsoft.com/globe/pdfs/sustainability/factsheets/Virginia%20(East%20US%20&%20East%20US%202).pdf,2023-03
+msft_tx_2025,Microsoft datacenters in Texas (fact sheet),https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Texas.pdf,2025-10
+msft_tx_2023,"Microsoft sustainability fact sheet Texas (South Central US), CY2022",https://datacenters.microsoft.com/wp-content/uploads/2024/08/Texas%20%28South%20Central%20US%29.pdf,2023-04
+msft_ia_2025,Microsoft datacenters in Iowa (fact sheet),https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Iowa.pdf,2025-10
+axios_wdm_2026,Axios Des Moines: Microsoft's next data center buildings to use zero-water technology,https://axios.com/local/des-moines/2026/01/16/microsoft-west-des-moines-data-center-water-zero,2026-01-16
+bizrecord_ia_2025,"Business Record: energy, water use under close watch as data centers expand in Iowa",https://www.businessrecord.com/energy-water-use-under-close-watch-as-data-centers-expand-in-iowa/,2025
+msft_wy_2025,Microsoft datacenters in Wyoming (fact sheet),https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Wyoming.pdf,2026-06
+msft_wy_2023,"Microsoft sustainability fact sheet Wyoming (West Central US), CY2022",https://datacenters.microsoft.com/wp-content/uploads/2024/08/Wyoming%20(West%20Central%20US).pdf,2023-03
+msft_wa_2025,Microsoft datacenters in Washington (fact sheet),https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Washington.pdf,2026-10
+msft_quincy_reuse,Microsoft: Partnering with the City of Quincy to open Washington's first industrial water reuse center,https://local.microsoft.com/blog/partnering-with-the-city-of-quincy-to-open-washingtons-first-industrial-water-reuse-center/,2021-08-27
+fb_prineville_2011,Meta Engineering: Designing a very efficient data center (Prineville),https://engineering.fb.com/2011/04/14/core-infra/designing-a-very-efficient-data-center/,2011-04-14
+ocp_prineville_2013,Open Compute Project: Water efficiency at Facebook's Prineville data center,https://www.opencompute.org/news/water-efficiency-at-facebooks-prineville-data-center/,2013-08-07
+switch_tr2,Switch: Tahoe Reno 2 one-sheet,https://switchdotcom.s3-sites.data.switch.com/media/one-sheets/COLO/Tahoe-Reno-2.pdf,2024
+qts_atl1,QTS data sheet ATL1 DC1,https://qtsdatacenters.com/wp-content/uploads/2024/07/QTS_DataSheet_ATL1-DC1.pdf,2024-07
+qts_water_wp,QTS water conservation white paper,https://q.com/wp-content/uploads/2024/07/25-0274_IMA_WaterConservation-Whitepaper_v02.pdf,2024-07
+loudoun_water_gov,"Loudoun County: Data centers, water considerations",https://www.loudoun.gov/6402/Data-Centers-Water-Considerations,2025
+loudoun_water_reclaimed,Loudoun Water: reclaimed water program,https://www.loudounwater.org/commercial-customers/reclaimed-water-program,2025
+bbreakfast_ashburn_2025,"Broadband Breakfast: Dateline Ashburn, the thirst for AI raises alarms in Virginia",https://broadbandbreakfast.com/dateline-ashburn-the-thirst-for-ai-raises-alarms-in-virginia/,2025-09-12
+equinix_data_2024,Equinix 2024 sustainability data summary,https://www.equinix.com/resources/data-sheets/sustainability-data-summary,2025-04-21
+equinix_heat_2025,"Equinix blog: warming communities, not just servers",https://blog.equinix.com/blog/2025/04/24/the-hidden-benefit-of-data-centers-warming-communities-not-just-servers/,2025-04-24

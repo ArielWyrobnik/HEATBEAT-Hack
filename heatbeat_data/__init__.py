@@ -220,3 +220,11 @@ from .site_industry import excel_inputs as excel_industry_inputs, site_industry 
 
 __all__ += ["excel_industry_inputs", "site_industry"]
 Site.industry = lambda self: site_industry(self.site_id)
+
+# What each data center already does today (cooling, heat rejection, water, reuse), field-level sources.
+from .current_setup import (already_implemented, current_setup, current_setup_table, setup_sources,  # noqa: E402
+                            verification_status, verified_rejection)
+
+__all__ += ["already_implemented", "current_setup", "current_setup_table", "setup_sources", "verification_status",
+            "verified_rejection"]
+Site.current_setup = lambda self: current_setup(self.site_id)

@@ -22,6 +22,8 @@ export interface SiteSummary {
   co2_kg_mwh?: number | null;
   is_hypothetical: boolean;
   weather_stored: boolean;
+  /** How well today's setup is documented: verified, partial, context, or null (nothing found) */
+  setup_status?: string | null;
 }
 
 export interface InputValue {
@@ -112,6 +114,23 @@ export interface OptionResult {
   calculation?: CalcStep[];
   /** Every input this option uses, with flag and source */
   calculation_inputs?: InputValue[];
+  /** Parts of this option the site already has today, with source */
+  already_in_place?: string[];
+}
+
+/** One fact about what the data center does today (site_current_setup.csv) */
+export interface SetupFact {
+  field: string;
+  label?: string | null;
+  value?: unknown;
+  unit?: string | null;
+  scope?: string | null;
+  confidence?: string | null;
+  evidence?: string | null;
+  note?: string | null;
+  source_url?: string | null;
+  source_title?: string | null;
+  source_date?: string | null;
 }
 
 export interface Baseline {
@@ -125,6 +144,14 @@ export interface Baseline {
   co2_t_yr?: number | null;
   electricity_cost_usd_yr?: number | null;
   cooling_type?: string | null;
+  cooling_profile?: string | null;
+  /** dry, adiabatic or tower */
+  heat_rejection?: string | null;
+  heat_rejection_flag?: Flag | null;
+  heat_rejection_source?: string | null;
+  /** verified, partial, context or null */
+  setup_status?: string | null;
+  current_setup?: SetupFact[];
 }
 
 export interface TornadoBar {

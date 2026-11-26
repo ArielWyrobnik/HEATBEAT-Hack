@@ -40,6 +40,8 @@ class SiteSummary(BaseModel):
     co2_kg_mwh: float | None = None
     is_hypothetical: bool = False
     weather_stored: bool = Field(True, description="False: first ranking call fetches weather live (needs internet)")
+    setup_status: str | None = Field(None, description="How well today's setup is documented: verified, partial, "
+                                     "context (operator or area level only) or None (nothing found)")
 
 
 class InputValue(BaseModel):
@@ -131,6 +133,23 @@ class OptionResult(BaseModel):
     calculation: list[CalcStep] = Field(default_factory=list, description="Step by step calculation trace with sources")
     calculation_inputs: list[InputValue] = Field(default_factory=list,
                                                  description="Every input this option uses, with flag and source")
+    already_in_place: list[str] = Field(default_factory=list,
+                                        description="Parts of this option the site already has today, with source")
+
+
+class SetupFact(BaseModel):
+    """One fact about what the data center does today, with its source (heatbeat_data.current_setup)."""
+    field: str
+    label: str | None = None
+    value: Any = None
+    unit: str | None = None
+    scope: str | None = Field(None, description="site, campus, cluster, area, operator_region, operator_fleet")
+    confidence: str | None = Field(None, description="high, medium, low")
+    evidence: str | None = Field(None, description="operator, press, permit, third_party, inferred")
+    note: str | None = None
+    source_url: str | None = None
+    source_title: str | None = None
+    source_date: str | None = None
 
 
 class Baseline(BaseModel):
@@ -145,6 +164,12 @@ class Baseline(BaseModel):
     co2_t_yr: float | None = None
     electricity_cost_usd_yr: float | None = None
     cooling_type: str | None = None
+    cooling_profile: str | None = None
+    heat_rejection: str | None = Field(None, description="dry, adiabatic or tower: what the baseline rejects heat with")
+    heat_rejection_flag: Flag | None = Field(None, description="real = from a public source for this site")
+    heat_rejection_source: str | None = None
+    setup_status: str | None = Field(None, description="verified, partial, context or None")
+    current_setup: list[SetupFact] = Field(default_factory=list, description="What the site already does, with sources")
 
 
 class TornadoBar(BaseModel):
