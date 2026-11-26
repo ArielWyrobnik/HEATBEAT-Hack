@@ -400,3 +400,16 @@ button.link { background: none; border: 0; color: #6bb8ff; cursor: pointer; font
 .plan-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); }
 .plan-form select { width: 100%; }
 .with-unit input { min-width: 56px; }
+
+/* Who can build it (companies per option) */
+.vendors h5 { margin: 6px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--green); }
+.vendors ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.vendors li { font-size: 13px; line-height: 1.4; }
+.vendors .v-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.vendors .v-head a { color: var(--text); font-weight: 600; text-decoration: none; }
+.vendors .v-head a:hover { text-decoration: underline; }
+.vendors .v-role { font-size: 11px; color: var(--muted); }
+.vendors .v-nv, .vendors .v-head a.v-nv { font-size: 10px; font-weight: 700; padding: 1px 5px; color: var(--green); border: 1px solid #3d5f00; }
+.vendors .v-unv { font-size: 10px; padding: 1px 5px; color: #d9a441; border: 1px dashed #6b5320; cursor: help; }
+.vendors small { display: block; color: var(--muted); font-size: 12px; }
+.plan-panel .panel-body > .vendors { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); }

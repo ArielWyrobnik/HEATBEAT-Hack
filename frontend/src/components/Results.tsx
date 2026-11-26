@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { compact, num, usd, value } from '../format';
-import type { CalcStep, Flag, InputValue, ModelResult, OptionResult } from '../types/api';
+import type { CalcStep, Flag, InputValue, ModelResult, OptionResult, Vendor } from '../types/api';
 import Tornado from './Tornado';
 
 /**
@@ -124,6 +124,41 @@ function InputsList({ inputs }: { inputs: InputValue[] }) {
   );
 }
 
+const VERIFIED_TITLE: Record<string, string> = {
+  verified: 'Checked against the source',
+  partly: 'Partly checked, see note',
+  unverified: 'Not checked yet',
+};
+
+/** Who can build it: name with link, NVIDIA badge, one line, where they are. */
+export function Vendors({ vendors, title = 'Who can build it' }: { vendors?: Vendor[]; title?: string }) {
+  if (!vendors?.length) return null;
+  return (
+    <div className="vendors">
+      <h5>{title}</h5>
+      <ul>
+        {vendors.map((v) => (
+          <li key={`${v.vendor_id}-${v.role}`}>
+            <div className="v-head">
+              {v.url ? <a href={v.url} target="_blank" rel="noreferrer">{v.name} ↗</a> : <b>{v.name}</b>}
+              <span className="v-role">{v.role_label ?? v.role}</span>
+              {v.nvidia && (v.nvidia_source
+                ? <a className="v-nv" href={v.nvidia_source} target="_blank" rel="noreferrer" title="Source">{v.nvidia}</a>
+                : <span className="v-nv">{v.nvidia}</span>)}
+              {v.verified !== 'verified' && (
+                <span className="v-unv" title={`${VERIFIED_TITLE[v.verified] ?? v.verified}${v.note ? `: ${v.note}` : ''}`}>
+                  {v.verified === 'partly' ? 'partly checked' : 'not checked'}
+                </span>
+              )}
+            </div>
+            <small>{v.one_line}{v.where ? ` · ${v.where}` : ''}</small>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function Details({ o, r }: { o: OptionResult; r: ModelResult }) {
   const k = o.kpis;
   const costs = Object.entries(o.capex_breakdown ?? {});
@@ -141,6 +176,7 @@ function Details({ o, r }: { o: OptionResult; r: ModelResult }) {
 
       {o.already_in_place?.map((t) => <p key={t} className="already-line"><span className="already">already in place</span> {t}</p>)}
       {o.implementation && <p className="impl-line"><b>How it is built.</b> {o.implementation}</p>}
+      <Vendors vendors={o.vendors} />
       {costs.length > 0 && (
         <p className="impl-line"><b>Investment {money(k.capex_usd)}.</b>{' '}
           {costs.map(([c, v]) => `${c.replace(/_/g, ' ')} ${money(v)}`).join(', ')}
