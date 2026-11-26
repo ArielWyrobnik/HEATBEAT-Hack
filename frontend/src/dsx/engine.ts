@@ -112,13 +112,13 @@ export const ENGINE = (() => {
     fish: (s, h) => { const f = []; chk(h.mean_amb <= 26, `mean ambient ${h.mean_amb.toFixed(1)} C is above the 26 C limit for fish tanks`, f); chk(h.gt30 < 1500, `${n0(h.gt30)} h above 30 C (limit under 1,500 h)`, f);
       chk(s.slope_deg <= 8, `slope ${s.slope_deg} deg (limit 8 deg)`, f); chk(s.flat_land_m2 >= 10000, `flat land ${n0(s.flat_land_m2)} m2, needs 10,000 m2 for RAS tanks`, f); chk(s.d_water_m <= 3000, `water intake ${km(s.d_water_m)} km away (limit 3 km)`, f);
       chk(s.wsi_index < 4.0, `water stress ${s.wsi_index} (must be under 4.0)`, f); chk(s.q_dc_mw >= 0.5, `heat source ${s.q_dc_mw} MW (needs 0.5 MW)`, f);
-      chk(s.ind_zoning === 1, "needs industrial or rural zoning; fish farms are not permitted in urban or commercial zones", f); return f; },
+      chk(s.ind_zoning === 1 || s.agri_land_m2 >= 20000, "needs industrial or agricultural land: no industrial zoning and under 2 ha of farmland within 1 km", f); return f; },
     dh: (s, h) => { const f = []; chk(h.lt15 >= 2000, `only ${n0(h.lt15)} h below 15 C (needs 2,000 h of heating demand)`, f);
       if (s.is_greenfield === 1) { chk(s.d_dh_m <= 3000, `heat network ${km(s.d_dh_m)} km away (limit 3 km for a new build)`, f); chk(s.rho_heat_mwh_m >= 1.5, `heat density ${s.rho_heat_mwh_m} MWh/m/yr (needs 1.5 for a new build)`, f); }
       else { chk(s.has_existing_dh === 1, "no existing district heating network to connect to (existing site)", f); chk(s.d_dh_m <= 800, `heat network ${n0(s.d_dh_m)} m away (limit 800 m for an existing site)`, f); chk(s.rho_heat_mwh_m >= 2.5, `heat density ${s.rho_heat_mwh_m} MWh/m/yr (needs 2.5 for an existing site)`, f); }
       return f; },
     biogas: (s, h) => { const f = []; chk(h.lt25 >= 2500, `only ${n0(h.lt25)} h below 25 C (needs 2,500 h)`, f); chk(s.d_bio_m <= 25000, `feedstock ${km(s.d_bio_m)} km away (limit 25 km)`, f); chk(s.slope_deg <= 10, `slope ${s.slope_deg} deg (limit 10 deg)`, f);
-      chk(s.ind_zoning === 1, "needs industrial or agricultural zoning; digesters are not permitted in urban or commercial zones", f); return f; },
+      chk(s.ind_zoning === 1 || s.agri_land_m2 >= 20000, "needs industrial or agricultural land: no industrial zoning and under 2 ha of farmland within 1 km", f); return f; },
     absorption: (s, h) => { const f = []; chk(h.max_tdc >= 65, `coolant peaks at ${h.max_tdc.toFixed(1)} C; absorption chillers need 65 C`, f); chk(h.gt24 >= 1500, `only ${n0(h.gt24)} h above 24 C (needs 1,500 h of cooling demand)`, f); chk(s.wsi_index < 3.8, `water stress ${s.wsi_index} (must be under 3.8)`, f); return f; },
     orc: (s, h) => { const f = []; chk(h.min_tdc >= 80, `coolant drops to ${h.min_tdc.toFixed(1)} C; ORC power needs 80 C all year`, f); chk(h.lt30 >= 5000, `only ${n0(h.lt30)} h below 30 C (needs 5,000 h for condenser cooling)`, f); return f; },
     dac: (s, h) => { const f = []; chk(s.d_co2_m <= 50000, `CO2 storage or user ${km(s.d_co2_m)} km away (limit 50 km)`, f); chk(h.gt35 < 1500, `${n0(h.gt35)} h above 35 C (limit under 1,500 h)`, f); return f; },
