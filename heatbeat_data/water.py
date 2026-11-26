@@ -153,12 +153,17 @@ def site_water(weather: dict[str, pd.DataFrame] | None = None, coc: float = COC_
 
     aq = aqueduct()
     if len(aq):
-        df = df.merge(aq[["site_id", "bws_score", "bws_raw", "bws_label"]], on="site_id", how="left")
+        keep = ["site_id", "bws_score", "bws_raw", "bws_label", "bws_note", "bau30_ws_x_s", "bau50_ws_x_s"]
+        df = df.merge(aq[[c for c in keep if c in aq.columns]], on="site_id", how="left")
         df["wsi_index"] = df["bws_score"]
+        df = df.rename(columns={"bau30_ws_x_s": "wsi_index_2030_bau", "bau50_ws_x_s": "wsi_index_2050_bau"})
     else:
         df["wsi_index"] = np.nan
         df["bws_raw"] = np.nan
         df["bws_label"] = "not looked up yet (run data_pipeline/fetch_aqueduct.py)"
+    for c in ("bws_note", "wsi_index_2030_bau", "wsi_index_2050_bau"):
+        if c not in df.columns:
+            df[c] = np.nan
 
     prof = wue_profiles().set_index("cooling_profile_id")
     df["wue_l_kwh_low"] = df["wue_profile_id"].map(prof["wue_l_kwh_low"])
@@ -185,7 +190,8 @@ def site_water(weather: dict[str, pd.DataFrame] | None = None, coc: float = COC_
     df["water_cost_usd_yr_high"] = (df["water_m3_yr_high"] * price_hi).round(-3)
     cols = ["site_id", "water_utility", "p_water_usd_m3", "p_water_usd_m3_low", "p_water_usd_m3_high",
             "p_sewer_usd_m3", "p_sewer_usd_m3_low", "p_sewer_usd_m3_high", "p_water_effective_usd_m3",
-            "wsi_index", "bws_raw", "bws_label", "wue_profile_id", "wue_method",
+            "wsi_index", "bws_raw", "bws_label", "bws_note", "wsi_index_2030_bau", "wsi_index_2050_bau",
+            "wue_profile_id", "wue_method",
             "wue_l_kwh_low", "wue_l_kwh", "wue_l_kwh_high", "discharge_share",
             "it_load_mw", "water_m3_yr_low", "water_m3_yr", "water_m3_yr_high",
             "water_cost_usd_yr_low", "water_cost_usd_yr", "water_cost_usd_yr_high",
@@ -219,7 +225,9 @@ def write_ranking_inputs(path: Path | str | None = None) -> Path:
                      f"sewer {r.p_sewer_usd_m3} USD/m3 extra on discharged water"))
         if not pd.isna(r.wsi_index):
             rows.append((r.site_id, "wsi_index", round(float(r.wsi_index), 2), "data", "wri_aqueduct_4",
-                         f"Aqueduct 4.0 baseline water stress: {r.bws_label}"))
+                         f"Aqueduct 4.0 baseline water stress: {r.bws_label}; 2030 BAU score "
+                         f"{r.wsi_index_2030_bau}, 2050 BAU {r.wsi_index_2050_bau}"
+                         + (f"; {r.bws_note}" if isinstance(r.bws_note, str) and r.bws_note else "")))
     out = pd.DataFrame(rows, columns=["site_id", "key", "value", "status", "source", "note"])
     p = Path(path) if path else _DIR / "site_ranking_inputs_water.csv"
     out.to_csv(p, index=False)

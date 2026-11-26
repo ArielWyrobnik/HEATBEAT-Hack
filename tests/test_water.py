@@ -67,3 +67,11 @@ def test_site_water_table():
     w = {"us-az-chandler": _weather([30.0] * 48, [18.0] * 48)}
     row = wt.site_water(w).set_index("site_id").loc["us-az-chandler"]
     assert row["wue_method"] == "hourly_weather"
+
+
+def test_water_stress_present_for_us_sites():
+    df = wt.site_water()
+    assert df["wsi_index"].notna().all()
+    assert df["wsi_index"].between(0, 5).all()
+    aq = wt.aqueduct()
+    assert not (aq["bws_raw"] >= 9999).any()  # sentinel removed, flagged in bws_raw_capped
