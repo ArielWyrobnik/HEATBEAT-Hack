@@ -269,6 +269,7 @@ GIS_KEYS = ["d_coast_m", "d_water_m", "dz_m", "slope_deg", "flat_land_m2", "agri
             "has_existing_dh", "rho_heat_mwh_m", "ind_zoning"]
 IND_KEYS = ["d_pp_m", "q_fw_mw", "d_co2_m", "d_bio_m", "d_market_m"]
 REF_IDS = [r["site_id"] for r in REFS]
+REUSED_NON_US = ("nl-amsterdam", "fr-paris", "gb-slough")  # existing sites used by the validation
 
 
 def _replace(path: Path, rows: list[dict], key: str = "site_id", ids: list[str] | None = None) -> None:
@@ -364,6 +365,23 @@ def write_tables() -> None:
                source="team_assumption", note=EST_TXT) for r in us],
         *[dict(site_id=r["site_id"], key="wsi_index", value=_num(r["water"]["wsi"]), status="assumption",
                source=EST, note=EST_TXT) for r in us]])
+    # Excel ranking reads GIS keys only from site_ranking_inputs*.csv, which the GIS thread wrote for US
+    # sites. For the non-US validation sites (new and reused) export their site_gis.csv values here.
+    gis = pd.read_csv(DP / "site_gis.csv").set_index("site_id")
+    eu_ids = [r["site_id"] for r in REFS if r["country_iso2"] != "US"] + list(REUSED_NON_US)
+    refs_long = []
+    for sid in eu_ids:
+        for k in GIS_KEYS:
+            v = gis.at[sid, k]
+            if pd.isna(v):
+                continue
+            src = gis.at[sid, f"{k}_source"]
+            conf = gis.at[sid, f"{k}_confidence"]
+            refs_long.append(dict(site_id=sid, key=k, value=_num(float(v)),
+                                  status="assumption" if conf == "synthetic" else "data",
+                                  source="site_gis.csv", note=f"confidence={conf}; {src}"))
+    pd.DataFrame(refs_long, columns=["site_id", "key", "value", "status", "source", "note"]).to_csv(
+        DP / "site_ranking_inputs_refs.csv", index=False)
     # already implemented facts (shared long format with the current setup thread)
     pd.DataFrame(SETUP, columns=["site_id", "field", "value", "unit", "scope", "confidence", "evidence", "source_id",
                                  "note"]).to_csv(DP / "site_current_setup_refs.csv", index=False)
