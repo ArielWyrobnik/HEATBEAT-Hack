@@ -83,11 +83,15 @@ def users(site, P: dict) -> list[User]:
     # 4. ambient (5th generation) network to nearby buildings
     if site.x["d_dh_m"] <= P["dh_max_transmission_km"] * 1000:
         from .district_heating import demand_profile
-        dem = demand_profile(site, P, P["amb_network_km"]) * P["amb_source_share"]
-        if dem.sum() > 0:
+        # three network sizes: a neighbourhood, the default town network, and the upper end of dh_network_km
+        for km in sorted({P["amb_network_km"], P["dh_network_km"], 3 * P["dh_network_km"]}):
+            dem = demand_profile(site, P, km) * P["amb_source_share"]
+            if dem.sum() <= 0:
+                continue
             line = pipe(max(site.x["d_dh_m"], 300.0), float(dem.max()), P["amb_supply_c"], P["amb_return_c"], tg, P)
-            net = P["capex_dist_network_usd_m"] * P["amb_network_km"] * 1000 * P["capex_factor"]
-            out.append(User("ambient", "Heat network (buildings)", f"{P['amb_network_km']:,.0f} km",
+            net = P["capex_dist_network_usd_m"] * km * 1000 * P["capex_factor"]
+            homes = dem.sum() / P["amb_source_share"] / P["casc_home_mwh_yr"]
+            out.append(User("ambient", "Heat network (homes)", f"{km:,.0f} km, about {homes:,.0f} homes",
                             P["amb_supply_c"], P["amb_return_c"], dem, p_heat * P["amb_value_share"],
                             line["capex_usd"] + net, gas_ef, loss_mw=line["loss_mw"], pump_mw=line["pump_design_mw"]))
     return out
@@ -210,6 +214,8 @@ def designs(site, P: dict, base: dict, n: int = 2) -> list[dict]:
     runs = []
     for k in range(1, len(us) + 1):
         for combo in itertools.combinations(us, k):
+            if len({u.key for u in combo}) < len(combo):  # one size per user type
+                continue
             r = run(site, P, list(combo), base)
             if r["heat_used_mwh_yr"] > 0:
                 r["users"] = [u.key for u in combo]

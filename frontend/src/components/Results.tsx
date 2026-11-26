@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { compact, num, usd, value } from '../format';
 import { PERSPECTIVES } from '../perspectives';
-import type { CalcStep, Flag, InputValue, ModelResult, OptionResult, Vendor } from '../types/api';
-import HeatFlow, { HeatOrderSelect, PROFIT_FALLBACK, rankHeatOptions, reuseShare, totalNpv, type HeatOrder } from './HeatFlow';
+import type { CalcStep, Flag, InputValue, ModelResult, OptionResult, Reference, Vendor } from '../types/api';
+import HeatFlow, { HeatOrderSelect, PROFIT_FALLBACK, rankHeatOptions, totalNpv, type HeatOrder } from './HeatFlow';
 import Tornado from './Tornado';
 import Cascades from './Cascade';
 
@@ -60,10 +60,9 @@ function Verdict({ r }: { r: ModelResult }) {
 
 function Kpi({ label, v, def, neg }: { label: string; v: string; def: string; neg?: boolean }) {
   return (
-    <div className="kpi">
+    <div className="kpi" title={def}>
       <span>{label}</span>
       <b className={neg ? 'neg' : ''}>{v}</b>
-      <small>{def}</small>
     </div>
   );
 }
@@ -80,7 +79,8 @@ function Source({ s }: { s?: string | null }) {
 const fmt = (v: number | string | null | undefined, unit?: string | null) => {
   if (v == null) return 'n/a';
   if (typeof v === 'string') return v;
-  const s = Math.abs(v) >= 1e4 ? compact(v, 2) : Math.abs(v) < 10 ? num(v, 3) : num(v, 1);
+  if (Math.abs(v) < 0.05) v = 0;
+  const s = Math.abs(v) >= 1e4 ? compact(v, 1) : Math.abs(v) < 10 ? num(v, 2) : num(v, 0);
   return unit && unit !== '-' ? `${s} ${unit}` : s;
 };
 
@@ -106,6 +106,20 @@ function Steps({ steps }: { steps: CalcStep[] }) {
         </li>
       ))}
     </ol>
+  );
+}
+
+/** The calculation at a glance: one big number per step, formulas and inputs behind a click. */
+function StepTiles({ steps }: { steps: CalcStep[] }) {
+  return (
+    <div className="calc-tiles">
+      {steps.map((st, i) => (
+        <div key={i} className="calc-tile" title={st.formula}>
+          <span>{i + 1}. {st.title}</span>
+          <b>{fmt(st.result, st.unit)}</b>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -141,7 +155,7 @@ export function Vendors({ vendors, title = 'Who can build it' }: { vendors?: Ven
       <h5>{title}</h5>
       <ul>
         {vendors.map((v) => (
-          <li key={`${v.vendor_id}-${v.role}`}>
+          <li key={`${v.vendor_id}-${v.role}`} title={`${v.one_line ?? ''}${v.where ? ` · ${v.where}` : ''}`}>
             <div className="v-head">
               {v.url ? <a href={v.url} target="_blank" rel="noreferrer">{v.name} ↗</a> : <b>{v.name}</b>}
               <span className="v-role">{v.role_label ?? v.role}</span>
@@ -154,7 +168,27 @@ export function Vendors({ vendors, title = 'Who can build it' }: { vendors?: Ven
                 </span>
               )}
             </div>
-            <small>{v.one_line}{v.where ? ` · ${v.where}` : ''}</small>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+const STATUS: Record<string, string> = { operating: 'running', pilot: 'pilot', prototype: 'prototype', announced: 'announced' };
+
+/** Real data centers that already do this: project, where, status, linked to the source. */
+export function References({ refs }: { refs?: Reference[] }) {
+  if (!refs?.length) return null;
+  return (
+    <div className="refs">
+      <h5>Already done at</h5>
+      <ul>
+        {refs.map((x) => (
+          <li key={x.project} title={`${x.what ?? ''}${x.source ? ` (source: ${x.source})` : ''}`}>
+            {x.url ? <a href={x.url} target="_blank" rel="noreferrer">{x.project} ↗</a> : <b>{x.project}</b>}
+            <span className={`ref-st ref-${x.status}`}>{STATUS[x.status] ?? x.status}{x.year ? ` ${x.year}` : ''}</span>
+            {x.where && <span className="ref-where">{x.where}</span>}
           </li>
         ))}
       </ul>
@@ -196,24 +230,29 @@ export function Details({ o, r, planned = false }: { o: OptionResult; r: ModelRe
         : <p className="impl-line"><b>Heat recovered</b> {compact(recoveredHeat)} MWh/yr{o.product && <> · {o.product}</>}</p>)}
       {o.already_in_place?.map((t) => <p key={t} className="already-line"><span className="already">already in place</span> {t}</p>)}
       {o.implementation && <p className="impl-line"><b>How it is built.</b> {o.implementation}</p>}
-      <Vendors vendors={o.vendors} />
+      <div className="who-refs">
+        <Vendors vendors={o.vendors} />
+        <References refs={o.references} />
+      </div>
       {costs.length > 0 && (
-        <p className="impl-line"><b>Investment {money(investment)}.</b>{' '}
-          {costs.map(([c, v]) => `${c.replace(/_/g, ' ')} ${money(v)}`).join(', ')}
-          <span className="muted"> (cost figures are team assumptions, not quotes)</span></p>
+        <p className="impl-line" title="Cost figures are team assumptions, not quotes."><b>Investment {money(investment)}</b>{' '}
+          {costs.filter(([, v]) => v > 0).map(([c, v]) => `${c.replace(/_/g, ' ')} ${money(v)}`).join(' · ')}</p>
       )}
 
       {o.calculation?.length ? (
         <>
-          <h5>Calculation <small>hourly over a full weather year</small></h5>
-          <Steps steps={o.calculation} />
-          <p className="legend">
-            <span className="term term-real">real data</span>
-            <span className="term term-estimated">estimate</span>
-            <span className="term term-synthetic">synthetic</span>
-            <span className="term term-calc">earlier step</span>
-            <span className="muted">hover an input for its source</span>
-          </p>
+          <h5>Calculation</h5>
+          <StepTiles steps={o.calculation} />
+          <details className="calc-more">
+            <summary>Formulas and inputs</summary>
+            <Steps steps={o.calculation} />
+            <p className="legend">
+              <span className="term term-real">real data</span>
+              <span className="term term-estimated">estimate</span>
+              <span className="term term-synthetic">synthetic</span>
+              <span className="term term-calc">earlier step</span>
+            </p>
+          </details>
         </>
       ) : null}
 
@@ -270,12 +309,11 @@ export default function Results({ r }: { r: ModelResult }) {
       {!cascades && reuse && <HeatOrderSelect order={order} onChange={setOrder} />}
       {!cascades && comparison.fallback && <p className="muted">{PROFIT_FALLBACK}</p>}
       {!cascades && <>
-      <h4>Best options {!reuse && <small title={DEFS.npv}>ranked by value over 20 years (NPV) ⓘ</small>}</h4>
+      <h4 title={reuse ? undefined : DEFS.npv}>Best options</h4>
       {top.length === 0 && <p className="muted">{reuse ? 'No tested design recovers heat at this site.' : 'No option passes the technical checks at this site.'}</p>}
       <ol className="options">
         {top.map((o, i) => {
           const on = open === o.option_id;
-          const k = o.kpis;
           const projectNpv = o.score == null ? null : totalNpv(o);
           const showingReuseNpv = reuse && order !== 'value';
           const npv = showingReuseNpv ? o.reuse_npv_usd : projectNpv;
@@ -283,15 +321,7 @@ export default function Results({ r }: { r: ModelResult }) {
             <li key={o.option_id} className={on ? 'open' : ''}>
               <button className="opt-head" onClick={() => setOpen(on ? null : o.option_id)} aria-expanded={on}>
                 <span className="opt-rank">{i + 1}</span>
-                <span className="opt-name">
-                  {o.name}
-                  <small>
-                    {reuse && <>{reuseShare(o, b.it_energy_mwh_yr)} to reuse · </>}
-                    {(projectNpv ?? 0) < 0 ? 'loses money here'
-                      : (k.cash_value_usd_yr ?? 0) < 0 ? `costs ${money(-(k.cash_value_usd_yr ?? 0))}/yr more, pays off through water saved`
-                      : `saves ${money(k.cash_value_usd_yr ?? k.net_value_usd_yr)}/yr · ${k.payback_yr === 0 ? 'no extra investment' : `payback ${payback(k.payback_yr)}`}`}
-                  </small>
-                </span>
+                <span className="opt-name">{o.name}</span>
                 <span className={`opt-npv${(npv ?? 0) < 0 ? ' neg' : ''}`}>
                   {npv == null ? 'n/a' : `${npv > 0 ? '+' : ''}${money(npv)}`}
                   <small>{showingReuseNpv ? 'Reuse NPV' : reuse ? 'Total NPV' : 'NPV'}</small>

@@ -124,7 +124,7 @@ fish farm (33 to 29 C, makeup water and hall losses) and an ambient (5GDH) heat 
 community is within reach. Each user cools the loop to its own return temperature plus an approach. The return
 water is reheated directly from the DC loops where they are hot enough, a booster heat pump does the rest, and
 whatever heat is left goes to the baseline heat rejection, so less water evaporates and fans run less.
-Every subset of users is simulated; the panel shows the top 2: "Most heat used" and "Most heat used that pays
+The heat network is tried at three sizes (5, 20 and 60 km of street, about N homes at `casc_home_mwh_yr`), one size per design. Neighbourhood heat is limited by heat density: US sites sit in low density suburbs (median 1.6 MWh per m of street per year, site_gis.csv) against about 3 or more in European district heating cities, so even a 60 km network takes a few percent of a large campus. Every subset of users is simulated; the panel shows the top 2: "Most heat used" and "Most heat used that pays
 off". Temperatures shown are those at the design hour (largest delivery).
 
 Limits: greenhouse area is capped by flat land (site_gis.csv, low confidence) and `gh_max_ha`; fish farm size and

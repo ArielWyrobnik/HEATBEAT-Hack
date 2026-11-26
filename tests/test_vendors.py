@@ -62,3 +62,13 @@ def test_api_attaches_vendors():
     p = c.post("/api/plan", json={"lat": 33.4, "lon": -112.0, "it_mw": 100, "cooling_profile": "dlc_warm",
                                   "tornado": False}).json()
     assert p["cooling_vendors"] and any(o["vendors"] for o in p["options"] if o["feasible"])
+
+
+def test_references_have_sources_and_reach_cascade_stages():
+    import heatbeat_data as hd
+    df = hd.references()
+    assert (df.url.str.startswith("http")).all() and df.status.isin(["operating", "pilot", "prototype", "announced"]).all()
+    refs = hd.references_for(["fish"])
+    assert refs and refs[0]["project"].startswith("Green Mountain")
+    assert hd.references_for(["ambient"])[0]["status"] == "operating"
+    assert hd.vendors_for(["greenhouse"], 40.0, -100.0, n=1)

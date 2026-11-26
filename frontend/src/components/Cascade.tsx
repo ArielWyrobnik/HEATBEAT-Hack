@@ -17,7 +17,7 @@ export function CascadeCard({ c, rank }: { c: Cascade; rank: number }) {
       <figcaption>
         <span className="cascade-rank">{rank}</span>
         <span className="cascade-title">{c.title}</span>
-        <b className="cascade-share">{num(c.heat_used_share * 100, c.heat_used_share < 0.1 ? 1 : 0)}%<small>of the heat used</small></b>
+        <b className="cascade-share" title="Share of the server heat used">{num(c.heat_used_share * 100, c.heat_used_share < 0.1 ? 1 : 0)}%<small>heat used</small></b>
       </figcaption>
 
       <div className="cascade-bar" aria-hidden>
@@ -33,7 +33,7 @@ export function CascadeCard({ c, rank }: { c: Cascade; rank: number }) {
         {c.stages.map((s) => (
           <li key={s.key} style={{ ['--c' as string]: COLOR[s.key] ?? 'var(--green)' }}>
             <span className="t">{deg(s.t_in_c)}→{deg(s.t_out_c)}</span>
-            <span className="name"><b>{s.label}</b><small>{s.size}</small></span>
+            <span className="name" title={s.size}><b>{s.label}</b></span>
             <span className="e">{gwh(s.mwh_yr)}</span>
           </li>
         ))}
@@ -42,6 +42,22 @@ export function CascadeCard({ c, rank }: { c: Cascade; rank: number }) {
           <span>back to the data center · {num(rest * 100, 0)}% still cooled away</span>
         </li>
       </ol>
+
+      <ul className="cascade-who">
+        {c.stages.filter((s) => s.vendors?.length || s.references?.length).map((s) => {
+          const v = s.vendors?.[0];
+          const ref = s.references?.[0];
+          return (
+            <li key={s.key} style={{ ['--c' as string]: COLOR[s.key] ?? 'var(--green)' }}>
+              <span className="who-name">{s.label}</span>
+              {v && (v.url ? <a href={v.url} target="_blank" rel="noreferrer" title={v.one_line ?? ''}>{v.name} ↗</a> : <b>{v.name}</b>)}
+              {v?.nvidia && <span className="v-nv">{v.nvidia}</span>}
+              {ref && <span className="who-ref" title={ref.what ?? ''}>already at{' '}
+                {ref.url ? <a href={ref.url} target="_blank" rel="noreferrer">{ref.project} ↗</a> : ref.project}</span>}
+            </li>
+          );
+        })}
+      </ul>
 
       <div className="cascade-kpis">
         <span><b>{compact(c.water_saved_m3_yr)} m3</b>water saved/yr</span>

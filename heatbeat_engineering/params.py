@@ -184,6 +184,9 @@ PARAMS: dict[str, Param] = {
     "amb_network_km": P(5.0, 2.0, 20.0, "km", "assumption", "Ambient network length to nearby buildings"),
     "amb_source_share": P(0.75, 0.65, 0.80, "-", "physics", "Share of building heat that comes from the network at building heat pump COP 4: 1 - 1/COP"),
     "amb_value_share": P(0.30, 0.15, 0.50, "-", "assumption", "Network heat sells at this share of the gas heat price (buildings pay their own heat pumps)"),
+    "casc_home_mwh_yr": P(15.0, 10.0, 20.0, "MWh/yr", "assumption",
+                          "Heat per home for the 'about N homes' label; cross check Meta Odense 215,000 MWh for more than 12,000 homes "
+                          "(Ramboll project page), about 18 MWh incl. losses"),
     # ---- boiler feedwater -------------------------------------------------------------------
     "p_wholesale_share": P(1.0, 0.8, 1.2, "-", "assumption", "Power plant output valued at the mean hourly market price x this"),
     "fw_target_c": P(50.0, 45.0, 60.0, "C", "assumption", "Condensate / makeup water preheated to this temperature"),
