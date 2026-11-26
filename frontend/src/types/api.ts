@@ -101,6 +101,18 @@ export interface CalcStep {
 }
 
 /** A company that can build one part of an option (heatbeat_data.vendors, docs/VENDORS.md). */
+/** A real data center that already runs this kind of heat use (source linked). */
+export interface Reference {
+  role: string;
+  project: string;
+  what?: string | null;
+  where?: string | null;
+  status: string;
+  year?: string | null;
+  url?: string | null;
+  source?: string | null;
+}
+
 export interface Vendor {
   vendor_id: string;
   name: string;
@@ -145,6 +157,7 @@ export interface OptionResult {
   /** True for the option that is the site's current setup (no change) */
   is_today?: boolean;
   vendors?: Vendor[];
+  references?: Reference[];
 }
 
 /** One fact about what the data center does today (site_current_setup.csv) */
@@ -315,6 +328,8 @@ export interface CascadeStage {
   t_out_c: number;
   peak_mw: number;
   value_usd_yr: number;
+  vendors?: Vendor[];
+  references?: Reference[];
 }
 
 export interface Cascade {

@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .models import clean, cooling_profiles, default_model, load_models
 from .schemas import (CoolingProfile, EvaluateRequest, LeaderboardRow, ModelInfo, ModelResult, PlanDefaults,
-                      PlanRequest, SiteInputs, SiteSummary, Vendor)
+                      PlanRequest, SiteInputs, Reference, SiteSummary, Vendor)
 
 # HEATBEAT_LIVE=0 never fetches weather from the internet (CI, offline demo); default 1.
 LIVE = os.getenv("HEATBEAT_LIVE", "1") != "0"
@@ -188,6 +188,11 @@ def with_vendors(r: ModelResult, lat: float, lon: float, cooling_profile: str | 
     for o in r.options:
         if o.feasible:
             o.vendors = [Vendor(**v) for v in hd.vendors_for(o.components, lat, lon)]
+            o.references = [Reference(**x) for x in hd.references_for(o.components)]
+    for c in r.cascades:
+        for st in c.stages:
+            st.vendors = [Vendor(**v) for v in hd.vendors_for([st.key], lat, lon, n=1)]
+            st.references = [Reference(**x) for x in hd.references_for([st.key], n=1)]
     if cooling_profile:
         r.cooling_vendors = [Vendor(**v) for v in hd.vendors_for_cooling(cooling_profile, lat, lon)]
     return r

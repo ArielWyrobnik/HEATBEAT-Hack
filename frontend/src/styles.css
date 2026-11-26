@@ -528,3 +528,37 @@ body.panel-full { overflow: hidden; }
   .site-panel.expanded .cascades, .site-panel.expanded .options { grid-template-columns: 1fr; }
   .site-panel.expanded header, .site-panel.expanded .panel-body { padding-left: 16px; padding-right: 16px; }
 }
+
+/* less small print: calculation tiles, compact suppliers and references, collapsed planner form */
+.calc-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 6px 0 10px; }
+.calc-tile { background: var(--surface); border: 1px solid var(--border); padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.calc-tile span { font-size: 12px; color: var(--muted); }
+.calc-tile b { font-size: 18px; color: var(--text); }
+.calc-more { margin: 4px 0 12px; }
+.calc-more summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.who-refs { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 6px 20px; }
+.vendors li .v-head { font-size: 14px; }
+.refs h5 { margin: 12px 0 6px; }
+.refs ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.refs li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 8px; font-size: 14px; }
+.refs a { color: var(--text); font-weight: 600; text-decoration: none; }
+.refs a:hover { color: var(--green); }
+.ref-st { font-size: 11px; padding: 1px 6px; border: 1px solid var(--border); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.ref-st.ref-operating { color: var(--green); border-color: var(--green); }
+.ref-where { color: var(--muted); font-size: 13px; }
+.cascade-who { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.cascade-who li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding-left: 10px; border-left: 3px solid var(--c); }
+.cascade-who .who-name { font-weight: 700; min-width: 96px; }
+.cascade-who a { color: var(--text); text-decoration: none; font-weight: 600; }
+.cascade-who a:hover { color: var(--green); }
+.cascade-who .who-ref { color: var(--muted); }
+.plan-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 20px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--muted); }
+.plan-summary b { color: var(--text); font-size: 16px; }
+.plan-summary .link { margin-left: auto; }
+.site-panel.expanded .plan-summary, .site-panel.expanded .plan-form { max-width: 1200px; margin: 0 auto; width: 100%; padding-left: 32px; padding-right: 32px; }
+
+.site-panel.expanded .plan-proposals { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.site-panel.expanded .plan-proposals > h4, .site-panel.expanded .plan-proposals > .plan-all,
+.site-panel.expanded .plan-proposals > .plan-proposal.open { grid-column: 1 / -1; }
+.site-panel.expanded .plan-proposals > .cascades { grid-template-columns: 1fr; margin: 0; }
+@media (max-width: 900px) { .site-panel.expanded .plan-proposals { grid-template-columns: 1fr; } }

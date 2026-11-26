@@ -152,6 +152,7 @@ function defaultDisplayValue(field: ParamField, inputs: InputValue[], greenfield
 export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClose: () => void }) {
   const [profiles, setProfiles] = useState<CoolingProfile[]>([]);
   const [expanded, setExpanded] = useExpand();
+  const [formOpen, setFormOpen] = useState(true);
   const [profileError, setProfileError] = useState('');
   const [sizingMode, setSizingMode] = useState<'size' | 'budget'>('size');
   const [size, setSize] = useState('100');
@@ -237,8 +238,9 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
     }
     const id = ++request.current;
     setSelected('');
-    setOpenProposal(0);
+    setOpenProposal(-1);
     setState({ status: 'loading' });
+    setFormOpen(false);
     try {
       const result = await api.plan({
         lat: point.lat,
@@ -290,7 +292,15 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
           <button className="close" onClick={onClose} aria-label="Close">×</button>
         </div>
       </header>
-      <form className="plan-form" onSubmit={(e) => { e.preventDefault(); void run(); }}
+      {!formOpen && (
+        <div className="plan-summary">
+          <b>{sizingMode === 'size' ? `${size} ${unit}` : `$${budget}${budgetUnit}`}</b>
+          <span>{greenfield ? 'New build' : 'Retrofit'}</span>
+          <span>Vera Rubin DLC</span>
+          <button type="button" className="link" onClick={() => setFormOpen(true)}>Edit inputs</button>
+        </div>
+      )}
+      {formOpen && <form className="plan-form" onSubmit={(e) => { e.preventDefault(); void run(); }}
         onChange={() => { if (state.status === 'ready') setState({ status: 'idle' }); }}>
         <div className="full plan-chip-banner">
           <b>NVIDIA Vera Rubin</b>
@@ -392,7 +402,7 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
         <button type="submit" className="btn btn-primary full" disabled={state.status === 'loading'}>
           {state.status === 'loading' ? 'Running model…' : sizingMode === 'budget' ? 'Size compute & propose 2 designs' : 'Propose 2 designs'}
         </button>
-      </form>
+      </form>}
 
       <div className="panel-body">
         {profileError && <p role="alert" className="error">{profileError}</p>}
@@ -431,11 +441,7 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
                         <span className="opt-name">
                           <span className="plan-proposal-badge">{prop.badge}</span>
                           {o.name}
-                          <small>
-                            {prop.subtitle}
-                            {!coolingOnly(o) && ` · ${reuseShare(o, result.baseline.it_energy_mwh_yr)} to reuse`}
-                            {fit?.max_it_mw_for_budget != null && ` · fits ${num(fit.max_it_mw_for_budget, 1)} MW (${compact(fit.max_vera_rubin_racks)} racks)`}
-                          </small>
+                          {fit?.max_it_mw_for_budget != null && <small>fits {num(fit.max_it_mw_for_budget, 1)} MW ({compact(fit.max_vera_rubin_racks)} racks)</small>}
                         </span>
                         <span className={`opt-npv${totalNpv(o) < 0 ? ' neg' : ''}`}>
                           {`${totalNpv(o) > 0 ? '+' : ''}${money(totalNpv(o))}`}

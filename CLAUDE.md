@@ -60,6 +60,8 @@ Biogas (2026-11-26): new plants are sized per site by NPV with economies of scal
 
 Heat waste cascade (2026-11-26, Ariel): the Heat waste tab shows the top 2 cascades (biogas, greenhouse, fish farm, ambient heat network in series by temperature, booster heat pump), optimized for heat used and water saved, with a flow view (`heatbeat_engineering/cascade.py`, `frontend/src/components/Cascade.tsx`). The site panel has a full screen button again.
 
+Less small print (2026-11-26, Ariel): KPI definitions only as hover, calculation as big number tiles (formulas behind a click), builder form collapses after "Propose designs". Every option and cascade stage names a company (NVIDIA backed first) and a real data center already doing it (`data_pipeline/solution_references.csv`, `hd.references_for`). Heat network in the cascade tried at 5, 20 and 60 km.
+
 Next steps:
 
 - Shortlist solutions and fill the per solution economics (plan in the Claude Doc "Lösungs-Ranking: Datenschema und Aufgabenverteilung").

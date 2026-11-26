@@ -146,6 +146,18 @@ class Vendor(BaseModel):
     note: str | None = None
 
 
+class Reference(BaseModel):
+    """A real data center that already runs this kind of heat use (data_pipeline/solution_references.csv)."""
+    role: str
+    project: str
+    what: str | None = None
+    where: str | None = None
+    status: str = Field(description="operating, pilot, prototype or announced")
+    year: str | None = None
+    url: str | None = None
+    source: str | None = None
+
+
 class OptionResult(BaseModel):
     """One candidate: a single option (ranking engine) or a heat chain of components (engineering)."""
     option_id: str
@@ -171,6 +183,7 @@ class OptionResult(BaseModel):
                                         description="Parts of this option the site already has today, with source")
     is_today: bool = Field(False, description="True for the option that is the site's current setup (no change)")
     vendors: list[Vendor] = Field(default_factory=list, description="Up to 3 companies that can build it, nearest first")
+    references: list[Reference] = Field(default_factory=list, description="Real data centers already doing this")
 
 
 class SetupFact(BaseModel):
@@ -237,6 +250,8 @@ class CascadeStage(BaseModel):
     t_out_c: float
     peak_mw: float
     value_usd_yr: float
+    vendors: list[Vendor] = []
+    references: list[Reference] = []
 
 
 class Cascade(BaseModel):

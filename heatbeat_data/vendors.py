@@ -41,19 +41,19 @@ ROLE = {
     "dry_cooler": "dry_cooler", "adiabatic_cooler": "adiabatic_cooler", "cooling_tower": "cooling_tower",
     "heat_pump": "heat_pump", "district_heating": "district_heating",
     "tank": "tank", "ates": "ates", "btes": "btes", "btes_ates": "btes",
-    "fish_farm": "aquaculture",
+    "fish_farm": "aquaculture", "fish": "aquaculture", "greenhouse": "greenhouse", "ambient": "district_heating",
     "biogas": "biogas", "biogas_meso": "biogas", "biogas_thermo": "biogas",
     "feedwater": "feedwater", "boiler_feedwater": "feedwater",
     "desal_med": "desal", "desal_md": "desal", "desalination": "desal",
     "orc": "orc", "adsorption": "adsorption", "absorption_cooling": "adsorption",
 }
 # importance when only n companies fit: heat use first, then the parts that make it work, then heat rejection
-PRIORITY = ["aquaculture", "district_heating", "biogas", "desal", "feedwater", "orc", "adsorption", "heat_pump",
+PRIORITY = ["aquaculture", "greenhouse", "district_heating", "biogas", "desal", "feedwater", "orc", "adsorption", "heat_pump",
             "btes", "ates", "tank", "cooling_tower", "adiabatic_cooler", "dry_cooler"]
 ROLE_LABEL = {
     "dry_cooler": "dry cooler", "adiabatic_cooler": "adiabatic cooler", "cooling_tower": "cooling tower",
     "heat_pump": "heat pump", "district_heating": "district heating", "tank": "storage tank",
-    "aquaculture": "aquaculture systems",
+    "aquaculture": "aquaculture systems", "greenhouse": "greenhouse heating",
     "ates": "aquifer storage", "btes": "borehole storage", "biogas": "digester", "feedwater": "power plant steam cycle",
     "desal": "desalination", "orc": "ORC", "adsorption": "adsorption chiller", "liquid_cooling": "liquid cooling",
     "immersion": "immersion cooling", "two_phase": "two-phase cooling", "controls": "cooling controls",
@@ -144,4 +144,32 @@ def _pick(roles: list[str], lat, lon, n: int, fill: bool = True) -> list[dict]:
                 break
         if len(out) >= n or len(roles) >= n:
             break
+    return out
+
+
+_REF_CSV = _CSV.with_name("solution_references.csv")
+
+
+@lru_cache(maxsize=1)
+def references() -> pd.DataFrame:
+    """Real data centers that already run a solution (data_pipeline/solution_references.csv, each with a source)."""
+    return pd.read_csv(_REF_CSV, dtype=str, keep_default_na=False)
+
+
+def references_for(components, n: int = 2) -> list[dict]:
+    """Up to n real projects for the most important part of a chain, operating ones first."""
+    roles = list(dict.fromkeys(ROLE[c] for c in components if c in ROLE))
+    roles.sort(key=lambda x: PRIORITY.index(x) if x in PRIORITY else len(PRIORITY))
+    df = references()
+    rank = {"operating": 0, "pilot": 1, "prototype": 2, "announced": 3}
+    out, seen = [], set()
+    for role in roles:
+        rows = sorted(df[df.role == role].to_dict("records"), key=lambda r: rank.get(r["status"], 9))
+        for r in rows:
+            if len(out) >= n:
+                return out
+            if r["project"] in seen:
+                continue
+            seen.add(r["project"])
+            out.append({k: (r[k] or None) for k in ("role", "project", "what", "where", "status", "year", "url", "source")})
     return out

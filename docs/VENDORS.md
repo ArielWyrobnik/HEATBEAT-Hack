@@ -78,3 +78,12 @@ not build heat reuse for others, so they are not in the vendor list.
 - No US adsorption chiller maker found; Fahrenheit (Munich) has no US office in the sources read.
 - Aquifer and borehole storage: only Jacobs (design, side business). A US drilling or ATES specialist is missing.
 - HQ coordinates of rows marked `partly` come from company profiles and were not re-checked.
+
+## Reference projects per solution
+
+`data_pipeline/solution_references.csv` lists real data centers that already run each kind of heat use (fish farm,
+greenhouse, district heating, heat pump, biogas, aquifer storage, desalination, ORC), each with status
+(operating, pilot, prototype, announced) and a source URL. `hd.references_for(components)` picks up to 2, operating
+first; the API adds them to every option (`references`) and to each heat waste cascade stage together with one
+company (`vendors`). Biogas (Echelon + Biocore) and desalination (Endeavour + Trevi) are announced only, ORC is a
+lab prototype; the panel shows that status. Greenhouse supplier Blockheating has no US office found.

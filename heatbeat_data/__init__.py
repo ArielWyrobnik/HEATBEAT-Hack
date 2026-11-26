@@ -230,6 +230,6 @@ __all__ += ["already_implemented", "current_setup", "current_setup_table", "setu
 Site.current_setup = lambda self: current_setup(self.site_id)
 
 # Companies that can build each solution (docs/VENDORS.md)
-from .vendors import vendors, vendors_for, vendors_for_cooling  # noqa: E402
+from .vendors import references, references_for, vendors, vendors_for, vendors_for_cooling  # noqa: E402
 
-__all__ += ["vendors", "vendors_for", "vendors_for_cooling"]
+__all__ += ["vendors", "vendors_for", "vendors_for_cooling", "references", "references_for"]

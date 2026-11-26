@@ -90,7 +90,6 @@ export default function HeatFlow({ option }: { option: OptionResult }) {
           </li>
         ))}
       </ul>
-      <p>Amounts count server heat only, measured before transfer and conversion losses.</p>
     </figure>
   );
 }
