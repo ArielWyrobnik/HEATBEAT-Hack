@@ -31,11 +31,11 @@ Local context: Israel has low heating demand, high cooling demand, water scarcit
 
 Focus: US sites first. Israel is set aside for now (Ariel, 2026-11-26).
 
-PRs #1 and #3 to #27 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020; #8: free cooling capped by site supply temperature; #10: demo works without stored weather; #13: DAC credit split from avoided emission carbon value). What is on `main`:
+PRs #1 and #3 to #30 are merged into `main` (#7: US retail prices from EIA 2024 instead of 2020; #8: free cooling capped by site supply temperature; #10: demo works without stored weather; #13: DAC credit split from avoided emission carbon value). What is on `main`:
 
 | Part | Where | Docs | Status |
 |---|---|---|---|
-| Location database: 59 sites, electricity prices, carbon intensity, `heatbeat_data` access module, GitHub Actions build. Weather is fetched live on first use (Open-Meteo, fallback NASA POWER) and cached. | `data_pipeline/`, `heatbeat_data/` | `docs/DATA.md` | Merged, data in `data/parquet/` (#25). Real hourly day-ahead prices for ERCOT, MISO, NYISO, ISO-NE; CAISO, SPP, PJM and non-market regions are synthetic shapes (`is_synthetic = 1`). Weather stored for 57 of 59 sites, the other 2 are fetched live. |
+| Location database: 59 sites, electricity prices, carbon intensity, `heatbeat_data` access module, GitHub Actions build. Weather is fetched live on first use (Open-Meteo, fallback NASA POWER) and cached. | `data_pipeline/`, `heatbeat_data/` | `docs/DATA.md` | Merged, data in `data/parquet/` (#25). Real hourly day-ahead prices for ERCOT, MISO, NYISO, ISO-NE; CAISO, SPP, PJM and non-market regions are synthetic shapes (`is_synthetic = 1`). Weather stored for 57 of 59 sites (restored and protected from empty rebuilds in #29), the other 2 are fetched live. |
 | Heat source per site: IT load, cooling type, chip generation, coolant temperatures, `hd.site_heat_profiles()` | `data_pipeline/cooling_profiles.csv`, `site_profiles.csv`, `heat_sources.csv`, `heatbeat_data/heat_profiles.py` | `docs/HEAT_PROFILES.md` | Merged. Most site MW and chip values are team estimates (low confidence). |
 | Solution catalogue: 21 solutions with ideal parameters, schema validation, `screen()` first pass ranking | `heatbeat_solutions/` | `docs/SOLUTIONS.md` | Merged. |
 | US market prices per state: gas, propane, heating oil, carbon markets, 45Q, RINs, LCFS, fish, tomatoes, pellets; `hd.excel_inputs(site_id)` | `data_pipeline/market_prices.csv`, `heatbeat_data/market.py` | `docs/MARKET.md` | Merged (#12, #13). Transcribed from published tables, synthetic rows flagged. |
