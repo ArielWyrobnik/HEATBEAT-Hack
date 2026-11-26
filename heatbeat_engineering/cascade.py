@@ -47,6 +47,8 @@ class User:
     capex_fixed: float          # pipes / network, USD
     co2_t_mwh: float            # avoided CO2 per MWh delivered
     settle: object = None       # biogas: use the biogas plan for value and CAPEX
+    loss_mw: float = 0.0        # connection line heat loss (drawn from the loop, not delivered)
+    pump_mw: float = 0.0        # connection line pump power at design flow
 
 
 def users(site, P: dict) -> list[User]:
@@ -67,7 +69,8 @@ def users(site, P: dict) -> list[User]:
         if dem.sum() > 0:
             pp = pipe(host, float(dem.max()), P["gh_supply_c"], P["gh_return_c"], tg, P)
             out.append(User("greenhouse", "Greenhouse", f"{area / 1e4:,.0f} ha", P["gh_supply_c"], P["gh_return_c"],
-                            dem, p_heat, pp["capex_usd"], gas_ef))
+                            dem + pp["loss_mw"], p_heat, pp["capex_usd"], gas_ef,
+                            loss_mw=pp["loss_mw"], pump_mw=pp["pump_design_mw"]))
     # 3. warm water fish farm (RAS)
     vol = P["aq_prod_t_yr"] * P["aq_m3_per_t_yr"]
     makeup = vol * P["aq_exchange_share"] * 1000 / 86400 * P["cp_water_kj_kgk"] * (P["aq_tank_c"] - P["aq_ground_c"]) / 1000
@@ -75,7 +78,8 @@ def users(site, P: dict) -> list[User]:
     dem = makeup + hall
     pp = pipe(host, float(dem.max()), P["aq_supply_c"], P["aq_return_c"], tg, P)
     out.append(User("fish", "Fish farm", f"{P['aq_prod_t_yr']:,.0f} t fish/yr", P["aq_supply_c"], P["aq_return_c"],
-                    dem, p_heat, pp["capex_usd"], gas_ef))
+                    dem + pp["loss_mw"], p_heat, pp["capex_usd"], gas_ef,
+                    loss_mw=pp["loss_mw"], pump_mw=pp["pump_design_mw"]))
     # 4. ambient (5th generation) network to nearby buildings
     if site.x["d_dh_m"] <= P["dh_max_transmission_km"] * 1000:
         from .district_heating import demand_profile
@@ -85,7 +89,7 @@ def users(site, P: dict) -> list[User]:
             net = P["capex_dist_network_usd_m"] * P["amb_network_km"] * 1000 * P["capex_factor"]
             out.append(User("ambient", "Heat network (buildings)", f"{P['amb_network_km']:,.0f} km",
                             P["amb_supply_c"], P["amb_return_c"], dem, p_heat * P["amb_value_share"],
-                            line["capex_usd"] + net, gas_ef))
+                            line["capex_usd"] + net, gas_ef, loss_mw=line["loss_mw"], pump_mw=line["pump_design_mw"]))
     return out
 
 
@@ -150,8 +154,18 @@ def run(site, P: dict, chosen: list[User], base: dict) -> dict:
     x = site.x
     stages, revenue, capex, co2 = [], 0.0, 0.0, 0.0
     delivered = sum(float(v.sum()) for v in got.values())
+    elec += sum(u.pump_mw * float(got[u.key].sum()) / float(u.demand.max())
+                for u in order if u.pump_mw > 0 and float(u.demand.max()) > 0)
+    line_loss, line_pump = 0.0, 0.0
     for u in order:
-        e = float(got[u.key].sum())
+        drawn = got[u.key]
+        if float(drawn.sum()) <= 0:
+            continue
+        # connection lines: the loss is drawn from the loop but never reaches the host; pumps run with the flow
+        line_loss += float(np.minimum(drawn, u.loss_mw).sum())
+        peak_u = float(u.demand.max())
+        line_pump += u.pump_mw * float(drawn.sum()) / peak_u if peak_u > 0 else 0.0
+        e = float(np.clip(drawn - u.loss_mw, 0, None).sum())
         if e <= 0:
             continue
         if u.settle is not None:
@@ -172,8 +186,13 @@ def run(site, P: dict, chosen: list[User], base: dict) -> dict:
     d_water = base["water_m3"] - water
     net = revenue + d_elec * x["p_elec_usd_mwh"] + d_water * p_w - P["opex_share"] * capex
     co2 += d_elec * x["ci_grid_kg_mwh"] / 1000
+    used -= line_loss  # lost to the ground on the way, not used
+    tot_del = sum(s_["mwh_yr"] for s_ in stages)
+    for s_ in stages:  # share of server heat behind each user (heat pump work counted pro rata)
+        s_["share"] = used * s_["mwh_yr"] / tot_del / total_heat if tot_del > 0 else 0.0
     return {"stages": stages, "heat_used_mwh_yr": used, "heat_used_share": used / total_heat,
-            "heat_rejected_mwh_yr": total_heat - used, "water_saved_m3_yr": d_water, "electricity_saved_mwh_yr": d_elec,
+            "heat_rejected_mwh_yr": total_heat - used, "line_loss_mwh_yr": line_loss,
+            "line_pump_mwh_yr": line_pump, "water_saved_m3_yr": d_water, "electricity_saved_mwh_yr": d_elec,
             "co2_avoided_t_yr": co2, "capex_usd": capex, "net_value_usd_yr": net, "npv_usd": net / annuity(P) - capex,
             "rejection": tech, "t_top_c": t_top, "t_back_c": float(t_back[h_d]),
             "direct_mwh_yr": float(direct.sum()), "heat_pump_mwh_yr": float(boost.sum()),
