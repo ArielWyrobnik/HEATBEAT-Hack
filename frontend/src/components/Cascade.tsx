@@ -63,7 +63,7 @@ export function CascadeCard({ c, rank }: { c: Cascade; rank: number }) {
 
       <div className="cascade-kpis">
         <span><b>{compact(c.water_saved_m3_yr)} m3</b>water saved/yr</span>
-        <span><b>{tonnes(c.co2_avoided_t_yr)}</b>CO2 avoided/yr</span>
+        {c.co2_avoided_t_yr >= 0 && <span><b>{tonnes(c.co2_avoided_t_yr)}</b>CO2 avoided/yr</span>}
         <span className={c.npv_usd < 0 ? 'neg' : ''}><b>{money(c.npv_usd)}</b>NPV 20 yr</span>
       </div>
     </figure>
