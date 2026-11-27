@@ -567,9 +567,12 @@ body.panel-full { overflow: hidden; }
 .opt-wrap { position: relative; }
 .opt-wrap > .opt-full-btn { display: block; margin: 8px 12px 0 auto; }
 .opt-full { position: fixed; inset: 0; z-index: 1200; background: var(--bg); overflow-y: auto; }
-.opt-full-inner { max-width: 1100px; margin: 0 auto; padding: 24px 32px 48px; }
+.opt-full-inner { width: 100%; padding: 24px 48px 48px; box-sizing: border-box; }
+/* bigger type in full screen: scales every font and box in the details together */
+.opt-full-inner { zoom: 1.35; }
+.opt-full .tornado svg { width: 100%; height: auto; }
 .opt-full-inner > header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
-.opt-full-inner > header h3 { font-size: 26px; margin: 0; }
+.opt-full-inner > header h3 { font-size: 30px; margin: 0; }
 .opt-full .kpis { grid-template-columns: repeat(4, 1fr); }
 body.opt-full-open { overflow: hidden; }
-@media (max-width: 760px) { .opt-full-inner { padding: 16px; } .opt-full .kpis { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px) { .opt-full-inner { padding: 16px; zoom: 1; } .opt-full .kpis { grid-template-columns: 1fr 1fr; } }
