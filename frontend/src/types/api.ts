@@ -290,34 +290,6 @@ export interface ModelInfo {
   default: boolean;
 }
 
-/** One data center in the opportunity ranking (GET /api/leaderboard) */
-export interface LeaderboardRow {
-  site_id: string;
-  name: string;
-  city?: string | null;
-  region?: string | null;
-  country?: string | null;
-  operator?: string | null;
-  it_load_mw?: number | null;
-  verdict_level?: string | null;
-  option_id?: string | null;
-  option_name?: string | null;
-  npv_usd?: number | null;
-  cash_value_usd_yr?: number | null;
-  co2_avoided_t_yr?: number | null;
-  water_saved_m3_yr?: number | null;
-  payback_yr?: number | null;
-  cooling_option_name?: string | null;
-  cooling_npv_usd?: number | null;
-  cooling_cash_usd_yr?: number | null;
-  heat_option_name?: string | null;
-  heat_reused_mwh_yr?: number | null;
-  heat_reused_share?: number | null;
-  heat_reuse_npv_usd?: number | null;
-  heat_npv_usd?: number | null;
-  heat_pays_off?: boolean | null;
-}
-
 export interface CascadeStage {
   key: string;
   label: string;
