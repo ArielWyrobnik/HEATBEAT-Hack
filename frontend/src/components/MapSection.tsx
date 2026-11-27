@@ -15,10 +15,6 @@ interface Props {
   onPlanToggle?: () => void;
   planPoint?: { lat: number; lng: number } | null;
   onMapClick?: (lat: number, lng: number) => void;
-  /** Fly to this site (set by the opportunity ranking); n makes a repeat request fire again */
-  focus?: { id: string; n: number } | null;
-  boardOpen?: boolean;
-  onBoardToggle?: () => void;
 }
 
 const planIcon = L.divIcon({ className: 'dc-pin dc-pin-plan', html: '<span class="dc-pin-core"></span>', iconSize: [22, 22], iconAnchor: [11, 11] });
@@ -51,7 +47,7 @@ function popupHtml(d: DataCenter) {
 interface PlaceResult { display_name: string; lat: string; lon: string }
 
 export default function MapSection({ dataCenters, fromApi = false, selectedId = null, onSelect, children,
-  planning = false, onPlanToggle, planPoint = null, onMapClick, focus = null, boardOpen = false, onBoardToggle }: Props) {
+  planning = false, onPlanToggle, planPoint = null, onMapClick }: Props) {
   const clickRef = useRef(onMapClick);
   clickRef.current = planning ? onMapClick : undefined;
   const planMarker = useRef<L.Marker | null>(null);
@@ -157,11 +153,6 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
     m.flyTo(target, zoom, { duration: 1.2 });
   };
 
-  useEffect(() => {
-    const d = focus && dataCenters.find((x) => x.id === focus.id);
-    if (d) flyToDc(d, 9);
-  }, [focus]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const focusDc = (d: DataCenter) => {
     flyToDc(d);
     if (fromApi && onSelect) onSelect(d.id);
@@ -266,11 +257,6 @@ export default function MapSection({ dataCenters, fromApi = false, selectedId = 
         <div ref={mapEl} className="map" />
         {fromApi && (
           <div className="map-btns">
-            {!planning && onBoardToggle && (
-              <button className={`plan-toggle${boardOpen ? ' on' : ''}`} onClick={onBoardToggle}>
-                {boardOpen ? 'Hide ranking' : 'Where can we do the most?'}
-              </button>
-            )}
             {onPlanToggle && (
               <button className={`plan-toggle${planning ? ' on' : ''}`} onClick={onPlanToggle}>
                 {planning ? (planPoint ? 'Exit planning' : 'Click the map to place the site · cancel') : '+ Plan a new data center'}
