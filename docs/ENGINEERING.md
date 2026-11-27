@@ -127,8 +127,10 @@ outlet about 55 C, `nvidia_45c_2026` in `heat_sources.csv`, vendor marketing). E
 plate heat exchanger while the loop is at least its supply temperature plus the approach (3 K); only a user
 that needs hotter water than the loop gets a heat pump, whose evaporator draws from the loop. What the users
 leave above the supply temperature goes to the baseline heat rejection, so less water evaporates and fans run
-less. Cold loops (chilled water 7/13 C, air 18/26 C) therefore need heat pumps for every user except the
-ambient network. Only the hottest loop feeds the cascade; the air side loop is cooled as before.
+less. The cascade only runs on a GPU liquid loop (direct to chip or immersion, return at least
+`casc_min_source_c` = 35 C): the hot water comes straight from the chips and bypasses chillers and towers.
+Sites cooled by chilled water, air or rear door heat exchangers get no cascade (a DLC retrofit would be
+needed first, not modelled). The air side loop of a DLC site is cooled as before.
 The heat network is tried at three sizes (5, 20 and 60 km of street, about N homes at `casc_home_mwh_yr`), one size per design. Neighbourhood heat is limited by heat density: US sites sit in low density suburbs (median 1.6 MWh per m of street per year, site_gis.csv) against about 3 or more in European district heating cities, so even a 60 km network takes a few percent of a large campus. Every subset of users is simulated; the panel shows the top 2: "Most heat used" and "Most heat used that pays
 off". Temperatures shown are those at the design hour (largest delivery).
 

@@ -71,6 +71,6 @@ export function CascadeCard({ c, rank }: { c: Cascade; rank: number }) {
 }
 
 export default function Cascades({ items }: { items: Cascade[] }) {
-  if (!items.length) return <p className="muted">No heat user can be reached from this site.</p>;
+  if (!items.length) return <p className="muted">No heat reuse here. It needs hot water straight from liquid cooled GPUs (35° or more) and a heat user nearby.</p>;
   return <div className="cascades">{items.slice(0, 2).map((c, i) => <CascadeCard key={c.title} c={c} rank={i + 1} />)}</div>;
 }
