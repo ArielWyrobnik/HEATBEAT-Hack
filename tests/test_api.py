@@ -9,7 +9,7 @@ pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 from fastapi.testclient import TestClient  # noqa: E402
 
-from heatbeat_api.app import MODELS, app  # noqa: E402
+from heatbeat_api.app import MODELS, SHOWCASE, app  # noqa: E402
 from heatbeat_api.models import ExcelRankingModel, SiteModel, flag_for  # noqa: E402
 from heatbeat_api.schemas import ModelResult  # noqa: E402
 
@@ -41,12 +41,12 @@ def test_default_lists_only_sites_with_verified_cooling():
     default = c.get("/api/sites").json()
     every = c.get("/api/sites", params={"scope": "all"}).json()
     assert 0 < len(default) < len(every)
-    assert all(p["setup_status"] == "verified" for p in default)
+    assert all(p["setup_status"] == "verified" or p["site_id"] in SHOWCASE for p in default)
     hidden = next(p for p in every if p["setup_status"] != "verified")
     assert c.get(f"/api/sites/{hidden['site_id']}").status_code == 200  # hidden, not deleted
     assert c.get("/api/sites", params={"scope": "nope"}).status_code == 422
     cfg = c.get("/api/config").json()
-    assert cfg["n_sites_verified"] == len(default) and cfg["n_sites_all"] == len(every)
+    assert cfg["n_sites_verified"] == sum(p["setup_status"] == "verified" for p in default) and cfg["n_sites_all"] == len(every)
 
 
 def test_inputs_have_flags_and_sources():
@@ -257,10 +257,11 @@ def test_plan_defaults_and_budget_mode():
 
 
 def test_heat_waste_cascades_in_result():
-    # heat reuse only straight from a GPU liquid loop: a chilled water site has none
+    # heat reuse only straight from a GPU liquid loop: a chilled water site gets a liquid cooling retrofit
     r = c.get(f"/api/sites/{SITE}/ranking", params={"tornado": False})
     assert r.status_code == 200, r.text
-    assert r.json()["cascades"] == []
+    rc = r.json()["cascades"]
+    assert rc and all(x["retrofit_capex_usd"] > 0 and x["t_top_c"] >= 35 for x in rc)
     r = c.get("/api/sites/us-or-the-dalles-google/ranking", params={"tornado": False})
     assert r.status_code == 200, r.text
     cs = r.json()["cascades"]

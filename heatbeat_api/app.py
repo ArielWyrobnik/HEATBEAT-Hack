@@ -31,6 +31,8 @@ LIVE = os.getenv("HEATBEAT_LIVE", "1") != "0"
 # Show all again:  HEATBEAT_SITES=all ./scripts/dev.sh   (or ?sites=all in the browser address)
 SITES_SCOPE = os.getenv("HEATBEAT_SITES", "verified").strip().lower()
 SCOPES = ("verified", "all")
+# always listed: heat reuse showcase (Google Hamina, TPU liquid cooling, best heat waste cascade)
+SHOWCASE = {"fi-hamina-google"}
 
 app = FastAPI(title="HEATBEAT API", version="0.1.0",
               description="Which waste stream solution is the most feasible at this data center?")
@@ -143,7 +145,7 @@ def sites(country: str | None = Query(None, description="ISO2 filter, e.g. US"),
         raise HTTPException(422, f"scope must be one of {SCOPES}")
     out = list(_sites().values())
     if scope == "verified":
-        out = [s for s in out if s.setup_status == "verified"]
+        out = [s for s in out if s.setup_status == "verified" or s.site_id in SHOWCASE]
     if country:
         out = [s for s in out if (s.country or "").upper() == country.upper()]
     return out

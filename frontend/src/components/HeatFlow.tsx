@@ -48,7 +48,7 @@ export function HeatOrderSelect({ order, onChange }: { order: HeatOrder; onChang
   );
 }
 
-const LOOP_LABELS: Record<string, string> = { air: 'Air-side cooling loop', liquid: 'Liquid cooling loop' };
+const LOOP_LABELS: Record<string, string> = { air: 'Air-side cooling loop', liquid: 'Liquid cooling loop', facility: 'Existing facility water loop' };
 
 export default function HeatFlow({ option }: { option: OptionResult }) {
   if (!option.heat_loops?.length) return null;
