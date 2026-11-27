@@ -90,6 +90,10 @@ interface Proposal {
   option: OptionResult;
 }
 
+/** A new build has nothing to improve on, so its cooling pick shows what it costs, not an NPV. */
+const COST_EFFECTIVE = 'Most cost effective cooling solution';
+const annualCost = (o: OptionResult) => o.details.annual_cost_usd_yr as number | undefined;
+
 function pickTwoProposals(feasible: OptionResult[], path: string): Proposal[] {
   if (feasible.length === 0) return [];
   if (path === 'any') {
@@ -97,7 +101,7 @@ function pickTwoProposals(feasible: OptionResult[], path: string): Proposal[] {
     const cooling = feasible.filter(coolingOnly).sort((a, b) => totalNpv(b) - totalNpv(a))[0];
     const heat = rankHeatOptions(feasible, 'profitableHeat');
     const out: Proposal[] = [];
-    if (cooling) out.push({ badge: PERSPECTIVES.cooling.label, subtitle: 'Most money saved through cooling', option: cooling });
+    if (cooling) out.push({ badge: PERSPECTIVES.cooling.label, subtitle: COST_EFFECTIVE, option: cooling });
     if (heat.options[0]) out.push({ badge: PERSPECTIVES.heat.label,
       subtitle: heat.fallback ? 'Best heat reuse here (does not pay off)' : 'Most heat reused that pays off', option: heat.options[0] });
     if (out.length) return out;
@@ -440,16 +444,24 @@ export default function PlanPanel({ point, onClose }: { point: PlanPoint; onClos
                         <span className="opt-rank">{idx + 1}</span>
                         <span className="opt-name">
                           <span className="plan-proposal-badge">{prop.badge}</span>
+                          {prop.subtitle === COST_EFFECTIVE && <small className="plan-proposal-sub">{COST_EFFECTIVE}</small>}
                           {o.name}
                           {fit?.max_it_mw_for_budget != null && <small>fits {num(fit.max_it_mw_for_budget, 1)} MW ({compact(fit.max_vera_rubin_racks)} racks)</small>}
                         </span>
-                        <span className={`opt-npv${totalNpv(o) < 0 ? ' neg' : ''}`}>
-                          {`${totalNpv(o) > 0 ? '+' : ''}${money(totalNpv(o))}`}
-                          <small>Total NPV</small>
-                        </span>
+                        {prop.subtitle === COST_EFFECTIVE && annualCost(o) != null ? (
+                          <span className="opt-npv" title="Electricity, water, maintenance and the investment spread over the lifetime (annuity)">
+                            {`${money(annualCost(o))}/yr`}
+                            <small>cooling cost</small>
+                          </span>
+                        ) : (
+                          <span className={`opt-npv${totalNpv(o) < 0 ? ' neg' : ''}`}>
+                            {`${totalNpv(o) > 0 ? '+' : ''}${money(totalNpv(o))}`}
+                            <small>Total NPV</small>
+                          </span>
+                        )}
                         <span className="chev" aria-hidden>{on ? '−' : '+'}</span>
                       </button>
-                      {on && <Details o={o} r={result} planned />}
+                      {on && <Details o={o} r={result} planned costOnly={prop.subtitle === COST_EFFECTIVE} />}
                     </div>
                   );
                 })}

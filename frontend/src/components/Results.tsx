@@ -196,7 +196,38 @@ export function References({ refs }: { refs?: Reference[] }) {
   );
 }
 
-export function Details({ o, r, planned = false }: { o: OptionResult; r: ModelResult; planned?: boolean }) {
+/** Option details, folded open under the option, with a button to show them full screen (Esc closes). */
+export function Details(props: { o: OptionResult; r: ModelResult; planned?: boolean; costOnly?: boolean }) {
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    if (!full) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFull(false); };
+    window.addEventListener('keydown', onKey);
+    document.body.classList.add('opt-full-open');
+    return () => { window.removeEventListener('keydown', onKey); document.body.classList.remove('opt-full-open'); };
+  }, [full]);
+  const btn = (
+    <button type="button" className="expand-btn opt-full-btn" onClick={() => setFull(!full)}
+            title={full ? 'Close (Esc)' : 'Full screen'} aria-label={full ? 'Close full screen' : 'Full screen'}>
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
+        {full
+          ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" strokeWidth="2" />
+          : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" strokeWidth="2" />}
+      </svg>
+    </button>
+  );
+  if (!full) return <div className="opt-wrap">{btn}<DetailsBody {...props} /></div>;
+  return (
+    <div className="opt-full" role="dialog" aria-modal="true" aria-label={props.o.name}>
+      <div className="opt-full-inner">
+        <header><h3>{props.o.name}</h3>{btn}</header>
+        <DetailsBody {...props} />
+      </div>
+    </div>
+  );
+}
+
+function DetailsBody({ o, r, planned = false, costOnly = false }: { o: OptionResult; r: ModelResult; planned?: boolean; costOnly?: boolean }) {
   const k = o.kpis;
   const costs = Object.entries(planned && r.model === 'heat_chain'
     ? (o.details.capex_breakdown_usd as Record<string, number> | undefined) ?? {}
@@ -217,6 +248,16 @@ export function Details({ o, r, planned = false }: { o: OptionResult; r: ModelRe
           {' '}<b>Total NPV {money(totalNpv(o))}</b> compared with the baseline.
         </p>
       )}
+      {costOnly ? (
+      <div className="kpis">
+        <Kpi label="Cooling cost" v={`${money(o.details.annual_cost_usd_yr as number)}/yr`}
+             def="Electricity, water and maintenance of the cooling plant plus its investment spread over the lifetime (annuity). Lowest of all tested designs." />
+        <Kpi label="Investment" v={money(o.details.capex_total_usd as number)} def="Cooling plant equipment. Team cost assumptions, not quotes." />
+        <Kpi label="PUE" v={num(k.pue_with, 2)} def="Power Usage Effectiveness: all facility energy divided by IT energy." />
+        <Kpi label="Water use" v={`${compact((k.wue_with_l_kwh ?? 0) * (r.baseline.it_energy_mwh_yr ?? 0))} m3/yr`}
+             def="Water the cooling evaporates per year (WUE times IT energy)." />
+      </div>
+      ) : (
       <div className="kpis">
         <Kpi label="Saved per year" v={`${money(k.cash_value_usd_yr ?? k.net_value_usd_yr)}`} def={DEFS.cash}
              neg={(k.cash_value_usd_yr ?? 0) < 0} />
@@ -224,6 +265,7 @@ export function Details({ o, r, planned = false }: { o: OptionResult; r: ModelRe
         <Kpi label="CO2 avoided" v={`${tonnes(k.co2_avoided_t_yr)}/yr`} def={planned ? 'Tonnes of CO2 per year compared with the baseline design.' : DEFS.co2} neg={(k.co2_avoided_t_yr ?? 0) < 0} />
         <Kpi label="Water saved" v={`${compact(k.water_saved_m3_yr)} m3/yr`} def={DEFS.water} neg={(k.water_saved_m3_yr ?? 0) < 0} />
       </div>
+      )}
 
       {recoveredHeat > 0 && (hasHeatFlow
         ? o.product && <p className="impl-line"><b>Annual output</b> {o.product}</p>

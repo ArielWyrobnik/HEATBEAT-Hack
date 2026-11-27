@@ -4,13 +4,15 @@ The cooling perspective asks which heat rejection saves the most money. This mod
 question: how much of the heat can be put to use, and how much water does that save? A heat use loop
 runs through several users in series, hottest requirement first, for example
 
-    45 C -> digester heating 45->41 C -> greenhouse 41->35 C -> fish farm 35->32 C -> back to the DC
+    50 C -> greenhouse 50->48 C -> fish farm 48->46 C -> homes 46->45 C -> back to the servers at 45 C
 
-Per hour: use loop flow C2 (MW/K) = peak demand / (T_top - T_low). Each user takes
-q = min(demand, C2 (T - T_floor)), T_floor = its return temperature + approach, and the water leaves at
-T - q / C2. The returning water is reheated to T_top directly from the DC loops where they are hot
-enough, and by a booster heat pump otherwise. All DC heat that goes this way is not cooled away: the
-existing heat rejection needs less fan power and less water (that saving is the point of this view).
+The users sit on the hottest DC loop itself, in series: the loop leaves the servers at its return
+temperature (Vera Rubin DLC: 45 C in, about 55 C at the chip outlet, NVIDIA 2026; facility loop 50 C in
+cooling_profiles.csv), passes the users, and only has to come back to its supply temperature (45 C).
+A user whose supply temperature is above the loop temperature minus the approach gets a heat pump that
+draws its evaporator heat from the loop; every other user takes heat through a plain heat exchanger.
+All DC heat that goes this way is not cooled away: the existing heat rejection trims only the rest and
+needs less fan power and less water (that saving is the point of this view).
 
 Users (all hourly, sized large on purpose, every size an assumption flagged in params.py):
   biogas      digester heating of the sized biogas plant (biogas.py), heating water 45/35 C
@@ -100,53 +102,49 @@ def users(site, P: dict) -> list[User]:
 def run(site, P: dict, chosen: list[User], base: dict) -> dict:
     """Hourly cascade for one set of users. Returns stages, totals and value vs the baseline.
 
-    A heat use loop runs from T_top (hottest user supply) through the users in series, hottest first,
-    and comes back at T_r. It is reheated to T_top first directly from the DC loops (hottest loop first,
-    up to the loop return minus the approach), and a booster heat pump lifts the rest from the DC loop
-    (COP from heat_pump.cop). Flow of the use loop C2 = peak demand / (T_top - T_low).
+    The users sit in series on the hottest DC loop itself: the water leaves the servers at the loop
+    return temperature (Vera Rubin DLC about 50 to 55 C), passes the users hottest requirement first,
+    and only has to come back down to the loop supply temperature (about 45 C). Whatever the users do
+    not take is trimmed by the existing heat rejection. Loop flow C = q_loop / (T_return - T_supply).
+
+    Per hour and user: if the loop is hot enough (T - approach >= user supply) a heat exchanger takes
+    q = min(demand, C (T - T_supply)) directly. Otherwise a heat pump lifts it: its evaporator draws
+    q (1 - 1/COP) from the loop, COP from heat_pump.cop at the loop temperature. The loop leaves each
+    user at T - drawn / C, never below the loop supply temperature.
     """
     from . import heat_pump as hp
     app = P["hx_approach_k"]
     order = sorted(chosen, key=lambda u: -u.t_supply)
-    t_top = order[0].t_supply
-    t_low = min(u.t_return for u in order) + app
-    peak = float(np.max(sum(u.demand for u in order)))
-    c2 = peak / max(t_top - t_low, 1.0)
-    t = np.full(H, t_top)
-    got = {}
+    src = max(site.loops, key=lambda l: l.t_return_c)
+    t_ret, t_sup = float(src.t_return_c), float(src.t_supply_c)
+    c = float(src.q_mw) / max(t_ret - t_sup, 1.0)   # MW per K of the DC loop
+    t = np.full(H, t_ret)
+    got, drawn_by, t_path, hp_by = {}, {}, {}, {}
+    direct = np.zeros(H)
+    boost = np.zeros(H)
+    hp_work = np.zeros(H)
     for u in order:
-        floor = max(u.t_return + app, t_low)
-        q = np.minimum(u.demand, c2 * np.clip(t - floor, 0, None))
-        t_out = t - q / c2
-        got[u.key] = q
-        t = t_out
-    t_back = t
+        avail = c * np.clip(t - t_sup, 0, None)                 # heat still in the loop above its supply temp
+        ok = t - app >= u.t_supply                               # direct heat exchanger is enough
+        cop = np.where(ok, np.inf, hp.cop(t, u.t_supply, P))
+        frac = np.where(ok, 1.0, 1.0 - 1.0 / cop)               # loop heat per MWh delivered
+        q = np.minimum(u.demand, avail / np.maximum(frac, 1e-6))
+        draw = q * frac
+        got[u.key], drawn_by[u.key] = q, draw
+        direct += np.where(ok, q, 0.0)
+        b_u = np.where(ok, 0.0, q)
+        boost += b_u
+        hp_work += b_u - np.where(ok, 0.0, draw)
+        hp_by[u.key] = (b_u, b_u - np.where(ok, 0.0, draw))   # (delivered by heat pump, its electricity)
+        t_path[u.key] = (t.copy(), t - draw / c)
+        t = t - draw / c
+    t_after = t
     # temperatures shown per user: the design hour (largest total delivery), so the chain is continuous
     h_d = int(np.argmax(sum(got.values())))
-    t_d = t_top
-    t_design = {}
-    for u in order:
-        t_design[u.key] = (t_d, t_d - float(got[u.key][h_d]) / c2)
-        t_d = t_design[u.key][1]
-    # reheat: direct from the DC loops, then booster heat pump
+    t_design = {k: (float(v[0][h_d]), float(v[1][h_d])) for k, v in t_path.items()}
+    cop_all = float(boost.sum() / hp_work.sum()) if hp_work.sum() > 0 else None
     rem = {l.name: np.full(H, float(l.q_mw)) for l in site.loops}
-    cur = t_back.copy()
-    direct = np.zeros(H)
-    for l in sorted(site.loops, key=lambda l: -l.t_return_c):
-        reach = min(t_top, l.t_return_c - app)
-        q = np.minimum(rem[l.name], c2 * np.clip(reach - cur, 0, None))
-        rem[l.name] -= q
-        direct += q
-        cur = cur + q / c2
-    boost = c2 * np.clip(t_top - cur, 0, None)
-    hot = max(site.loops, key=lambda l: l.t_return_c)
-    cop = float(hp.cop(hot.t_return_c, t_top, P)) if boost.sum() > 0 else None
-    hp_work = boost / cop if cop else np.zeros(H)
-    evap = boost - hp_work
-    for l in sorted(site.loops, key=lambda l: -l.t_return_c):
-        q = np.minimum(rem[l.name], evap)
-        rem[l.name] -= q
-        evap = evap - q
+    rem[src.name] = rem[src.name] - sum(drawn_by.values())
     # heat rejection of what is left, same technology as today
     tech = site.baseline_rejection
     rej = [reject(tech, rem[l.name], l.t_supply_c, l.t_return_c, site.t_db, site.t_wb, P, q_design_mw=l.q_mw)
@@ -182,8 +180,10 @@ def run(site, P: dict, chosen: list[User], base: dict) -> dict:
         stages.append({"key": u.key, "label": u.label, "size": u.size, "mwh_yr": e,
                        "share": used * e / delivered / total_heat,  # share of server heat behind this user
                        "t_in_c": t_design[u.key][0], "t_out_c": t_design[u.key][1], "peak_mw": float(got[u.key].max()),
-                       "demand_mwh_yr": float(u.demand.sum()), "value_usd_yr": rev, "capex_usd": cap})
-    capex += P["capex_hx_usd_kw"] * float(direct.max()) * 1000 * P["capex_factor"]
+                       "demand_mwh_yr": float(u.demand.sum()), "value_usd_yr": rev, "capex_usd": cap,
+                       "heat_pump_mwh_yr": float(hp_by[u.key][0].sum()), "t_user_c": u.t_supply,
+                       "heat_pump_cop": (float(hp_by[u.key][0].sum() / hp_by[u.key][1].sum())
+                                         if hp_by[u.key][1].sum() > 0 else None)})
     capex += P["capex_hp_usd_kw"] * float(boost.max()) * 1000 * P["capex_factor"]
     p_w = x["p_water_usd_m3"] + x["wsi"] * P["water_scarcity_usd_m3_per_wsi"]
     d_elec = base["cooling_mwh"] - elec
@@ -198,9 +198,9 @@ def run(site, P: dict, chosen: list[User], base: dict) -> dict:
             "heat_rejected_mwh_yr": total_heat - used, "line_loss_mwh_yr": line_loss,
             "line_pump_mwh_yr": line_pump, "water_saved_m3_yr": d_water, "electricity_saved_mwh_yr": d_elec,
             "co2_avoided_t_yr": co2, "capex_usd": capex, "net_value_usd_yr": net, "npv_usd": net / annuity(P) - capex,
-            "rejection": tech, "t_top_c": t_top, "t_back_c": float(t_back[h_d]),
+            "rejection": tech, "t_top_c": t_ret, "t_back_c": t_sup, "t_after_users_c": float(t_after[h_d]),
             "direct_mwh_yr": float(direct.sum()), "heat_pump_mwh_yr": float(boost.sum()),
-            "heat_pump_cop": cop, "heat_pump_elec_mwh_yr": float(hp_work.sum()),
+            "heat_pump_cop": cop_all, "heat_pump_elec_mwh_yr": float(hp_work.sum()),
             "loops": [{"name": l.name, "t_return_c": l.t_return_c, "t_supply_c": l.t_supply_c, "mwh_yr": l.q_mw * H}
                       for l in site.loops]}
 

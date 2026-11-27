@@ -250,6 +250,9 @@ class CascadeStage(BaseModel):
     t_out_c: float
     peak_mw: float
     value_usd_yr: float
+    heat_pump_mwh_yr: float = Field(0.0, description="Part of mwh_yr lifted by a heat pump (loop too cold for this user)")
+    heat_pump_cop: float | None = None
+    t_user_c: float | None = Field(None, description="Supply temperature this user needs (heat pump target when above the loop)")
     vendors: list[Vendor] = []
     references: list[Reference] = []
 
@@ -267,7 +270,8 @@ class Cascade(BaseModel):
     npv_usd: float
     capex_usd: float
     t_top_c: float
-    t_back_c: float
+    t_back_c: float = Field(description="DC loop supply temperature: the water goes back to the servers at this")
+    t_after_users_c: float | None = Field(None, description="Loop temperature after the last user (design hour); the heat rejection trims the rest")
     heat_pump_cop: float | None = None
     heat_pump_mwh_yr: float = 0.0
     direct_mwh_yr: float = 0.0

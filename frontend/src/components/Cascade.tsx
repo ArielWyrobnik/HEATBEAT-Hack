@@ -28,18 +28,20 @@ export function CascadeCard({ c, rank }: { c: Cascade; rank: number }) {
       <ol className="cascade-flow">
         <li className="cascade-src">
           <span className="t">{deg(c.t_top_c)}</span>
-          <span>Server heat{c.heat_pump_cop ? ` + heat pump (COP ${num(c.heat_pump_cop, 1)})` : ''}</span>
+          <span>Hot water from the servers</span>
         </li>
         {c.stages.map((s) => (
           <li key={s.key} style={{ ['--c' as string]: COLOR[s.key] ?? 'var(--green)' }}>
             <span className="t">{deg(s.t_in_c)}→{deg(s.t_out_c)}</span>
-            <span className="name" title={s.size}><b>{s.label}</b></span>
+            <span className="name" title={s.size}><b>{s.label}</b>
+              {s.heat_pump_cop ? <small className="hp-tag" title="The loop is too cold for this user, a heat pump lifts the heat">
+                {' '}+ heat pump {deg(s.t_in_c)}→{deg(s.t_user_c ?? s.t_in_c)} (COP {num(s.heat_pump_cop, 1)})</small> : null}</span>
             <span className="e">{gwh(s.mwh_yr)}</span>
           </li>
         ))}
         <li className="cascade-end">
           <span className="t">{deg(c.t_back_c)}</span>
-          <span>back to the data center · {num(rest * 100, 0)}% still cooled away</span>
+          <span>back to the servers · {num(rest * 100, 0)}% still cooled away</span>
         </li>
       </ol>
 

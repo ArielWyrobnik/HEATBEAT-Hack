@@ -118,12 +118,17 @@ The API returns it for the best chain.
 
 ## 6b. Heat waste cascade: `cascade.py`
 
-The "Heat waste" tab optimizes for heat used and water saved, not money. A separate heat-use loop runs through
-several users in series, hottest first: biogas digester (about 45 C supply), greenhouse (40 to 30 C), warm water
-fish farm (33 to 29 C, makeup water and hall losses) and an ambient (5GDH) heat network (20 to 10 C) when a
-community is within reach. Each user cools the loop to its own return temperature plus an approach. The return
-water is reheated directly from the DC loops where they are hot enough, a booster heat pump does the rest, and
-whatever heat is left goes to the baseline heat rejection, so less water evaporates and fans run less.
+The "Heat waste" tab optimizes for heat used and water saved, not money. The users sit in series on the
+hottest DC loop itself, hottest requirement first: biogas digester (about 45 C supply), greenhouse (40 to 30 C),
+warm water fish farm (33 to 29 C, makeup water and hall losses) and an ambient (5GDH) heat network (20 to 10 C)
+when a community is within reach. The loop leaves the servers at its return temperature and only has to come
+back to its supply temperature: for Vera Rubin DLC 55 C out and 45 C back (NVIDIA: up to 45 C coolant, chip
+outlet about 55 C, `nvidia_45c_2026` in `heat_sources.csv`, vendor marketing). Each user takes heat through a
+plate heat exchanger while the loop is at least its supply temperature plus the approach (3 K); only a user
+that needs hotter water than the loop gets a heat pump, whose evaporator draws from the loop. What the users
+leave above the supply temperature goes to the baseline heat rejection, so less water evaporates and fans run
+less. Cold loops (chilled water 7/13 C, air 18/26 C) therefore need heat pumps for every user except the
+ambient network. Only the hottest loop feeds the cascade; the air side loop is cooled as before.
 The heat network is tried at three sizes (5, 20 and 60 km of street, about N homes at `casc_home_mwh_yr`), one size per design. Neighbourhood heat is limited by heat density: US sites sit in low density suburbs (median 1.6 MWh per m of street per year, site_gis.csv) against about 3 or more in European district heating cities, so even a 60 km network takes a few percent of a large campus. Every subset of users is simulated; the panel shows the top 2: "Most heat used" and "Most heat used that pays
 off". Temperatures shown are those at the design hour (largest delivery).
 

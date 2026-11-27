@@ -21,6 +21,20 @@ SITE_SWINGS = {
     "rho_heat_mwh_m": "Linear heat density", "d_dh_m": "Distance to community",
     "d_bio_m": "Distance to feedstock", "it_mw": "IT load",
 }
+# plain English names for the tornado chart (the parameter key stays in "input")
+PARAM_LABELS = {
+    "capex_factor": "Investment cost (all equipment)", "discount_rate": "Discount rate", "lifetime_yr": "Lifetime",
+    "hp_carnot_fraction": "Heat pump efficiency", "dry_approach_k": "Dry cooler temperature gap",
+    "tower_approach_k": "Cooling tower temperature gap", "adiabatic_eff": "Adiabatic pre-cooling efficiency",
+    "sfp_dry_kw_kw": "Dry cooler fan power", "tower_cycles": "Cooling tower water reuse (cycles)",
+    "chiller_carnot_fraction": "Chiller efficiency", "water_scarcity_usd_m3_per_wsi": "Value of water in dry regions",
+    "dh_supply_c": "Heat network supply temperature", "dh_heat_price_share": "Heat sale price",
+    "dh_u_a_w_mk": "Heat network pipe losses", "capex_hp_usd_kw": "Heat pump cost",
+    "capex_dist_network_usd_m": "Heat network cost per m", "bio_feed_t_day": "Biogas feedstock",
+    "bio_wall_u_w_m2k": "Digester insulation", "bio_upgrade_capex_usd_nm3h": "Biogas upgrading cost",
+    "ads_cop": "Adsorption chiller efficiency", "orc_carnot_fraction": "ORC efficiency",
+    "fw_kwh_e_per_kwh_th": "Feedwater preheat value", "med_dt_per_effect_k": "Desalination temperature per stage",
+}
 # parameters that matter for most chains; the rest are swung only if `all_params`
 CORE = ["capex_factor", "discount_rate", "lifetime_yr", "hp_carnot_fraction", "dry_approach_k", "tower_approach_k",
         "adiabatic_eff", "sfp_dry_kw_kw", "tower_cycles", "chiller_carnot_fraction", "water_scarcity_usd_m3_per_wsi",
@@ -51,7 +65,7 @@ def tornado(site, tech: str, uses: tuple, storage=None, metric: str = "npv_usd",
         vals = []
         for v in (p.low, p.high):
             vals.append(_run(site, {**P0, k: v}, tech, uses, storage, metric))
-        rows.append({"input": k, "label": k, "kind": "parameter", "status": p.status, "unit": p.unit,
+        rows.append({"input": k, "label": PARAM_LABELS.get(k, k.replace("_", " ")), "kind": "parameter", "status": p.status, "unit": p.unit,
                      "base_value": P0[k], "low_value": p.low, "high_value": p.high,
                      "metric_low": vals[0], "metric_high": vals[1]})
     for k, label in SITE_SWINGS.items():

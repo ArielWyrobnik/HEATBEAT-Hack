@@ -15,6 +15,7 @@ from . import calc_trace, cascade
 from .chains import DH_SIZED_PLANS, best_per_use, evaluate_site
 from .params import PARAMS, defaults
 from .sensitivity import tornado as tornado_fn
+from .sinks import annuity
 from .site import load_location, load_site, set_input
 from .verdict import verdict as verdict_fn
 
@@ -376,6 +377,11 @@ class HeatChainModel:
                             details={"capex_breakdown_usd": {a: round(b) for a, b in r["capex"].items()},
                                      "cost_usd_yr": {a: round(b) for a, b in r["cost"].items()},
                                      "npv_usd": r["npv_usd"], "reuse_npv_usd": r.get("reuse_npv_usd"),
+                                     # what this design costs per year on its own (new builds have nothing to
+                                     # improve on): running cost + CAPEX annuity, water scarcity shadow price left out
+                                     "annual_cost_usd_yr": round(r["net_cost_usd"] - r["cost"]["water_scarcity_usd"]
+                                                                 + r["capex_usd"] * annuity(P)),
+                                     "capex_total_usd": round(r["capex_usd"]),
                                      "balance_residual_mwh": r["balance_residual_mwh"],
                                      "chiller_hours": r["chiller_hours"], "wet_hours": r["wet_hours"],
                                      **{a: b for a, b in r.get("details", {}).items()}})
