@@ -187,6 +187,9 @@ PARAMS: dict[str, Param] = {
     "casc_home_mwh_yr": P(15.0, 10.0, 20.0, "MWh/yr", "assumption",
                           "Heat per home for the 'about N homes' label; cross check Meta Odense 215,000 MWh for more than 12,000 homes "
                           "(Ramboll project page), about 18 MWh incl. losses"),
+    "casc_min_source_c": P(35.0, 35.0, 35.0, "C", "assumption",
+                           "Heat reuse takes hot water straight from the GPU liquid loop (direct to chip or immersion), "
+                           "bypassing chillers and towers. Loops colder than this (chilled water, air, rear door) get no cascade"),
     # ---- boiler feedwater -------------------------------------------------------------------
     "p_wholesale_share": P(1.0, 0.8, 1.2, "-", "assumption", "Power plant output valued at the mean hourly market price x this"),
     "fw_target_c": P(50.0, 45.0, 60.0, "C", "assumption", "Condensate / makeup water preheated to this temperature"),

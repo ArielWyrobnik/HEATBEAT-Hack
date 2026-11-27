@@ -115,7 +115,7 @@ def run(site, P: dict, chosen: list[User], base: dict) -> dict:
     from . import heat_pump as hp
     app = P["hx_approach_k"]
     order = sorted(chosen, key=lambda u: -u.t_supply)
-    src = max(site.loops, key=lambda l: l.t_return_c)
+    src = max((l for l in site.loops if l.name == "liquid"), key=lambda l: l.t_return_c)
     t_ret, t_sup = float(src.t_return_c), float(src.t_supply_c)
     c = float(src.q_mw) / max(t_ret - t_sup, 1.0)   # MW per K of the DC loop
     t = np.full(H, t_ret)
@@ -210,6 +210,9 @@ def designs(site, P: dict, base: dict, n: int = 2) -> list[dict]:
 
     Every subset of the feasible users is simulated; the list is short (at most 4 users, 15 subsets).
     """
+    # heat reuse only straight from the GPU liquid loop: no chilled water, air or rear door loop
+    if not any(l.name == "liquid" and l.t_return_c >= P["casc_min_source_c"] for l in site.loops):
+        return []
     us = users(site, P)
     runs = []
     for k in range(1, len(us) + 1):

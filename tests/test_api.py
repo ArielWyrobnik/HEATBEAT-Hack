@@ -257,8 +257,13 @@ def test_plan_defaults_and_budget_mode():
 
 
 def test_heat_waste_cascades_in_result():
+    # heat reuse only straight from a GPU liquid loop: a chilled water site has none
     r = c.get(f"/api/sites/{SITE}/ranking", params={"tornado": False})
+    assert r.status_code == 200, r.text
+    assert r.json()["cascades"] == []
+    r = c.get("/api/sites/us-or-the-dalles-google/ranking", params={"tornado": False})
     assert r.status_code == 200, r.text
     cs = r.json()["cascades"]
     assert 1 <= len(cs) <= 2
+    assert all(x["t_top_c"] >= 35 for x in cs)
     assert all(x["stages"] and 0 < x["heat_used_share"] <= 1 for x in cs)
