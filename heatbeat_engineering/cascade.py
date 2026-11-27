@@ -35,6 +35,7 @@ import numpy as np
 from . import biogas
 from .heat_rejection import reject
 from .sinks import H, annuity, pipe
+from .site import Loop
 
 
 @dataclass
@@ -140,8 +141,14 @@ def run(site, P: dict, chosen: list[User], base: dict) -> dict:
         t = t - draw / c
     t_after = t
     # temperatures shown per user: the design hour (largest total delivery), so the chain is continuous
-    h_d = int(np.argmax(sum(got.values())))
-    t_design = {k: (float(v[0][h_d]), float(v[1][h_d])) for k, v in t_path.items()}
+    # temperatures shown per user: the yearly mean temperature drop each user causes (mean heat drawn / C),
+    # in series from the loop return, so every user that takes heat shows a real drop
+    t_design, t_d = {}, t_ret
+    for u in order:
+        drop = float(np.mean(drawn_by[u.key])) / c
+        t_design[u.key] = (t_d, t_d - drop)
+        t_d -= drop
+    t_after_mean = t_d
     cop_all = float(boost.sum() / hp_work.sum()) if hp_work.sum() > 0 else None
     rem = {l.name: np.full(H, float(l.q_mw)) for l in site.loops}
     rem[src.name] = rem[src.name] - sum(drawn_by.values())
@@ -208,7 +215,7 @@ def run(site, P: dict, chosen: list[User], base: dict) -> dict:
             "heat_rejected_mwh_yr": total_heat - used, "line_loss_mwh_yr": line_loss,
             "line_pump_mwh_yr": line_pump, "water_saved_m3_yr": d_water, "electricity_saved_mwh_yr": d_elec,
             "co2_avoided_t_yr": co2, "capex_usd": capex, "net_value_usd_yr": net, "npv_usd": net / annuity(P) - capex,
-            "rejection": tech, "t_top_c": t_ret, "t_back_c": t_sup, "t_after_users_c": float(t_after[h_d]),
+            "rejection": tech, "t_top_c": t_ret, "t_back_c": t_sup, "t_after_users_c": t_after_mean,
             "direct_mwh_yr": float(direct.sum()), "heat_pump_mwh_yr": float(boost.sum()),
             "heat_pump_cop": cop_all, "heat_pump_elec_mwh_yr": float(hp_work.sum()),
             "loops": [{"name": l.name, "t_return_c": l.t_return_c, "t_supply_c": l.t_supply_c, "mwh_yr": l.q_mw * H}
@@ -220,9 +227,22 @@ def designs(site, P: dict, base: dict, n: int = 2) -> list[dict]:
 
     Every subset of the feasible users is simulated; the list is short (at most 4 users, 15 subsets).
     """
-    # heat reuse only straight from the GPU liquid loop: no chilled water, air or rear door loop
+    # heat reuse only straight from the GPU liquid loop (never from chilled water, air or rear door loops).
+    # A site without one is shown as a direct liquid cooling retrofit: a new GPU loop takes
+    # casc_retrofit_share of the IT heat at casc_retrofit_sup_c / _ret_c, the old loops keep the rest, and the
+    # retrofit CAPEX is charged to the cascade. The baseline stays today's setup, so the cascade also gets
+    # credit for the chiller and tower load the retrofit removes.
+    retrofit_capex = 0.0
     if not any(l.name == "liquid" and l.t_return_c >= P["casc_min_source_c"] for l in site.loops):
-        return []
+        import copy
+        import dataclasses
+        share = P["casc_retrofit_share"]
+        site = copy.copy(site)
+        old_loops = site.loops
+        site.loops = [Loop("liquid", site.it_mw * share, P["casc_retrofit_sup_c"], P["casc_retrofit_ret_c"])]
+        site.loops += [dataclasses.replace(l, name=l.name if l.name == "air" else "facility", q_mw=l.q_mw * (1 - share))
+                       for l in old_loops]
+        retrofit_capex = P["casc_retrofit_capex_usd_kw"] * site.it_mw * share * 1000 * P["capex_factor"]
     us = users(site, P)
     runs = []
     for k in range(1, len(us) + 1):
@@ -230,6 +250,10 @@ def designs(site, P: dict, base: dict, n: int = 2) -> list[dict]:
             if len({u.key for u in combo}) < len(combo):  # one size per user type
                 continue
             r = run(site, P, list(combo), base)
+            if retrofit_capex:
+                r["capex_usd"] += retrofit_capex
+                r["npv_usd"] -= retrofit_capex
+                r["retrofit_capex_usd"] = retrofit_capex
             if r["heat_used_mwh_yr"] > 0:
                 r["users"] = [u.key for u in combo]
                 runs.append(r)

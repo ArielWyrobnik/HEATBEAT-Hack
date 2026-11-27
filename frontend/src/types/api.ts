@@ -330,6 +330,7 @@ export interface Cascade {
   line_loss_mwh_yr?: number;
   electricity_saved_mwh_yr?: number;
   net_value_usd_yr?: number;
+  retrofit_capex_usd?: number;
   heat_loops?: HeatLoop[];
   rejection: string;
 }

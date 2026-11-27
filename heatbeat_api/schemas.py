@@ -281,6 +281,7 @@ class Cascade(BaseModel):
     line_loss_mwh_yr: float = 0.0
     electricity_saved_mwh_yr: float = 0.0
     net_value_usd_yr: float = 0.0
+    retrofit_capex_usd: float = Field(0.0, description="Direct liquid cooling retrofit CAPEX (site without a GPU liquid loop today)")
     heat_loops: list[HeatLoop] = Field(default_factory=list, description="Heat budget per DC loop: users and what is still cooled away")
     rejection: str
 

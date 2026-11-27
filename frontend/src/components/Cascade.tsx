@@ -26,6 +26,7 @@ function CascadeDetails({ c }: { c: Cascade }) {
     ['Cooling electricity saved', mwh(c.electricity_saved_mwh_yr), 'Fans, pumps and chillers that no longer run for the heat used, minus heat pump electricity.'],
     ['Water saved', `${compact(c.water_saved_m3_yr)} m3/yr`, 'Water the cooling no longer evaporates.'],
     ['Investment', money(c.capex_usd), 'Heat exchangers, heat pumps, pipes and network. Team cost assumptions, not quotes.'],
+    ...(c.retrofit_capex_usd ? [['of which liquid cooling retrofit', money(c.retrofit_capex_usd), 'CDUs, manifolds, cold plates and piping. Unverified team estimate.'] as [string, string, string]] : []),
     ['Net value per year', `${money(c.net_value_usd_yr ?? 0)}/yr`, 'Heat sales plus electricity and water saved minus maintenance.'],
     ['NPV 20 yr', money(c.npv_usd), 'Net value over 20 years, discounted, minus the investment.'],
   ];
@@ -81,7 +82,9 @@ function CascadeBody({ c, rank, open, onToggle, full, onFull }:
       <figcaption>
         <button type="button" className="cascade-head" onClick={onToggle} aria-expanded={open}>
           <span className="cascade-rank">{rank}</span>
-          <span className="cascade-title">{c.title}</span>
+          <span className="cascade-title">{c.title}
+            {c.retrofit_capex_usd ? <small className="cascade-retro" title="This site has no liquid cooled GPUs today. The cascade assumes a direct liquid cooling retrofit; its cost is in the investment and NPV.">
+              with liquid cooling retrofit</small> : null}</span>
           <b className="cascade-share" title="Share of the server heat used">{num(c.heat_used_share * 100, c.heat_used_share < 0.1 ? 1 : 0)}%<small>heat used</small></b>
           <span className="chev" aria-hidden>{open ? '−' : '+'}</span>
         </button>
@@ -103,7 +106,7 @@ function CascadeBody({ c, rank, open, onToggle, full, onFull }:
       <ol className="cascade-flow">
         <li className="cascade-src">
           <span className="t">{deg(c.t_top_c)}</span>
-          <span>Hot water from the servers</span>
+          <span>{c.retrofit_capex_usd ? 'Hot water from the GPUs, after a liquid cooling retrofit' : 'Hot water from the GPUs'}</span>
         </li>
         {c.stages.map((s) => (
           <li key={s.key} style={{ ['--c' as string]: COLOR[s.key] ?? 'var(--green)' }}>

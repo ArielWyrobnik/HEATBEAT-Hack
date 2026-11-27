@@ -190,6 +190,15 @@ PARAMS: dict[str, Param] = {
     "casc_min_source_c": P(35.0, 35.0, 35.0, "C", "assumption",
                            "Heat reuse takes hot water straight from the GPU liquid loop (direct to chip or immersion), "
                            "bypassing chillers and towers. Loops colder than this (chilled water, air, rear door) get no cascade"),
+    "casc_retrofit_share": P(0.8, 0.7, 0.9, "-", "assumption",
+                             "Share of IT heat a direct liquid cooling retrofit captures (Compass designs 80% liquid / 20% air, "
+                             "compass_rubin_2026)"),
+    "casc_retrofit_sup_c": P(40.0, 32.0, 45.0, "C", "assumption",
+                             "Retrofit GPU loop supply, warm water DLC (ASHRAE W40/W45 classes; NVIDIA Rubin up to 45 C)"),
+    "casc_retrofit_ret_c": P(50.0, 42.0, 55.0, "C", "assumption", "Retrofit GPU loop return, 10 K above supply"),
+    "casc_retrofit_capex_usd_kw": P(400.0, 250.0, 700.0, "USD/kW", "assumption",
+                                    "Direct liquid cooling retrofit: CDUs, manifolds, cold plates, piping per kW of liquid heat. "
+                                    "UNVERIFIED team estimate"),
     # ---- boiler feedwater -------------------------------------------------------------------
     "p_wholesale_share": P(1.0, 0.8, 1.2, "-", "assumption", "Power plant output valued at the mean hourly market price x this"),
     "fw_target_c": P(50.0, 45.0, 60.0, "C", "assumption", "Condensate / makeup water preheated to this temperature"),
