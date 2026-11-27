@@ -194,7 +194,17 @@ def run(site, P: dict, chosen: list[User], base: dict) -> dict:
     tot_del = sum(s_["mwh_yr"] for s_ in stages)
     for s_ in stages:  # share of server heat behind each user (heat pump work counted pro rata)
         s_["share"] = used * s_["mwh_yr"] / tot_del / total_heat if tot_del > 0 else 0.0
-    return {"stages": stages, "heat_used_mwh_yr": used, "heat_used_share": used / total_heat,
+    # heat budget per DC loop for the "Where the server heat goes" diagram
+    rej_label = {"dry": "Dry cooler", "adiabatic": "Adiabatic cooler", "tower": "Cooling tower"}.get(tech, tech)
+    heat_loops = []
+    for l in site.loops:
+        routes = []
+        if l is src:
+            routes = [{"name": u.label, "mwh_yr": float(drawn_by[u.key].sum()), "kind": "reuse"}
+                      for u in order if float(drawn_by[u.key].sum()) > 0]
+        routes.append({"name": rej_label, "mwh_yr": float(rem[l.name].sum()), "kind": "cooling"})
+        heat_loops.append({"name": l.name, "mwh_yr": float(l.q_mw) * H, "return_c": float(l.t_return_c), "routes": routes})
+    return {"stages": stages, "heat_used_mwh_yr": used, "heat_loops": heat_loops, "heat_used_share": used / total_heat,
             "heat_rejected_mwh_yr": total_heat - used, "line_loss_mwh_yr": line_loss,
             "line_pump_mwh_yr": line_pump, "water_saved_m3_yr": d_water, "electricity_saved_mwh_yr": d_elec,
             "co2_avoided_t_yr": co2, "capex_usd": capex, "net_value_usd_yr": net, "npv_usd": net / annuity(P) - capex,
