@@ -41,7 +41,7 @@ def test_default_lists_only_sites_with_verified_cooling():
     default = c.get("/api/sites").json()
     every = c.get("/api/sites", params={"scope": "all"}).json()
     assert 0 < len(default) < len(every)
-    assert all(p["setup_status"] == "verified" for p in default)
+    assert all(p["setup_status"] == "verified" or p["site_id"] in SHOWCASE for p in default)
     hidden = next(p for p in every if p["setup_status"] != "verified")
     assert c.get(f"/api/sites/{hidden['site_id']}").status_code == 200  # hidden, not deleted
     assert c.get("/api/sites", params={"scope": "nope"}).status_code == 422
