@@ -250,9 +250,10 @@ def designs(site, P: dict, base: dict, n: int = 2) -> list[dict]:
             if len({u.key for u in combo}) < len(combo):  # one size per user type
                 continue
             r = run(site, P, list(combo), base)
-            if retrofit_capex:
+            if retrofit_capex:  # retrofit investment plus its yearly maintenance
                 r["capex_usd"] += retrofit_capex
-                r["npv_usd"] -= retrofit_capex
+                r["net_value_usd_yr"] -= P["opex_share"] * retrofit_capex
+                r["npv_usd"] = r["net_value_usd_yr"] / annuity(P) - r["capex_usd"]
                 r["retrofit_capex_usd"] = retrofit_capex
             if r["heat_used_mwh_yr"] > 0:
                 r["users"] = [u.key for u in combo]
