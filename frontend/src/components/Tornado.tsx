@@ -15,7 +15,7 @@ export default function Tornado({ data, optionName }: { data: T; optionName: str
   return (
     <figure className="tornado">
       <figcaption>
-        Sensitivity of <b>{optionName}</b>: {data.metric.replace(/_usd_yr$|_mwh_yr$|_t_yr$/, '').replace(/_/g, ' ')} ({data.unit})
+        Sensitivity of <b>{optionName}</b>: {data.metric === 'npv_usd' ? 'NPV' : data.metric.replace(/_usd_yr$|_mwh_yr$|_t_yr$/, '').replace(/_/g, ' ')} ({data.unit})
       </figcaption>
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Tornado chart">
         {bars.map((b, i) => {

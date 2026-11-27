@@ -562,3 +562,14 @@ body.panel-full { overflow: hidden; }
 .site-panel.expanded .plan-proposals > .plan-proposal.open { grid-column: 1 / -1; }
 .site-panel.expanded .plan-proposals > .cascades { grid-template-columns: 1fr; margin: 0; }
 @media (max-width: 900px) { .site-panel.expanded .plan-proposals { grid-template-columns: 1fr; } }
+
+/* option details full screen */
+.opt-wrap { position: relative; }
+.opt-wrap > .opt-full-btn { display: block; margin: 8px 12px 0 auto; }
+.opt-full { position: fixed; inset: 0; z-index: 1200; background: var(--bg); overflow-y: auto; }
+.opt-full-inner { max-width: 1100px; margin: 0 auto; padding: 24px 32px 48px; }
+.opt-full-inner > header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
+.opt-full-inner > header h3 { font-size: 26px; margin: 0; }
+.opt-full .kpis { grid-template-columns: repeat(4, 1fr); }
+body.opt-full-open { overflow: hidden; }
+@media (max-width: 760px) { .opt-full-inner { padding: 16px; } .opt-full .kpis { grid-template-columns: 1fr 1fr; } }
