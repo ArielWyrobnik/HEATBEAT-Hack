@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { compact, num } from '../format';
-import type { Cascade } from '../types/api';
+import type { Cascade, OptionResult } from '../types/api';
+import HeatFlow from './HeatFlow';
 import { money, tonnes } from './Results';
 
 /** Colour per heat user, hottest (warm) to coolest. */
@@ -118,6 +119,9 @@ function CascadeBody({ c, rank, open, onToggle, full, onFull }:
           <span>back to the servers · {num(rest * 100, 0)}% still cooled away</span>
         </li>
       </ol>
+
+      {c.heat_loops?.length ? <HeatFlow option={{ heat_loops: c.heat_loops,
+        kpis: { heat_recovered_mwh_yr: c.heat_used_mwh_yr } } as unknown as OptionResult} /> : null}
 
       <ul className="cascade-who">
         {c.stages.filter((s) => s.vendors?.length || s.references?.length).map((s) => {
