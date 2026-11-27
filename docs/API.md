@@ -117,5 +117,5 @@ The site panel and the planner show the same compact view (`frontend/src/compone
 today's baseline in one line, the best 3 options that change something (`OptionResult.is_today` marks today's setup
 and is left out). Clicking an option opens its four key numbers with definitions (money saved per year, payback,
 CO2 avoided, water saved), how it is built, the investment, the calculation steps with inputs (colour = real /
-estimate / synthetic, hover for the source), the tornado and all inputs with sources. The button
+estimate / synthetic, hover for the source), the tornado and all inputs with sources.
 The map no longer shows the opportunity ranking (removed 2026-11-27 for the demo); `/api/leaderboard` still answers for scripts.
