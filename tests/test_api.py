@@ -9,7 +9,7 @@ pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 from fastapi.testclient import TestClient  # noqa: E402
 
-from heatbeat_api.app import MODELS, app  # noqa: E402
+from heatbeat_api.app import MODELS, SHOWCASE, app  # noqa: E402
 from heatbeat_api.models import ExcelRankingModel, SiteModel, flag_for  # noqa: E402
 from heatbeat_api.schemas import ModelResult  # noqa: E402
 
