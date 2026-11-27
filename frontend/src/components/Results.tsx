@@ -236,6 +236,8 @@ function DetailsBody({ o, r, planned = false, costOnly = false }: { o: OptionRes
     ? costs.reduce((total, [, amount]) => total + amount, 0)
     : k.capex_usd;
   const inputs = o.calculation_inputs?.length ? o.calculation_inputs : r.inputs;
+  // a negative "CO2 avoided" means more emissions: that step is left out
+  const steps = (o.calculation ?? []).filter((st) => !(st.title === 'CO2 avoided' && (st.result ?? 0) < 0));
   const nReal = inputs.filter((i) => i.flag === 'real' || i.flag === 'user').length;
   const hasHeatFlow = Boolean(o.heat_loops?.length);
   const recoveredHeat = k.heat_recovered_mwh_yr ?? 0;
@@ -262,7 +264,8 @@ function DetailsBody({ o, r, planned = false, costOnly = false }: { o: OptionRes
         <Kpi label="Saved per year" v={`${money(k.cash_value_usd_yr ?? k.net_value_usd_yr)}`} def={DEFS.cash}
              neg={(k.cash_value_usd_yr ?? 0) < 0} />
         <Kpi label="Payback" v={payback(k.payback_yr)} def={DEFS.payback} />
-        <Kpi label="CO2 avoided" v={`${tonnes(k.co2_avoided_t_yr)}/yr`} def={planned ? 'Tonnes of CO2 per year compared with the baseline design.' : DEFS.co2} neg={(k.co2_avoided_t_yr ?? 0) < 0} />
+        {(k.co2_avoided_t_yr ?? 0) >= 0 && /* negative means more emissions: not shown (Ariel, 2026-11-27) */
+          <Kpi label="CO2 avoided" v={`${tonnes(k.co2_avoided_t_yr)}/yr`} def={planned ? 'Tonnes of CO2 per year compared with the baseline design.' : DEFS.co2} />}
         <Kpi label="Water saved" v={`${compact(k.water_saved_m3_yr)} m3/yr`} def={DEFS.water} neg={(k.water_saved_m3_yr ?? 0) < 0} />
       </div>
       )}
@@ -281,13 +284,13 @@ function DetailsBody({ o, r, planned = false, costOnly = false }: { o: OptionRes
           {costs.filter(([, v]) => v > 0).map(([c, v]) => `${c.replace(/_/g, ' ')} ${money(v)}`).join(' · ')}</p>
       )}
 
-      {o.calculation?.length ? (
+      {steps.length ? (
         <>
           <h5>Calculation</h5>
-          <StepTiles steps={o.calculation} />
+          <StepTiles steps={steps} />
           <details className="calc-more">
             <summary>Formulas and inputs</summary>
-            <Steps steps={o.calculation} />
+            <Steps steps={steps} />
             <p className="legend">
               <span className="term term-real">real data</span>
               <span className="term term-estimated">estimate</span>
