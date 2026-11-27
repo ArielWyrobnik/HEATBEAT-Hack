@@ -46,7 +46,7 @@ def test_default_lists_only_sites_with_verified_cooling():
     assert c.get(f"/api/sites/{hidden['site_id']}").status_code == 200  # hidden, not deleted
     assert c.get("/api/sites", params={"scope": "nope"}).status_code == 422
     cfg = c.get("/api/config").json()
-    assert cfg["n_sites_verified"] == len(default) and cfg["n_sites_all"] == len(every)
+    assert cfg["n_sites_verified"] == sum(p["setup_status"] == "verified" for p in default) and cfg["n_sites_all"] == len(every)
 
 
 def test_inputs_have_flags_and_sources():
