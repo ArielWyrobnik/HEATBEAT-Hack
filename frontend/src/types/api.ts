@@ -300,6 +300,8 @@ export interface CascadeStage {
   t_out_c: number;
   peak_mw: number;
   value_usd_yr: number;
+  capex_usd?: number;
+  demand_mwh_yr?: number;
   heat_pump_mwh_yr?: number;
   heat_pump_cop?: number | null;
   t_user_c?: number | null;
@@ -324,5 +326,9 @@ export interface Cascade {
   heat_pump_cop?: number | null;
   heat_pump_mwh_yr: number;
   direct_mwh_yr: number;
+  heat_pump_elec_mwh_yr?: number;
+  line_loss_mwh_yr?: number;
+  electricity_saved_mwh_yr?: number;
+  net_value_usd_yr?: number;
   rejection: string;
 }
